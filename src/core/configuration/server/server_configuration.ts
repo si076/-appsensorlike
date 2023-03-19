@@ -154,16 +154,18 @@ abstract class ServerConfiguration {
 	 * @param detectionSystemId system ID to evaluate and find correlated systems
 	 * @return collection of strings representing correlation set, INCLUDING specified system ID
 	 */
-	public getRelatedDetectionSystems(detectionSystem: DetectionSystem): string[] {
+	public getRelatedDetectionSystems(detectionSystem: DetectionSystem | null): string[] {
 		let relatedDetectionSystems: string[] = [];
 
-		relatedDetectionSystems.push(detectionSystem.getDetectionSystemId());
+		if (detectionSystem !== null) {
+			relatedDetectionSystems.push(detectionSystem.getDetectionSystemId());
 
-		if(this.correlationSets != null) {
-			for(const correlationSet of this.correlationSets) {
-				if(correlationSet.getClientApplications() != null) {
-					if(correlationSet.getClientApplications().indexOf(detectionSystem.getDetectionSystemId()) > -1) {
-						relatedDetectionSystems = relatedDetectionSystems.concat(correlationSet.getClientApplications());
+			if(this.correlationSets !== null) {
+				for(const correlationSet of this.correlationSets) {
+					if(correlationSet.getClientApplications() !== null) {
+						if(correlationSet.getClientApplications().indexOf(detectionSystem.getDetectionSystemId()) > -1) {
+							relatedDetectionSystems = relatedDetectionSystems.concat(correlationSet.getClientApplications());
+						}
 					}
 				}
 			}
@@ -178,29 +180,31 @@ abstract class ServerConfiguration {
 	 * @param search detection point that has been added to the system
 	 * @return DetectionPoint populated with configuration information from server-side config
 	 */
-	public findDetectionPoints(search: DetectionPoint, clientApplicationName: string | null = null): DetectionPoint[] {
+	public findDetectionPoints(search: DetectionPoint | null, clientApplicationName: string | null = null): DetectionPoint[] {
 		const matches: DetectionPoint[] = [];
 
-        const customDetPoints: Map<string, DetectionPoint[]> = this.getCustomDetectionPoints();
-        if(clientApplicationName !== null && customDetPoints.size > 0) {
-
-            for (const customDetectionPoint of customDetPoints) {
-
-                if (clientApplicationName === customDetectionPoint[0]) {
-
-                    for(const customPoint of customDetectionPoint[1])
-                    {
-                        if (customPoint.typeMatches(search)) {
-                            matches.push(customPoint);
-                        }
-                    }
-                }
-            }
-        }
-
-		for (const configuredDetectionPoint of this.getDetectionPoints()) {
-			if (configuredDetectionPoint.typeMatches(search)) {
-				matches.push(configuredDetectionPoint);
+		if (search !== null) {
+			const customDetPoints: Map<string, DetectionPoint[]> = this.getCustomDetectionPoints();
+			if(clientApplicationName !== null && customDetPoints.size > 0) {
+	
+				for (const customDetectionPoint of customDetPoints) {
+	
+					if (clientApplicationName === customDetectionPoint[0]) {
+	
+						for(const customPoint of customDetectionPoint[1])
+						{
+							if (customPoint.typeMatches(search)) {
+								matches.push(customPoint);
+							}
+						}
+					}
+				}
+			}
+	
+			for (const configuredDetectionPoint of this.getDetectionPoints()) {
+				if (configuredDetectionPoint.typeMatches(search)) {
+					matches.push(configuredDetectionPoint);
+				}
 			}
 		}
 

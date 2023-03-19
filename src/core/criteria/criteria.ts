@@ -11,7 +11,7 @@ class SearchCriteria {
 
 	private detectionSystemIds: string[] = [];
 
-	private earliest: string = '';
+	private earliest: Date | null = null;
 
 	public getUser(): User | null {
 		return this.user;
@@ -43,7 +43,7 @@ class SearchCriteria {
 		return this;
 	}
 
-	public getEarliest(): string {
+	public getEarliest(): Date | null {
 		return this.earliest;
 	}
 
@@ -56,12 +56,12 @@ class SearchCriteria {
 		return this.setEarliest(this.earliest, true);
 	}
 
-	public setEarliest(earliest: string, inclusive: boolean = true): SearchCriteria {
+	public setEarliest(earliest: Date | null, inclusive: boolean = true): SearchCriteria {
 		if(inclusive) {
 			this.earliest = earliest;
-		} else {
+		} else if (earliest !== null) {
             // add one second if exclusive
-			this.earliest = new Date(Date.parse(earliest) + 1000).toISOString();
+			this.earliest = new Date(earliest.getTime() + 1000);
 		}
 
 		return this;

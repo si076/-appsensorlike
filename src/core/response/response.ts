@@ -34,14 +34,14 @@ interface UserManager {
 	 * 
 	 * @param user User to logout
 	 */
-	logout(user: User): void;
+	logout(user: User | null): void;
 	
 	/**
 	 * Disable (lock) the {@link org.owasp.appsensor.core.User}
 	 * 
 	 * @param user User to disable (lock)
 	 */
-	disable(user: User): void;
+	disable(user: User | null): void;
 	
 }
 
@@ -69,4 +69,4 @@ class NoopUserManager implements UserManager {
 
 }
 
-export {ResponseHandler, UserManager};
+export {RESPONSES, ResponseHandler, UserManager, NoopUserManager};

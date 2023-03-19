@@ -129,7 +129,7 @@ abstract class AttackStore {
 		const user: User | null = criteria.getUser();
 		const detectionPoint: DetectionPoint | null = criteria.getDetectionPoint();
 		const detectionSystemIds: string[] = criteria.getDetectionSystemIds();
-		const earliest: Date = new Date(Date.parse(criteria.getEarliest()));
+		const earliest: Date | null = criteria.getEarliest();
 		const rule: Rule | null = criteria.getRule();
 
 		// check user match if user specified
@@ -158,12 +158,13 @@ abstract class AttackStore {
 			ruleMatch = (attRule !== null) ? rule.guidMatches(attRule) : false;
 		}
 
-		const attackTimestampMillis = Date.parse(attack.getTimestamp());
-
 		let earliestMatch: boolean = true; 
 		if (earliest !== null) {
+
+			const attackTimestampMillis = attack.getTimestamp().getTime();
 			const earliestMillis = earliest.getTime();
-				(earliestMillis < attackTimestampMillis || earliestMillis === attackTimestampMillis)
+
+			earliestMatch = (earliestMillis < attackTimestampMillis || earliestMillis === attackTimestampMillis)
 		}
 
 		if (userMatch && detectionSystemMatch && detectionPointMatch && ruleMatch && earliestMatch) {
@@ -277,7 +278,7 @@ abstract class EventStore {
 		const user: User | null = criteria.getUser();
 		const detectionPoint: DetectionPoint | null = criteria.getDetectionPoint();
 		const detectionSystemIds: string[] = criteria.getDetectionSystemIds();
-		const earliest: Date = new Date(Date.parse(criteria.getEarliest()));
+		const earliest: Date | null = criteria.getEarliest();
 		const rule: Rule | null = criteria.getRule();
 
 		// check user match if user specified
@@ -306,12 +307,13 @@ abstract class EventStore {
 			ruleMatch = (detPoint !== null) ? rule.typeAndThresholdContainsDetectionPoint(detPoint) : false;
 		}
 
-		const eventTimestampMillis = Date.parse(event.getTimestamp());
-
 		let earliestMatch: boolean = true; 
 		if (earliest !== null) {
+
+			const eventTimestampMillis = event.getTimestamp().getTime();
 			const earliestMillis = earliest.getTime();
-				(earliestMillis < eventTimestampMillis || earliestMillis === eventTimestampMillis)
+
+			earliestMatch =	(earliestMillis < eventTimestampMillis || earliestMillis === eventTimestampMillis)
 		}
 		
 		if (userMatch && detectionSystemMatch && detectionPointMatch && ruleMatch && earliestMatch) {
@@ -358,7 +360,7 @@ abstract class ResponseStore {
 		
 		const user: User | null = criteria.getUser();
 		const detectionSystemIds: string[] = criteria.getDetectionSystemIds();
-		const earliest: Date = new Date(Date.parse(criteria.getEarliest()));
+		const earliest: Date | null = criteria.getEarliest();
 		
 		for (const response of responses) {
 			// check user match if user specified
@@ -371,12 +373,13 @@ abstract class ResponseStore {
 				detectionSystemMatch = detectionSystemIds.indexOf(respDetSystemId.getDetectionSystemId()) > -1 ;
 			}
 			
-			const responseTimestampMillis = Date.parse(response.getTimestamp());
-			
 			let earliestMatch: boolean = true; 
 			if (earliest !== null) {
+
+				const responseTimestampMillis = response.getTimestamp().getTime();
 				const earliestMillis = earliest.getTime();
-					(earliestMillis < responseTimestampMillis || earliestMillis === responseTimestampMillis)
+
+				earliestMatch =	(earliestMillis < responseTimestampMillis || earliestMillis === responseTimestampMillis)
 			}
 				
 			if (userMatch && detectionSystemMatch && earliestMatch) {

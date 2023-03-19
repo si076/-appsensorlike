@@ -21,7 +21,7 @@ interface EventManager {
 	 *  
 	 * @return a Collection of {@link Response} objects 
 	 */
-	getResponses(earliest: string): Response[];
+	getResponses(earliest: Date): Response[];
 }
 
 export {EventManager};

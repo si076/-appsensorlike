@@ -137,6 +137,9 @@ class Interval extends AppsensorEntity {
 
 	public constructor(duration: number = 0, unit: string = Interval.MINUTES) {
 		super();
+		if (duration === 0) {
+			console.warn("Interval's duration is 0");
+		}
 		this.setDuration(duration);
 		this.setUnit(unit);
 	}
@@ -283,7 +286,7 @@ class Response  extends AppsensorEntity {
 	
 	/** When the event occurred */
 	// @Column
-	private timestamp: string = '';
+	private timestamp: Date = new Date();
 	
 	/** String representing response action name */
 	// @Column
@@ -306,9 +309,9 @@ class Response  extends AppsensorEntity {
 	
 	public constructor(user: User | null = null, 
 		               action: string = '', 
-					   timestamp: string = '', 
-					   detectionSystem: DetectionSystem | null, 
-					   interval: Interval | null) {
+					   timestamp: Date | null = null, 
+					   detectionSystem: DetectionSystem | null = null, 
+					   interval: Interval | null = null) {
 		super();
 		this.setUser(user);
 		this.setAction(action);
@@ -326,12 +329,16 @@ class Response  extends AppsensorEntity {
 		return this;
 	}
 
-	public getTimestamp(): string {
+	public getTimestamp(): Date {
 		return this.timestamp;
 	}
 
-	public setTimestamp(timestamp: string): Response {
-		this.timestamp = timestamp;
+	public setTimestamp(timestamp: Date | null): Response {
+		if (timestamp) {
+			this.timestamp = new Date(timestamp);
+		} else {
+			this.timestamp = new Date();
+		}
 		return this;
 	}
 
@@ -415,7 +422,7 @@ class Response  extends AppsensorEntity {
 		const other = obj as Response;
 		
 		return Utils.equalsEntitys(this.user, other.getUser()) &&
-			   this.timestamp === other.getTimestamp() &&
+			   this.timestamp.getTime() === other.getTimestamp().getTime() &&
 			   this.action === other.getAction() && 
 			   Utils.equalsEntitys(this.interval, other.getInterval()) &&
 			   Utils.equalsEntitys(this.detectionSystem, other.getDetectionSystem()) &&
@@ -939,7 +946,7 @@ class AppSensorEvent extends AppsensorEntity {
 
 	/** When the event occurred */
 	// @Column
-	private timestamp: string = '';
+	private timestamp: Date = new Date();
 
 	/**
 	 * Identifier label for the system that detected the event.
@@ -970,7 +977,7 @@ class AppSensorEvent extends AppsensorEntity {
 	public constructor(user: User | null = null, 
 		               detectionPoint: DetectionPoint | null = null, 
 					   detectionSystem: DetectionSystem | null = null, 
-					   timestamp: string = '') {
+					   timestamp: Date | null = null) {
 		super();
 		this.setUser(user);
 		this.setDetectionPoint(detectionPoint);
@@ -996,12 +1003,16 @@ class AppSensorEvent extends AppsensorEntity {
 		return this;
 	}
 
-	public getTimestamp(): string {
+	public getTimestamp(): Date {
 		return this.timestamp;
 	}
 
-	public setTimestamp(timestamp: string): AppSensorEvent {
-		this.timestamp = timestamp;
+	public setTimestamp(timestamp: Date | null): AppSensorEvent {
+		if (timestamp) {
+			this.timestamp = new Date(timestamp);
+		} else {
+			this.timestamp = new Date();
+		}
 		return this;
 	}
 
@@ -1031,21 +1042,21 @@ class AppSensorEvent extends AppsensorEntity {
 		this.metadata = metadata;
 	}
 
-	// public static Comparator<AppSensorEvent> getTimeAscendingComparator() {
-	// 	return new Comparator<AppSensorEvent>() {
-	// 		public int compare(AppSensorEvent e1, AppSensorEvent e2) {
-	// 			if (DateUtils.fromString(e1.getTimestamp()).isBefore(DateUtils.fromString(e2.getTimestamp()))) {
-	// 				return -1;
-	// 			}
-	// 			else if (DateUtils.fromString(e1.getTimestamp()).isAfter(DateUtils.fromString(e2.getTimestamp()))) {
-	// 				return 1;
-	// 			}
-	// 			else {
-	// 				return 0;
-	// 			}
-	// 		}
-	// 	};
-	// }
+	public static getTimeAscendingComparator(e1: AppSensorEvent, e2: AppSensorEvent) {
+		if (e1 === null || e2 === null) {
+			throw new Error('e1 and e2 cannot be null');
+		} 
+
+		if (e1.getTimestamp().getTime() < e2.getTimestamp().getTime()) {
+			return -1;
+		}
+		else if (e1.getTimestamp().getTime() > e2.getTimestamp().getTime()) {
+			return 1;
+		}
+		else {
+			return 0;
+		}
+	}
 
 	// @Override
 	// public int hashCode() {
@@ -1069,7 +1080,7 @@ class AppSensorEvent extends AppsensorEntity {
 
 		return Utils.equalsEntitys(this.user, other.getUser()) &&
 			   Utils.equalsEntitys(this.detectionPoint, other.getDetectionPoint()) &&	
-			   this.timestamp === other.getTimestamp() &&
+			   this.timestamp.getTime() === other.getTimestamp().getTime() &&
 			   Utils.equalsEntitys(this.detectionSystem, other.getDetectionSystem()) &&
 			   Utils.equalsEntitys(this.resource, other.getResource()) &&
 			   Utils.equalsArrayEntitys(this.metadata, other.getMetadata());
@@ -1100,7 +1111,7 @@ class Attack extends AppsensorEntity {
 
 	/** When the attack occurred */
 	// @Column
-	private timestamp: string = '';
+	private timestamp: Date = new Date();
 
 	/**
 	 * Identifier label for the system that detected the attack.
@@ -1128,7 +1139,7 @@ class Attack extends AppsensorEntity {
 	public constructor(event: AppSensorEvent | null = null, 
 		               user: User | null = null, 
 					   detectionPoint: DetectionPoint | null = null, 
-					   timestamp: string = '', 
+					   timestamp: Date | null = null, 
 					   detectionSystem: DetectionSystem | null = null, 
 					   resource: Resource | null = null) {
 		super();
@@ -1165,12 +1176,17 @@ class Attack extends AppsensorEntity {
 		return this;
 	}
 
-	public getTimestamp(): string {
+	public getTimestamp(): Date {
 		return this.timestamp;
 	}
 
-	public setTimestamp(timestamp: string): Attack {
-		this.timestamp = timestamp;
+	public setTimestamp(timestamp: Date | null): Attack {
+		if (timestamp) {
+			this.timestamp = new Date(timestamp);
+		} else {
+			this.timestamp = new Date();
+		}
+		
 		return this;
 	}
 
@@ -1243,7 +1259,7 @@ class Attack extends AppsensorEntity {
 
 		return Utils.equalsEntitys(this.user, other.getUser()) &&
 			   Utils.equalsEntitys(this.detectionPoint, other.getDetectionPoint()) &&
-			   this.timestamp === other.getTimestamp() &&
+			   this.timestamp.getTime() === other.getTimestamp().getTime() &&
 			   Utils.equalsEntitys(this.detectionSystem, other.getDetectionSystem()) &&
 			   Utils.equalsEntitys(this.resource, other.getResource()) &&
 			   Utils.equalsArrayEntitys(this.metadata, other.getMetadata());
@@ -1288,7 +1304,7 @@ interface RequestHandler {
 	 * @param earliest Timestamp in the http://tools.ietf.org/html/rfc3339 format
 	 * @return a Collection of Response objects 
 	 */
-	getResponses(earliest: string): Response[];
+	getResponses(earliest: Date): Response[];
 	
 }
 
@@ -1543,4 +1559,4 @@ class Utils {
 
 export {IEquals, AppsensorEntity, KeyValuePair, InetAddress, IPAddress, Interval, Threshold, Response, 
 	    DetectionPoint, DetectionSystem, RequestHandler, AppSensorEvent, Attack, User, ClientApplication, 
-		Utils};
+		Utils, AppSensorClient, AppSensorServer, Category, Resource};

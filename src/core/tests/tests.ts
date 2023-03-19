@@ -6,4 +6,4 @@ function runTests() {
     DetectionPointTest.runTests();
 }
 
-runTests();
+export {runTests};

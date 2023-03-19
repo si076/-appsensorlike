@@ -3,7 +3,7 @@ import {AppsensorEntity, Interval, Response, DetectionPoint, Utils} from '../cor
 class Notification extends Interval {
 
 	/** the start time of the interval */
-	private startTime: Date | null = null;
+	private startTime: Date  = new Date();
 
 	/** the MonitorPoint that generated the Notification */
 	private monitorPoint: DetectionPoint | null = null;
@@ -13,20 +13,20 @@ class Notification extends Interval {
 					   startTime: Date | null = null, 
 		               monitorPoint: DetectionPoint | null = null) {
 		super(duration, unit);
-		this.setStartTime(startTime);
+		this.setStartTime(startTime !== null ? startTime : new Date());
 		this.setMonitorPoint(monitorPoint);
 	}
 
-	public getStartTime(): Date | null {
+	public getStartTime(): Date {
 		return this.startTime;
 	}
 
-	public setStartTime(startTime: Date | null): void {
+	public setStartTime(startTime: Date): void {
 		this.startTime = startTime;
 	}
 
-	public getEndTime(): Date | null {
-		return (this.startTime !== null) ? new Date(this.startTime.getTime() + this.toMillis()): null;
+	public getEndTime(): Date {
+		return new Date(this.startTime.getTime() + super.toMillis());
 	}
 
 	public getMonitorPoint(): DetectionPoint | null {
@@ -52,19 +52,18 @@ class Notification extends Interval {
 	// 		}
 	// 	};
 	// }
-	public static getStartTimeAscendingCompare(n1: Notification, n2: Notification): number {
+	public static getStartTimeAscendingComparator(n1: Notification, n2: Notification): number {
 		if (n1 === null || n2 === null ) {
 			throw new Error("n1 and n2 cannot be null");
 		}
 
-		if (n1.getStartTime() === null || n2.getStartTime() === null) {
-			throw new Error(" n1's and n2's startTime cannot be null");
-		}
+		const n1StartTime = n1.getStartTime();
+		const n2StartTime = n2.getStartTime();
 
-		if (n1.getStartTime()!.getTime() < n2.getStartTime()!.getTime()) {
+		if (n1StartTime.getTime() < n2StartTime.getTime()) {
 			return -1;
 		}
-		else if (n1.getStartTime()!.getTime() > n2.getStartTime()!.getTime()) {
+		else if (n1StartTime.getTime() > n2StartTime.getTime()) {
 			return 1;
 		}
 		else {
@@ -72,34 +71,18 @@ class Notification extends Interval {
 		}
 	}
 
-	// public static Comparator<Notification> getEndTimeAscendingComparator() {
-	// 	return new Comparator<Notification>() {
-	// 		public int compare(Notification n1, Notification n2) {
-	// 			if (n1.getEndTime().isBefore(n2.getEndTime())) {
-	// 				return -1;
-	// 			}
-	// 			else if (n1.getEndTime().isAfter(n2.getEndTime())) {
-	// 				return 1;
-	// 			}
-	// 			else {
-	// 				return 0;
-	// 			}
-	// 		}
-	// 	};
-	// }
-	public static getEndTimeAscendingCompare(n1: Notification, n2: Notification): number {
+	public static getEndTimeAscendingComparator(n1: Notification, n2: Notification): number {
 		if (n1 === null || n2 === null ) {
 			throw new Error("n1 and n2 cannot be null");
 		}
 
-		if (n1.getEndTime() === null || n2.getEndTime() === null) {
-			throw new Error(" n1's and n2's startTime cannot be null");
-		}
+		const n1EndTime = n1.getEndTime();
+		const n2EndTime = n2.getEndTime();
 
-		if (n1.getEndTime()!.getTime() < n2.getEndTime()!.getTime()) {
+		if (n1EndTime.getTime() < n2EndTime.getTime()) {
 			return -1;
 		}
-		else if (n1.getEndTime()!.getTime() > n2.getEndTime()!.getTime()) {
+		else if (n1EndTime.getTime() > n2EndTime.getTime()) {
 			return 1;
 		}
 		else {
@@ -420,4 +403,4 @@ class Rule extends AppsensorEntity {
 	// }
 }
 
-export {Rule};
+export {Rule, Expression, Clause, Notification, MonitorPoint};
