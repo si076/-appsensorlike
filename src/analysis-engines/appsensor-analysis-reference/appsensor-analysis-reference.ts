@@ -1,5 +1,5 @@
 import { AttackAnalysisEngine, EventAnalysisEngine, ResponseAnalysisEngine } from "../../core/analysis/analysis.js";
-import { AppSensorEvent, AppSensorServer, Attack, DetectionPoint, Interval, Response } from "../../core/core.js";
+import { AppSensorEvent, AppSensorServer, Attack, DetectionPoint, Interval, Response, Utils } from "../../core/core.js";
 import { SearchCriteria } from "../../core/criteria/criteria.js";
 
 class ReferenceAttackAnalysisEngine extends AttackAnalysisEngine {
@@ -73,7 +73,7 @@ class ReferenceAttackAnalysisEngine extends AttackAnalysisEngine {
         }
 
 		let responseAction: string = '';
-		let interval: Interval | null = null; 
+		let interval: Interval | null | undefined = null; 
 
 		const possibleResponses: Response[] = this.findPossibleResponses(triggeringDetectionPoint);
 
@@ -101,10 +101,8 @@ class ReferenceAttackAnalysisEngine extends AttackAnalysisEngine {
 		}
 
 		if(responseAction == null) {
-            let label = '';
-            if (triggeringDetectionPoint !== null) {
-                label = triggeringDetectionPoint.getLabel();
-            }
+            let label = Utils.getDetectionPointLabel(triggeringDetectionPoint);
+
 			throw new Error("No appropriate response was configured for this detection point: " + label);
 		}
 
@@ -267,11 +265,7 @@ class ReferenceEventAnalysisEngine extends EventAnalysisEngine {
 				}
 			}
 		} else {
-            let label = '';
-            const detectionPoint = event.getDetectionPoint();
-            if (detectionPoint !== null) {
-                label = detectionPoint.getLabel();
-            }
+            const label = Utils.getDetectionPointLabel(event.getDetectionPoint());
             
 			console.error("Could not find detection point configured for this type: " + label);
 		}
@@ -378,11 +372,8 @@ class ReferenceResponseAnalysisEngine extends ResponseAnalysisEngine {
 	// @Override
 	public analyze(response: Response): void {
 		if (response != null) {
-            let userName = '';
-            const user = response.getUser();
-            if (user) {
-                userName = user.getUsername()
-            }
+            let userName = Utils.getUserName(response.getUser());
+
 			console.info("NO-OP Response for user <" + userName + "> - should be executing response action " + response.getAction());
 		}
 	}

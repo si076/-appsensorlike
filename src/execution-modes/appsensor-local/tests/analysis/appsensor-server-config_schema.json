@@ -1,0 +1,572 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "definitions": {
+        "Clause": {
+            "additionalProperties": false,
+            "properties": {
+                "id": {
+                    "default": "",
+                    "type": "string"
+                },
+                "monitorPoints": {
+                    "default": [],
+                    "description": "The monitor points being checked as variables in an Expression",
+                    "items": {
+                        "$ref": "#/definitions/DetectionPoint"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "monitorPoints"
+            ],
+            "type": "object"
+        },
+        "ClientApplication": {
+            "additionalProperties": false,
+            "properties": {
+                "ipAddress": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/IPAddress"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The {@link IPAddress} of the client application, optionally set in the server configuration"
+                },
+                "name": {
+                    "default": "",
+                    "description": "The name of the client application",
+                    "type": "string"
+                },
+                "roles": {
+                    "default": [],
+                    "description": "The collection of {@link Role}s associated with this client application",
+                    "items": {
+                        "$ref": "#/definitions/Role"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "name",
+                "roles"
+            ],
+            "type": "object"
+        },
+        "CorrelationSet": {
+            "additionalProperties": false,
+            "properties": {
+                "clientApplications": {
+                    "default": [],
+                    "description": "{@link ClientApplication}s that are represented in this correlation set",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "clientApplications"
+            ],
+            "type": "object"
+        },
+        "DetectionPoint": {
+            "additionalProperties": false,
+            "properties": {
+                "category": {
+                    "default": "",
+                    "description": "Category identifier for the detection point. (ex. \"Request\", \"AccessControl\", \"SessionManagement\")",
+                    "type": "string"
+                },
+                "guid": {
+                    "default": "",
+                    "type": "string"
+                },
+                "id": {
+                    "default": "",
+                    "type": "string"
+                },
+                "label": {
+                    "default": "",
+                    "description": "Identifier for the detection point. (ex. \"IE1\", \"RE2\")",
+                    "type": "string"
+                },
+                "responses": {
+                    "default": [],
+                    "description": "Set of {@link Response}s associated with given detection point.",
+                    "items": {
+                        "$ref": "#/definitions/Response"
+                    },
+                    "type": "array"
+                },
+                "threshold": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/Threshold"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "{@link Threshold} for determining whether given detection point (associated {@link Event})\nshould be considered an {@link Attack}."
+                }
+            },
+            "required": [
+                "category",
+                "responses",
+                "threshold"
+            ],
+            "type": "object"
+        },
+        "DetectionSystem": {
+            "additionalProperties": false,
+            "properties": {
+                "detectionSystemId": {
+                    "default": "",
+                    "type": "string"
+                },
+                "id": {
+                    "default": "",
+                    "type": "string"
+                },
+                "ipAddress": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/IPAddress"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                },
+                "locator": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/IPAddress"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                }
+            },
+            "required": [
+                "detectionSystemId",
+                "ipAddress",
+                "locator"
+            ],
+            "type": "object"
+        },
+        "Expression": {
+            "additionalProperties": false,
+            "properties": {
+                "clauses": {
+                    "default": [],
+                    "description": "The Clauses that build up the Expression. *",
+                    "items": {
+                        "$ref": "#/definitions/Clause"
+                    },
+                    "type": "array"
+                },
+                "id": {
+                    "default": "",
+                    "type": "string"
+                },
+                "window": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/Interval"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The window of time a Clause must be triggered within"
+                }
+            },
+            "required": [
+                "clauses",
+                "window"
+            ],
+            "type": "object"
+        },
+        "GeoLocation": {
+            "additionalProperties": false,
+            "properties": {
+                "id": {
+                    "default": "",
+                    "type": "string"
+                },
+                "latitude": {
+                    "default": 0,
+                    "type": "number"
+                },
+                "longitude": {
+                    "default": 0,
+                    "type": "number"
+                }
+            },
+            "required": [
+                "latitude",
+                "longitude"
+            ],
+            "type": "object"
+        },
+        "GeoLocator": {
+            "additionalProperties": false,
+            "type": "object"
+        },
+        "IPAddress": {
+            "additionalProperties": false,
+            "properties": {
+                "address": {
+                    "default": "",
+                    "type": "string"
+                },
+                "geoLocation": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/GeoLocation"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                },
+                "geoLocator": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/GeoLocator"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                },
+                "id": {
+                    "default": "",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "address",
+                "geoLocation",
+                "geoLocator"
+            ],
+            "type": "object"
+        },
+        "Interval": {
+            "additionalProperties": false,
+            "properties": {
+                "duration": {
+                    "default": 0,
+                    "description": "Duration portion of interval, ie. '3' if you wanted \nto represent an interval of '3 minutes'",
+                    "type": "number"
+                },
+                "id": {
+                    "default": "",
+                    "type": "string"
+                },
+                "unit": {
+                    "description": "Unit portion of interval, ie. 'minutes' if you wanted \nto represent an interval of '3 minutes'.\nConstants are provided in the Interval class for the \nunits supported by the reference implementation, ie.\nSECONDS, MINUTES, HOURS, DAYS.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "duration",
+                "unit"
+            ],
+            "type": "object"
+        },
+        "KeyValuePair": {
+            "additionalProperties": false,
+            "properties": {
+                "id": {
+                    "default": "",
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "key",
+                "value"
+            ],
+            "type": "object"
+        },
+        "Response": {
+            "additionalProperties": false,
+            "properties": {
+                "action": {
+                    "default": "",
+                    "description": "String representing response action name",
+                    "type": "string"
+                },
+                "active": {
+                    "default": false,
+                    "type": "boolean"
+                },
+                "detectionSystem": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/DetectionSystem"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Client application name that response applies to."
+                },
+                "id": {
+                    "default": "",
+                    "type": "string"
+                },
+                "interval": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/Interval"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Interval response should last for, if applicable. Ie. block access for 30 minutes"
+                },
+                "metadata": {
+                    "default": [],
+                    "description": "Represent extra metadata, anything client wants to send",
+                    "items": {
+                        "$ref": "#/definitions/KeyValuePair"
+                    },
+                    "type": "array"
+                },
+                "timestamp": {
+                    "description": "When the event occurred",
+                    "format": "date-time",
+                    "type": "string"
+                },
+                "user": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/User"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "User the response is for"
+                }
+            },
+            "required": [
+                "action"
+            ],
+            "type": "object"
+        },
+        "Role": {
+            "enum": [
+                "ADD_ATTACK",
+                "ADD_EVENT",
+                "EXECUTE_REPORT",
+                "GET_RESPONSES"
+            ],
+            "type": "string"
+        },
+        "Rule": {
+            "additionalProperties": false,
+            "properties": {
+                "expressions": {
+                    "default": [],
+                    "description": "The {@link Expression}s that build up a Rule\nThe order of the list corresponds to the temporal order of the expressions.",
+                    "items": {
+                        "$ref": "#/definitions/Expression"
+                    },
+                    "type": "array"
+                },
+                "guid": {
+                    "default": "",
+                    "description": "Unique identifier",
+                    "type": "string"
+                },
+                "id": {
+                    "default": "",
+                    "type": "string"
+                },
+                "name": {
+                    "default": "",
+                    "description": "An optional human-friendly name for the Rule",
+                    "type": "string"
+                },
+                "responses": {
+                    "default": [],
+                    "description": "Set of {@link Response}s associated with given Rule.",
+                    "items": {
+                        "$ref": "#/definitions/Response"
+                    },
+                    "type": "array"
+                },
+                "window": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/Interval"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The window is the time all {@link Expression}s must be triggered within.\nA Rule's window must be greater than or equal to the total of it's Expressions' windows."
+                }
+            },
+            "required": [
+                "expressions",
+                "guid",
+                "name",
+                "responses",
+                "window"
+            ],
+            "type": "object"
+        },
+        "Threshold": {
+            "additionalProperties": false,
+            "properties": {
+                "count": {
+                    "default": 0,
+                    "description": "The count at which this threshold is triggered.",
+                    "type": "number"
+                },
+                "id": {
+                    "default": "",
+                    "type": "string"
+                },
+                "interval": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/Interval"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The time frame within which 'count' number of actions has to be detected in order to\ntrigger this threshold."
+                }
+            },
+            "required": [
+                "count",
+                "interval"
+            ],
+            "type": "object"
+        },
+        "User": {
+            "additionalProperties": false,
+            "properties": {
+                "id": {
+                    "default": "",
+                    "type": "string"
+                },
+                "ipAddress": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/IPAddress"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                },
+                "locator": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/IPAddress"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                },
+                "username": {
+                    "default": "",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "ipAddress",
+                "locator",
+                "username"
+            ],
+            "type": "object"
+        }
+    },
+    "properties": {
+        "clientApplicationIdentificationHeaderName": {
+            "type": "string"
+        },
+        "clientApplications": {
+            "items": {
+                "$ref": "#/definitions/ClientApplication"
+            },
+            "type": "array"
+        },
+        "configurationFile": {
+            "type": "string"
+        },
+        "correlationSets": {
+            "items": {
+                "$ref": "#/definitions/CorrelationSet"
+            },
+            "type": "array"
+        },
+        "detectionPoints": {
+            "items": {
+                "$ref": "#/definitions/DetectionPoint"
+            },
+            "type": "array"
+        },
+        "geolocateIpAddresses": {
+            "type": "boolean"
+        },
+        "geolocationDatabasePath": {
+            "type": "string"
+        },
+        "rules": {
+            "items": {
+                "$ref": "#/definitions/Rule"
+            },
+            "type": "array"
+        },
+        "serverHostName": {
+            "type": "string"
+        },
+        "serverPort": {
+            "type": "number"
+        },
+        "serverSocketTimeout": {
+            "type": "number"
+        }
+    },
+    "required": [
+        "detectionPoints"
+    ],
+    "type": "object"
+}
+

@@ -1,5 +1,5 @@
 import { ResponseAnalysisEngine } from "../../../core/analysis/analysis.js";
-import { Response } from "../../../core/core.js";
+import { Response, Utils } from "../../../core/core.js";
 import { ResponseHandler, RESPONSES } from "../../../core/response/response.js";
 
 class LocalResponseAnalysisEngine extends ResponseAnalysisEngine {
@@ -24,11 +24,7 @@ class LocalResponseAnalysisEngine extends ResponseAnalysisEngine {
 			return;
 		}
 
-        let userName = '';
-        const user = response.getUser();
-        if (user) {
-            userName = user.getUsername();
-        }
+        let userName = Utils.getUserName(response.getUser());
         
 		if (RESPONSES.LOG === response.getAction()) {
 			console.info(`Handling <log> response for user ${userName}`);

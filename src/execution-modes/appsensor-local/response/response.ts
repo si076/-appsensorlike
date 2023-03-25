@@ -1,4 +1,4 @@
-import { Response } from "../../../core/core.js";
+import { Response, Utils } from "../../../core/core.js";
 import { ResponseHandler, RESPONSES, UserManager } from "../../../core/response/response.js";
 
 class LocalResponseHandler implements ResponseHandler {
@@ -17,11 +17,7 @@ class LocalResponseHandler implements ResponseHandler {
 	 */
 	// @Override
 	public handle(response: Response) {
-        let userName = '';
-        const user = response.getUser();
-        if (user) {
-            userName = user.getUsername();
-        }
+        let userName = Utils.getUserName(response.getUser());
 		
 		if (RESPONSES.LOG === response.getAction()) {
 			console.warn("Response executed for user:" + userName + 

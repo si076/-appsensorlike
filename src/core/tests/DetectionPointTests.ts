@@ -1,4 +1,4 @@
-import { DetectionPoint, Interval, Threshold } from "../core.js";
+import { DetectionPoint, Interval, INTERVAL_UNITS, Threshold } from "../core.js";
 
 import * as assert from 'assert';
 
@@ -21,9 +21,9 @@ class DetectionPointTest {
 	// @Test
 	public static testTypeMatchesFullMismatch(): void {
 		const point1: DetectionPoint = new DetectionPoint("a", "a1", 
-				new Threshold(5, new Interval(1, Interval.SECONDS)));
+				new Threshold(5, new Interval(1, INTERVAL_UNITS.SECONDS)));
         const point2: DetectionPoint = new DetectionPoint("b", "b1", 
-				new Threshold(5, new Interval(2, Interval.SECONDS)));
+				new Threshold(5, new Interval(2, INTERVAL_UNITS.SECONDS)));
 		
 		assert.equal(point1.typeAndThresholdMatches(point2), false);
 	}
@@ -31,9 +31,9 @@ class DetectionPointTest {
 	// @Test
 	public static testTypeMatchesCategoryMismatch(): void {
 		const point1: DetectionPoint = new DetectionPoint("a", "a1", 
-				new Threshold(5, new Interval(1, Interval.SECONDS)));
+				new Threshold(5, new Interval(1, INTERVAL_UNITS.SECONDS)));
         const point2: DetectionPoint = new DetectionPoint("a", "b1", 
-				new Threshold(5, new Interval(2, Interval.SECONDS)));
+				new Threshold(5, new Interval(2, INTERVAL_UNITS.SECONDS)));
 		
 		assert.equal(point1.typeAndThresholdMatches(point2), false);
 	}
@@ -41,9 +41,9 @@ class DetectionPointTest {
 	// @Test
 	public static testTypeMatchesLabelMismatch(): void {
 		const point1: DetectionPoint = new DetectionPoint("a", "a1", 
-				new Threshold(5, new Interval(1, Interval.SECONDS)));
+				new Threshold(5, new Interval(1, INTERVAL_UNITS.SECONDS)));
         const point2: DetectionPoint = new DetectionPoint("b", "a1", 
-				new Threshold(5, new Interval(2, Interval.SECONDS)));
+				new Threshold(5, new Interval(2, INTERVAL_UNITS.SECONDS)));
 		
 		assert.equal(point1.typeAndThresholdMatches(point2), false);
 	}
@@ -51,9 +51,9 @@ class DetectionPointTest {
 	// @Test
 	public static testTypeMatchesThresholdMismatch(): void {
 		const point1: DetectionPoint = new DetectionPoint("a", "a1", 
-				new Threshold(5, new Interval(1, Interval.SECONDS)));
+				new Threshold(5, new Interval(1, INTERVAL_UNITS.SECONDS)));
         const point2: DetectionPoint = new DetectionPoint("a", "a1", 
-				new Threshold(5, new Interval(2, Interval.SECONDS)));
+				new Threshold(5, new Interval(2, INTERVAL_UNITS.SECONDS)));
 		
 		assert.equal(point1.typeAndThresholdMatches(point2), false);
 	}
@@ -61,14 +61,15 @@ class DetectionPointTest {
 	// @Test
 	public static testTypeMatchesThresholdMatch(): void {
 		const point1: DetectionPoint = new DetectionPoint("a", "a1", 
-				new Threshold(5, new Interval(1, Interval.SECONDS)));
+				new Threshold(5, new Interval(1, INTERVAL_UNITS.SECONDS)));
         const point2: DetectionPoint = new DetectionPoint("a", "a1", 
-				new Threshold(5, new Interval(1, Interval.SECONDS)));
+				new Threshold(5, new Interval(1, INTERVAL_UNITS.SECONDS)));
 		
 		assert.equal(point1.typeAndThresholdMatches(point2), true);
 	}
 
     public static runTests() {
+		console.log();
         console.log('-> Start of DetectionPointTest');
 
         DetectionPointTest.testTypeMatchesEmptyDetectionPoints();

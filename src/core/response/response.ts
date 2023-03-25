@@ -34,14 +34,14 @@ interface UserManager {
 	 * 
 	 * @param user User to logout
 	 */
-	logout(user: User | null): void;
+	logout(user: User | null | undefined): void;
 	
 	/**
 	 * Disable (lock) the {@link org.owasp.appsensor.core.User}
 	 * 
 	 * @param user User to disable (lock)
 	 */
-	disable(user: User | null): void;
+	disable(user: User | null | undefined): void;
 	
 }
 

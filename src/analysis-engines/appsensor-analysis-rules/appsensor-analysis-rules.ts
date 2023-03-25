@@ -1,5 +1,5 @@
 import { AttackAnalysisEngine, EventAnalysisEngine, ResponseAnalysisEngine } from "../../core/analysis/analysis.js";
-import { AppSensorEvent, AppSensorServer, Attack, DetectionPoint, Interval, Response, Threshold, User } from "../../core/core.js";
+import { AppSensorEvent, AppSensorServer, Attack, DetectionPoint, Interval, INTERVAL_UNITS, Response, Threshold, User, Utils } from "../../core/core.js";
 import { SearchCriteria } from "../../core/criteria/criteria.js";
 import { Clause, Expression, Notification, Rule } from "../../core/rule/rule.js";
 
@@ -31,11 +31,8 @@ class AggregateAttackAnalysisEngine extends AttackAnalysisEngine {
 			const response: Response = this.findAppropriateResponse(attack);
 
 			if (response != null) {
-                let userName = '';
-                const user = attack.getUser();
-                if (user !== null) {
-                    userName = user.getUsername();
-                }
+                let userName = Utils.getUserName(attack.getUser());
+
 				console.info("Response set for user <" + userName + "> - storing response action " + response.getAction());
 				
                 const responseStore = this.appSensorServer.getResponseStore();
@@ -73,7 +70,7 @@ class AggregateAttackAnalysisEngine extends AttackAnalysisEngine {
         }
 
 		let responseAction: string | null = null;
-		let interval: Interval | null = null;
+		let interval: Interval | null  | undefined= null;
 
 		const possibleResponses: Response[] = this.findPossibleResponses(triggeringRule);
 
@@ -417,7 +414,7 @@ class AggregateEventAnalysisEngine extends EventAnalysisEngine {
 		const endTime = tailEvent.getTimestamp();
 		const startTime = queue[0].getTimestamp();
 
-		return new Interval(endTime.getTime() - startTime.getTime(), Interval.MILLISECONDS);
+		return new Interval(endTime.getTime() - startTime.getTime(), INTERVAL_UNITS.MILLISECONDS);
 	}
 
 	/**
@@ -427,18 +424,14 @@ class AggregateEventAnalysisEngine extends EventAnalysisEngine {
 	 * @param rule the {@link Rule} being evaluated
 	 */
 	public generateAttack(triggerEvent: AppSensorEvent, rule: Rule): void {
-		let userName = '';
-		const user = triggerEvent.getUser();
-		if (user) {
-			userName = user.getUsername()
-		}
+		let userName = Utils.getUserName(triggerEvent.getUser());
+
 		console.info("Attack generated on rule: " + rule.getGuid() + ", by user: " + userName);
 
 		const attack: Attack = new Attack().
 			setUser(new User(userName)).
 			setRule(rule).
 			setTimestamp(triggerEvent.getTimestamp()).
-			setDetectionPoint(triggerEvent.getDetectionPoint()).
 			setDetectionSystem(triggerEvent.getDetectionSystem()).
 			setResource(triggerEvent.getResource());
 
@@ -501,11 +494,7 @@ class AggregateEventAnalysisEngine extends EventAnalysisEngine {
 	protected findMostRecentAttackTime(triggerEvent: AppSensorEvent, rule: Rule): Date {
 		let newest: Date = new Date(0);
 
-		let userName = '';
-		const user = triggerEvent.getUser();
-		if (user) {
-			userName = user.getUsername()
-		}
+		let userName = Utils.getUserName(triggerEvent.getUser());
 
 		let criteria: SearchCriteria = new SearchCriteria().
 				setUser(new User(userName)).
@@ -547,11 +536,8 @@ class AggregateResponseAnalysisEngine extends ResponseAnalysisEngine {
 	// @Override
 	public analyze(response: Response): void {
 		if (response != null) {
-            let userName = '';
-            const user = response.getUser();
-            if (user) {
-                userName = user.getUsername()
-            }
+            let userName = Utils.getUserName(response.getUser());
+
 			console.info("NO-OP Response for user <" + userName + "> - should be executing response action " + response.getAction());
 		}
 	}

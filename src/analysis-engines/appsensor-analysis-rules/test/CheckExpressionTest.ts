@@ -1,4 +1,4 @@
-import { Category, DetectionPoint, Interval } from "../../../core/core.js";
+import { Category, DetectionPoint, Interval, INTERVAL_UNITS } from "../../../core/core.js";
 import { Clause, Expression, MonitorPoint, Notification } from "../../../core/rule/rule.js";
 import { AggregateEventAnalysisEngine } from "../appsensor-analysis-rules.js";
 
@@ -38,7 +38,7 @@ class CheckExpressionTest {
 		const expression: Expression = new Expression(new Interval(), clauses);
 
 		const sensors: Notification[] = [];
-		sensors.push(new Notification(2, Interval.MINUTES, new Date(10), CheckExpressionTest.point1));
+		sensors.push(new Notification(2, INTERVAL_UNITS.MINUTES, new Date(10), CheckExpressionTest.point1));
 
 		assert.ok(CheckExpressionTest.engine.checkExpression(expression, sensors));
 
@@ -56,8 +56,8 @@ class CheckExpressionTest {
 		const expression: Expression = new Expression(new Interval(), clauses);
 
 		const sensors: Notification[] = [];
-		sensors.push(new Notification(2, Interval.MINUTES, new Date(10), CheckExpressionTest.point1));
-		sensors.push(new Notification(2, Interval.MINUTES, new Date(10), CheckExpressionTest.point2));
+		sensors.push(new Notification(2, INTERVAL_UNITS.MINUTES, new Date(10), CheckExpressionTest.point1));
+		sensors.push(new Notification(2, INTERVAL_UNITS.MINUTES, new Date(10), CheckExpressionTest.point2));
 
 		assert.ok(CheckExpressionTest.engine.checkExpression(expression, sensors));
 
@@ -75,7 +75,7 @@ class CheckExpressionTest {
 		const expression: Expression = new Expression(new Interval(), clauses);
 
 		const sensors: Notification[] = [];
-		sensors.push(new Notification(2, Interval.MINUTES, new Date(10), CheckExpressionTest.point2));
+		sensors.push(new Notification(2, INTERVAL_UNITS.MINUTES, new Date(10), CheckExpressionTest.point2));
 
 		assert.ok(CheckExpressionTest.engine.checkExpression(expression, sensors));
 
@@ -99,7 +99,8 @@ class CheckExpressionTest {
 	}
 
     public static runTests() {
-        console.log('Run CheckExpressionTest');
+		console.log();
+        console.log('----- Run CheckExpressionTest -----');
         CheckExpressionTest.testOneValidClause();
         CheckExpressionTest.testTwoValidClause();
         CheckExpressionTest.testOneValidOneInvalidClause();

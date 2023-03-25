@@ -1,4 +1,4 @@
-import { AppSensorEvent, Attack, Response } from "../../core/core.js";
+import { AppSensorEvent, Attack, Response, Utils } from "../../core/core.js";
 import { SearchCriteria } from "../../core/criteria/criteria.js";
 import { AttackStore, EventStore, ResponseStore } from "../../core/storage/storage.js";
 
@@ -53,17 +53,9 @@ class InMemoryEventStore extends EventStore {
 	 */
 	// @Override
 	public override addEvent(event: AppSensorEvent): void {
-        let detPointLabel = ''
-        const eventDetPoint = event.getDetectionPoint();
-        if (eventDetPoint) {
-            detPointLabel = eventDetPoint.getLabel()
-        }
+        const detPointLabel = Utils.getDetectionPointLabel(event.getDetectionPoint());
 
-        let userName = '';
-        const user = event.getUser();
-        if (user) {
-            userName = user.getUsername();
-        }
+        const userName = Utils.getUserName(event.getUser());
 
 		console.warn("Security event " + detPointLabel + " triggered by user: " + userName);
 		
@@ -98,11 +90,7 @@ class InMemoryResponseStore extends ResponseStore {
 	 */
 	// @Override
 	public override addResponse(response: Response): void {
-        let userName = '';
-        const user = response.getUser();
-        if (user) {
-            userName = user.getUsername();
-        }
+        let userName = Utils.getUserName(response.getUser());
 
 		console.warn("Security response " + response.getAction() + " triggered for user: " + userName);
 
@@ -111,6 +99,10 @@ class InMemoryResponseStore extends ResponseStore {
 		super.notifyListeners(response);
 	}
 	
+	public clearAll(): void {
+		InMemoryResponseStore.responses = [];
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */

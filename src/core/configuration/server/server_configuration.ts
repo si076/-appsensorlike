@@ -1,35 +1,62 @@
 import { AppSensorEvent, ClientApplication, DetectionPoint, DetectionSystem, IEquals, Utils } from "../../core.js";
 import { CorrelationSet } from "../../correlation/correlation.js";
 import { Rule } from "../../rule/rule.js";
+// import { IServerConfiguration } from "./server_config_defs.js";
 
-abstract class ServerConfiguration {
+interface IServerConfiguration {
 
-	private configurationFile: string = '';
+	configurationFile?: string;
 
-	private rules: Rule[] = [];
+	rules?: Rule[];
 
-	private detectionPoints: DetectionPoint[] = [];
+	detectionPoints: DetectionPoint[];
 
-	private correlationSets: CorrelationSet[] = [];
+	correlationSets?: CorrelationSet[];
 
-	private clientApplicationIdentificationHeaderName: string = '';
+	clientApplicationIdentificationHeaderName?: string;
 
-	private clientApplications: ClientApplication[] = [];
+	clientApplications?: ClientApplication[];
 
-	private serverHostName: string = '';
+	serverHostName?: string;
 
-	private serverPort: number = 0;
+	serverPort?: number;
 
-	private serverSocketTimeout: number = 0;
+	serverSocketTimeout?: number;
 
-	private geolocateIpAddresses: boolean = false;
+	geolocateIpAddresses?: boolean;
 
-	private geolocationDatabasePath: string = '';
+	geolocationDatabasePath?: string;
+
+}
+
+abstract class ServerConfiguration implements IServerConfiguration {
+
+	configurationFile: string = '';
+
+	rules: Rule[] = [];
+
+	detectionPoints: DetectionPoint[] = [];
+
+	correlationSets: CorrelationSet[] = [];
+
+	clientApplicationIdentificationHeaderName: string = '';
+
+	clientApplications: ClientApplication[] = [];
+
+	serverHostName: string = '';
+
+	serverPort: number = 0;
+
+	serverSocketTimeout: number = 0;
+
+	geolocateIpAddresses: boolean = false;
+
+	geolocationDatabasePath: string = '';
 
 	//Change for adding new custom client specific detection points
-	private customDetectionPoints: Map<string, DetectionPoint[]> = new Map<string, DetectionPoint[]>();
+	customDetectionPoints: Map<string, DetectionPoint[]> = new Map<string, DetectionPoint[]>();
 
-	private static clientApplicationCache: Map<string, ClientApplication> = new Map<string, ClientApplication>();
+	static clientApplicationCache: Map<string, ClientApplication> = new Map<string, ClientApplication>();
 
 
 	public getCustomDetectionPoints(): Map<string, DetectionPoint[]> {
@@ -185,7 +212,8 @@ abstract class ServerConfiguration {
 
 		if (search !== null) {
 			const customDetPoints: Map<string, DetectionPoint[]> = this.getCustomDetectionPoints();
-			if(clientApplicationName !== null && customDetPoints.size > 0) {
+			if(clientApplicationName !== null && 
+			   customDetPoints && customDetPoints.size > 0) {
 	
 				for (const customDetectionPoint of customDetPoints) {
 	
@@ -315,7 +343,7 @@ interface ServerConfigurationReader {
 	 * @return populated configuration object
 	 * @throws ConfigurationException
 	 */
-	read(): ServerConfiguration;
+	read(): ServerConfiguration | null;
 	
 	/**
 	 * 
@@ -324,7 +352,7 @@ interface ServerConfigurationReader {
 	 * @return populated configuration object
 	 * @throws ConfigurationException
 	 */
-	read(configurationLocation: string, validatorLocation: string): ServerConfiguration;
+	read(configurationLocation: string, validatorLocation: string | null, reload: boolean): ServerConfiguration | null;
 }
 
-export {ServerConfiguration, ServerConfigurationReader};
+export {IServerConfiguration, ServerConfiguration, ServerConfigurationReader};

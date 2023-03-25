@@ -1,19 +1,15 @@
-import { AggregateAttackAnalysisEngine, AggregateEventAnalysisEngine, AggregateResponseAnalysisEngine } from "../../../../analysis-engines/appsensor-analysis-rules/appsensor-analysis-rules.js";
-import { EventAnalysisEngine } from "../../../../core/analysis/analysis.js";
+import { AggregateAttackAnalysisEngine, AggregateEventAnalysisEngine } from "../../../../analysis-engines/appsensor-analysis-rules/appsensor-analysis-rules.js";
+import { AttackAnalysisEngine, EventAnalysisEngine } from "../../../../core/analysis/analysis.js";
 import { ServerConfiguration } from "../../../../core/configuration/server/server_configuration.js";
-import { AppSensorClient, AppSensorEvent, AppSensorServer, Category, DetectionPoint, DetectionSystem, Interval, Response, Threshold, User } from "../../../../core/core.js";
+import { AppSensorEvent, AppSensorServer, Category, DetectionPoint, DetectionSystem, Interval, INTERVAL_UNITS, Response, Threshold, User } from "../../../../core/core.js";
 import { SearchCriteria } from "../../../../core/criteria/criteria.js";
-import { NoopUserManager, UserManager } from "../../../../core/response/response.js";
 import { Clause, Expression, MonitorPoint, Rule } from "../../../../core/rule/rule.js";
-import { InMemoryAttackStore, InMemoryEventStore, InMemoryResponseStore } from "../../../../storage-providers/appsensor-storage-in-memory/appsensor-storage-in-memory.js";
-import { LocalEventManager } from "../../event/event.js";
-import { LocalRequestHandler } from "../../handler/handler.js";
-import { LocalResponseHandler } from "../../response/response.js";
 
 import assert from "assert";
-import { ServerConfigurationReaderImpl } from "../config/config.js";
+import { BaseTest } from "./BaseTest.js";
+import { ReferenceAttackAnalysisEngine, ReferenceEventAnalysisEngine } from "../../../../analysis-engines/appsensor-analysis-reference/appsensor-analysis-reference.js";
 
-class AggregateEventAnalysisEngineIntegrationTest {
+class AggregateEventAnalysisEngineIntegrationTest extends BaseTest {
 
 	private static bob = new User("bob");
 
@@ -39,14 +35,8 @@ class AggregateEventAnalysisEngineIntegrationTest {
 
 	protected sleepAmount: number = 10;
 
-	// @Inject
-	private appSensorServer: AppSensorServer | null = null;
-
-	// @Inject
-	private appSensorClient: AppSensorClient | null = null;
-
 	private static generateResponses(): Response[] {
-		const minutes5 = new Interval(5, Interval.MINUTES);
+		const minutes5 = new Interval(5, INTERVAL_UNITS.MINUTES);
 
 		const log = new Response();
 		log.setAction("log");
@@ -78,10 +68,10 @@ class AggregateEventAnalysisEngineIntegrationTest {
 	private static generateRules(): Rule[] {
 		const configuredRules: Rule[] = [];
 		// intervals
-		const minutes5 = new Interval(5, Interval.MINUTES);
-		const minutes6 = new Interval(6, Interval.MINUTES);
-		const minutes10 = new Interval(10, Interval.MINUTES);
-		const minutes16 = new Interval(16, Interval.MINUTES);
+		const minutes5 = new Interval(5, INTERVAL_UNITS.MINUTES);
+		const minutes6 = new Interval(6, INTERVAL_UNITS.MINUTES);
+		const minutes10 = new Interval(10, INTERVAL_UNITS.MINUTES);
+		const minutes16 = new Interval(16, INTERVAL_UNITS.MINUTES);
 
 		// detection points
 		const point1 = new MonitorPoint(new DetectionPoint(Category.INPUT_VALIDATION, "IE1", new Threshold(3, minutes5)));
@@ -212,11 +202,11 @@ class AggregateEventAnalysisEngineIntegrationTest {
 
 		AggregateEventAnalysisEngineIntegrationTest.detectionPoint2.setCategory(Category.INPUT_VALIDATION);
 		AggregateEventAnalysisEngineIntegrationTest.detectionPoint2.setLabel("IE2");
-		AggregateEventAnalysisEngineIntegrationTest.detectionPoint2.setThreshold(new Threshold(12, new Interval(5, Interval.MINUTES)));
+		AggregateEventAnalysisEngineIntegrationTest.detectionPoint2.setThreshold(new Threshold(12, new Interval(5, INTERVAL_UNITS.MINUTES)));
 
 		AggregateEventAnalysisEngineIntegrationTest.detectionPoint3.setCategory(Category.INPUT_VALIDATION);
 		AggregateEventAnalysisEngineIntegrationTest.detectionPoint3.setLabel("IE3");
-		AggregateEventAnalysisEngineIntegrationTest.detectionPoint3.setThreshold(new Threshold(13, new Interval(6, Interval.MINUTES)));
+		AggregateEventAnalysisEngineIntegrationTest.detectionPoint3.setThreshold(new Threshold(13, new Interval(6, INTERVAL_UNITS.MINUTES)));
 
 		AggregateEventAnalysisEngineIntegrationTest.detectionPoint4.setCategory(Category.INPUT_VALIDATION);
 		AggregateEventAnalysisEngineIntegrationTest.detectionPoint4.setLabel("IE4");
@@ -287,8 +277,8 @@ class AggregateEventAnalysisEngineIntegrationTest {
 
 		const responses: Response[] = AggregateEventAnalysisEngineIntegrationTest.generateResponses();
 
-		const minutes5 = new Interval(5, Interval.MINUTES);
-		const minutes6 = new Interval(6, Interval.MINUTES);
+		const minutes5 = new Interval(5, INTERVAL_UNITS.MINUTES);
+		const minutes6 = new Interval(6, INTERVAL_UNITS.MINUTES);
 
 		const events3minutes5 = new Threshold(3, minutes5);
 		const events12minutes5 = new Threshold(12, minutes5);
@@ -309,84 +299,30 @@ class AggregateEventAnalysisEngineIntegrationTest {
 		const rules: Rule[] = [];
 		rules.push(rule);
 
-		const updatedConfiguration: ServerConfiguration | null = this.appSensorServer!.getConfiguration();
-		if (updatedConfiguration) {
-			updatedConfiguration.setRules(rules);
-		}
-		
-		this.appSensorServer!.setConfiguration(updatedConfiguration);
+		this.appSensorServer!.getConfiguration()!.setRules(rules);
 	}
 
-	private clearStores(): void {
-        if (this.appSensorServer) {
-            (this.appSensorServer.getAttackStore() as InMemoryAttackStore).clearAll();
-            (this.appSensorServer.getEventStore() as InMemoryEventStore).clearAll();
-        }
-	}
+	public override initializeTest(): void {
+		if (AggregateEventAnalysisEngineIntegrationTest.myEngine === null) {
+			super.initializeTest();
 
-
-	// @Before
-	public initializeTest(): void {
-		if (AggregateEventAnalysisEngineIntegrationTest.myEngine == null) {
-			this.initialSetup();
-		}
-		this.clearStores();
-
-		// clear rules
-		// this.setRule(this.appSensorServer, null);
-	}
-
-	public initialSetup(): void {
-		//instantiate server
-        this.appSensorServer = new AppSensorServer();
-
-		this.appSensorServer.setConfiguration(new ServerConfigurationReaderImpl().read());
-
-		const eventStore = new InMemoryEventStore();
-        this.appSensorServer.setEventStore(eventStore);
-
-		const attackStore = new InMemoryAttackStore();
-        this.appSensorServer.setAttackStore(attackStore);
-
-		const responseStore = new InMemoryResponseStore();
-        this.appSensorServer.setResponseStore(responseStore);
-
-        // const attEngine = new AggregateAttackAnalysisEngine();
-        // attEngine.setAppSensorServer(this.appSensorServer);
-        // this.appSensorServer.setAttackAnalysisEngines([attEngine]);
-
-        const eventEngine = new AggregateEventAnalysisEngine();
-        eventEngine.setAppSensorServer(this.appSensorServer);
-        this.appSensorServer.setEventAnalysisEngines([eventEngine]);
-
-		eventStore.registerListener(eventEngine);
-        // const respEngine = new AggregateResponseAnalysisEngine();
-        // this.appSensorServer.setResponseAnalysisEngines([respEngine]);
-
-		const updatedConfiguration: ServerConfiguration | null = this.appSensorServer.getConfiguration();
-        if (updatedConfiguration) {
-            updatedConfiguration.setDetectionPoints(AggregateEventAnalysisEngineIntegrationTest.loadMockedDetectionPoints());
-        }
-		
-		this.appSensorServer.setConfiguration(updatedConfiguration);
-
-		const engines: EventAnalysisEngine[] = this.appSensorServer.getEventAnalysisEngines();
-
-		for (const engine of engines) {
-			if (engine instanceof AggregateEventAnalysisEngine){
-				AggregateEventAnalysisEngineIntegrationTest.myEngine = engine as AggregateEventAnalysisEngine;
+			this.appSensorServer.getConfiguration()!.
+				setDetectionPoints(AggregateEventAnalysisEngineIntegrationTest.loadMockedDetectionPoints());
+	
+			const engines: EventAnalysisEngine[] = this.appSensorServer.getEventAnalysisEngines();
+	
+			for (const engine of engines) {
+				if (engine instanceof AggregateEventAnalysisEngine){
+					AggregateEventAnalysisEngineIntegrationTest.myEngine = engine as AggregateEventAnalysisEngine;
+				}
 			}
 		}
 
-        const requestHandler: LocalRequestHandler = new LocalRequestHandler(this.appSensorServer);
-        const eventManager: LocalEventManager = new LocalEventManager(requestHandler);
-        const userManager: UserManager = new NoopUserManager();
-        const responseHandler: LocalResponseHandler = new LocalResponseHandler(userManager);
+		this.clearStores();
 
-        this.appSensorClient = new AppSensorClient();
-        this.appSensorClient.setEventManager(eventManager);
-        this.appSensorClient.setResponseHandler(responseHandler);
-        this.appSensorClient.setUserManager(userManager);
+		// clear rules
+		const emptyRules: Rule[] = [];
+		this.appSensorServer.getConfiguration()!.setRules(emptyRules);
 	}
 
 	// this method doesn't actually wait, it just adds events with a predetermined time
@@ -418,11 +354,7 @@ class AggregateEventAnalysisEngineIntegrationTest {
             this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(AggregateEventAnalysisEngineIntegrationTest.bob, detectionPoint, new DetectionSystem("localhostme")));
             // Thread.sleep(time/eventCount);
             // dateTime = new Date(dateTime.getTime() + millis);
-			await new Promise((resolve, reject) => {
-				setTimeout(() => {
-					resolve(null);
-				}, millis);
-			});
+			await super.sleep(millis);
         }
 	}
 
@@ -437,7 +369,7 @@ class AggregateEventAnalysisEngineIntegrationTest {
 
 	// @Test
 	public async test1_DP1() {
-		console.log('-> test1_DP1');
+		console.log('--> test1_DP1');
 		//Add rule
 		this.setRule(this.appSensorServer, AggregateEventAnalysisEngineIntegrationTest.rules[0]);
 
@@ -468,12 +400,12 @@ class AggregateEventAnalysisEngineIntegrationTest {
 		this.assertEventsAndAttacks(6, 2, AggregateEventAnalysisEngineIntegrationTest.criteria.get("dp1")!);
 		assert.equal(2, this.appSensorServer!.getAttackStore()!.findAttacks(AggregateEventAnalysisEngineIntegrationTest.criteria.get("rule1")!).length);
 
-		console.log('<- test1_DP1');
+		console.log('<-- test1_DP1');
 	}
 
 	// @Test
 	public async test2_DP1andDP2() {
-		console.log('-> test2_DP1andDP2');
+		console.log('--> test2_DP1andDP2');
 		//Add rule
 		this.setRule(this.appSensorServer, AggregateEventAnalysisEngineIntegrationTest.rules[1]);
 
@@ -527,12 +459,12 @@ class AggregateEventAnalysisEngineIntegrationTest {
 		this.assertEventsAndAttacks(36, 3, AggregateEventAnalysisEngineIntegrationTest.criteria.get("dp2")!);
 		this.assertEventsAndAttacks(0, 3, AggregateEventAnalysisEngineIntegrationTest.criteria.get("rule2")!);
 
-		console.log('<- test2_DP1andDP2');
+		console.log('<-- test2_DP1andDP2');
 	}
 
 	// @Test
 	public async test3_DP1orDP2() {
-		console.log('-> test3_DP1orDP2');
+		console.log('--> test3_DP1orDP2');
 		//Add rule
 		this.setRule(this.appSensorServer, AggregateEventAnalysisEngineIntegrationTest.rules[2]);;
 
@@ -572,12 +504,12 @@ class AggregateEventAnalysisEngineIntegrationTest {
 		this.assertEventsAndAttacks(7, 2, AggregateEventAnalysisEngineIntegrationTest.criteria.get("dp1")!);
 		this.assertEventsAndAttacks(0, 4, AggregateEventAnalysisEngineIntegrationTest.criteria.get("rule3")!);
 
-		console.log('<- test3_DP1orDP2');
+		console.log('<-- test3_DP1orDP2');
 	}
 
 	// @Test
 	public async test4_DP1orDP2andDP3() {
-		console.log('-> test4_DP1orDP2andDP3');
+		console.log('--> test4_DP1orDP2andDP3');
 		//Add rule
 		this.setRule(this.appSensorServer, AggregateEventAnalysisEngineIntegrationTest.rules[3]);
 
@@ -628,12 +560,12 @@ class AggregateEventAnalysisEngineIntegrationTest {
 		this.assertEventsAndAttacks(39, 3, AggregateEventAnalysisEngineIntegrationTest.criteria.get("dp3")!);
 		this.assertEventsAndAttacks(0, 6, AggregateEventAnalysisEngineIntegrationTest.criteria.get("rule4")!);
 
-		console.log('<- test4_DP1orDP2andDP3');
+		console.log('<-- test4_DP1orDP2andDP3');
 	}
 
 	// @Test
 	public async test5_DP1thenDP2() {
-		console.log('-> test5_DP1thenDP2');
+		console.log('--> test5_DP1thenDP2');
 		//Add rule
 		this.setRule(this.appSensorServer, AggregateEventAnalysisEngineIntegrationTest.rules[4]);
 
@@ -669,12 +601,12 @@ class AggregateEventAnalysisEngineIntegrationTest {
 		this.assertEventsAndAttacks(36, 3, AggregateEventAnalysisEngineIntegrationTest.criteria.get("dp2")!);
 		this.assertEventsAndAttacks(0, 2, AggregateEventAnalysisEngineIntegrationTest.criteria.get("rule5")!);
 
-		console.log('<- test5_DP1thenDP2');
+		console.log('<-- test5_DP1thenDP2');
 	}
 
 	// @Test
 	public async test6_DP1thenDP2thenDP1orDP2() {
-		console.log('-> test6_DP1thenDP2thenDP1orDP2');
+		console.log('--> test6_DP1thenDP2thenDP1orDP2');
 		//Add rule
 		this.setRule(this.appSensorServer, AggregateEventAnalysisEngineIntegrationTest.rules[5]);
 
@@ -743,13 +675,13 @@ class AggregateEventAnalysisEngineIntegrationTest {
 		this.assertEventsAndAttacks(60, 5, AggregateEventAnalysisEngineIntegrationTest.criteria.get("dp2")!);
 		this.assertEventsAndAttacks(0, 2, AggregateEventAnalysisEngineIntegrationTest.criteria.get("rule6")!);
 
-		console.log('<- test6_DP1thenDP2thenDP1orDP2');
+		console.log('<-- test6_DP1thenDP2thenDP1orDP2');
 	}
 
 	// test the scheduling bug
 	// @Test
 	public test7_DP1andDP4orDP1andDP3thenDP1(): void {
-		console.log('-> test7_DP1andDP4orDP1andDP3thenDP1');
+		console.log('--> test7_DP1andDP4orDP1andDP3thenDP1');
 
 		let time = new Date(100 * 60 * 60 * 1000);
 		const ruleCriteria = new SearchCriteria().
@@ -800,13 +732,13 @@ class AggregateEventAnalysisEngineIntegrationTest {
 
 		assert.equal(2, this.appSensorServer!.getAttackStore()!.findAttacks(ruleCriteria).length);
 
-		console.log('<- test7_DP1andDP4orDP1andDP3thenDP1');
+		console.log('<-- test7_DP1andDP4orDP1andDP3thenDP1');
 	}
 
 	// test the earliest attack bug
 		// @Test
     public test8_DP1(): void {
-		console.log('-> test8_DP1');
+		console.log('--> test8_DP1');
 
         let time = new Date(100 * 60 * 60 * 1000);
         const ruleCriteria = new SearchCriteria().
@@ -838,11 +770,12 @@ class AggregateEventAnalysisEngineIntegrationTest {
 
         assert.equal(2, this.appSensorServer!.getAttackStore()!.findAttacks(ruleCriteria).length);
 
-		console.log('<- test8_DP1');
+		console.log('<-- test8_DP1');
     }
 
 	public static async runTests() {
-		console.log('Run AggregateEventAnalysisEngineIntegrationTest');
+		console.log();
+		console.log('----- Run AggregateEventAnalysisEngineIntegrationTest -----');
 		const instance = new AggregateEventAnalysisEngineIntegrationTest();
 
 		instance.initializeTest();

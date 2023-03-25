@@ -1,148 +1,110 @@
-import { ServerConfiguration } from "../../../../core/configuration/server/server_configuration.js";
-import { AppSensorClient, AppSensorEvent, AppSensorServer, Category, DetectionPoint, 
-	     DetectionSystem, Interval, IPAddress, KeyValuePair, Resource, Response, 
+import { AppSensorEvent, Category, DetectionPoint, 
+	     DetectionSystem, Interval, INTERVAL_UNITS, IPAddress, KeyValuePair, Resource, Response, 
 		 Threshold, User } from "../../../../core/core.js";
 import { SearchCriteria } from "../../../../core/criteria/criteria.js";
-import { ServerConfigurationReaderImpl } from "../config/config.js";
-import { InMemoryAttackStore, InMemoryEventStore, InMemoryResponseStore } from "../../../../storage-providers/appsensor-storage-in-memory/appsensor-storage-in-memory.js";
-import { LocalRequestHandler } from "../../handler/handler.js";
-import { LocalEventManager } from "../../event/event.js";
-import { NoopUserManager, UserManager } from "../../../../core/response/response.js";
-import { LocalResponseHandler } from "../../response/response.js";
-import { ReferenceEventAnalysisEngine } from "../../../../analysis-engines/appsensor-analysis-reference/appsensor-analysis-reference.js";
+import { ReferenceAttackAnalysisEngine, ReferenceEventAnalysisEngine } from "../../../../analysis-engines/appsensor-analysis-reference/appsensor-analysis-reference.js";
 
 import assert from "assert";
+import { BaseTest } from "./BaseTest.js";
+import { AttackAnalysisEngine, EventAnalysisEngine } from "../../../../core/analysis/analysis.js";
 
-class ReferenceStatisticalEventAnalysisEngineTest {
+class ReferenceStatisticalEventAnalysisEngineTest extends BaseTest {
 
 	private sleepAmount: number = 1;
 
-	private appSensorServer: AppSensorServer;
-
-	private appSensorClient: AppSensorClient;
-
     private ipAddressLocator: IPAddress = new IPAddress();
 
-	constructor() {
-        this.appSensorServer = new AppSensorServer();
+	protected override initializeTest(): void {
 
-		this.appSensorServer.setConfiguration(new ServerConfigurationReaderImpl().read());
+		super.initializeTest();
 
-		const eventStore = new InMemoryEventStore();
-        this.appSensorServer.setEventStore(eventStore);
-
-		const attackStore = new InMemoryAttackStore();
-        this.appSensorServer.setAttackStore(attackStore);
-
-		const responseStore = new InMemoryResponseStore();
-        this.appSensorServer.setResponseStore(responseStore);
-
-        const eventEngine = new ReferenceEventAnalysisEngine();
-        eventEngine.setAppSensorServer(this.appSensorServer);
-
-        this.appSensorServer.setEventAnalysisEngines([eventEngine]);
-
-		eventStore.registerListener(eventEngine);
-
-
-		const updatedConfiguration: ServerConfiguration | null = this.appSensorServer.getConfiguration();
-		if (updatedConfiguration) {
-			updatedConfiguration.setDetectionPoints(this.loadMockedDetectionPoints());
-		}
-		this.appSensorServer.setConfiguration(updatedConfiguration);
-
-        const requestHandler: LocalRequestHandler = new LocalRequestHandler(this.appSensorServer);
-        const eventManager: LocalEventManager = new LocalEventManager(requestHandler);
-        const userManager: UserManager = new NoopUserManager();
-        const responseHandler: LocalResponseHandler = new LocalResponseHandler(userManager);
-
-        this.appSensorClient = new AppSensorClient();
-        this.appSensorClient.setEventManager(eventManager);
-        this.appSensorClient.setResponseHandler(responseHandler);
-        this.appSensorClient.setUserManager(userManager);
+		this.appSensorServer.getConfiguration()!.setDetectionPoints(this.loadMockedDetectionPoints());
 	}
 
     // @Ignore
 	// @Test
 	private async testAttackCreation() {
+		console.log('--> testAttackCreation');
 
 		const criteria = new SearchCriteria().
 				setUser(this.generateUserBob()).
 				setDetectionPoint(this.generateDetectionPoint1()).
 				setDetectionSystemIds([this.generateDetectionSystemLocalhostMe().getDetectionSystemId()]);
 
-		await this.sleep(this.sleepAmount);
+		await super.sleep(this.sleepAmount);
 
 		assert.equal(0, this.appSensorServer.getEventStore()!.findEvents(criteria).length);
 		assert.equal(0, this.appSensorServer.getAttackStore()!.findAttacks(criteria).length);
 
 		this.appSensorClient.getEventManager()!.addEvent(this.generateNewEvent());
 
-		await this.sleep(this.sleepAmount);
+		await super.sleep(this.sleepAmount);
 
 		assert.equal(1, this.appSensorServer.getEventStore()!.findEvents(criteria).length);
 		assert.equal(0, this.appSensorServer.getAttackStore()!.findAttacks(criteria).length);
 
         this.appSensorClient.getEventManager()!.addEvent(this.generateNewEvent());
 
-		await this.sleep(this.sleepAmount);
+		await super.sleep(this.sleepAmount);
 
 		assert.equal(2, this.appSensorServer.getEventStore()!.findEvents(criteria).length);
 		assert.equal(0, this.appSensorServer.getAttackStore()!.findAttacks(criteria).length);
 
         this.appSensorClient.getEventManager()!.addEvent(this.generateNewEvent());
 
-		await this.sleep(this.sleepAmount);
+		await super.sleep(this.sleepAmount);
 
 		assert.equal(3, this.appSensorServer.getEventStore()!.findEvents(criteria).length);
 		assert.equal(1, this.appSensorServer.getAttackStore()!.findAttacks(criteria).length);
 
         this.appSensorClient.getEventManager()!.addEvent(this.generateNewEvent());
 
-		await this.sleep(this.sleepAmount);
+		await super.sleep(this.sleepAmount);
 
 		assert.equal(4, this.appSensorServer.getEventStore()!.findEvents(criteria).length);
 		assert.equal(1, this.appSensorServer.getAttackStore()!.findAttacks(criteria).length);
 
         this.appSensorClient.getEventManager()!.addEvent(this.generateNewEvent());
 
-		await this.sleep(this.sleepAmount);
+		await super.sleep(this.sleepAmount);
 
 		assert.equal(5, this.appSensorServer.getEventStore()!.findEvents(criteria).length);
 		assert.equal(1, this.appSensorServer.getAttackStore()!.findAttacks(criteria).length);
 
         this.appSensorClient.getEventManager()!.addEvent(this.generateNewEvent());
 
-		await this.sleep(this.sleepAmount);
+		await super.sleep(this.sleepAmount);
 
 		assert.equal(6, this.appSensorServer.getEventStore()!.findEvents(criteria).length);
 		assert.equal(2, this.appSensorServer.getAttackStore()!.findAttacks(criteria).length);
 
         this.appSensorClient.getEventManager()!.addEvent(this.generateNewEvent());
 
-		await this.sleep(this.sleepAmount);
+		await super.sleep(this.sleepAmount);
 
 		assert.equal(7, this.appSensorServer.getEventStore()!.findEvents(criteria).length);
 		assert.equal(2, this.appSensorServer.getAttackStore()!.findAttacks(criteria).length);
+
+		console.log('<-- testAttackCreation');
 	}
 
 	private loadMockedDetectionPoints(): DetectionPoint[] {
 		const configuredDetectionPoints: DetectionPoint[] = [];
 
-		const minutes5 = new Interval(5, Interval.MINUTES);
-		const minutes6 = new Interval(6, Interval.MINUTES);
-		const minutes7 = new Interval(7, Interval.MINUTES);
-		const minutes8 = new Interval(8, Interval.MINUTES);
-		const minutes11 = new Interval(11, Interval.MINUTES);
-		const minutes12 = new Interval(12, Interval.MINUTES);
-		const minutes13 = new Interval(13, Interval.MINUTES);
-		const minutes14 = new Interval(14, Interval.MINUTES);
-		const minutes15 = new Interval(15, Interval.MINUTES);
-		const minutes31 = new Interval(31, Interval.MINUTES);
-		const minutes32 = new Interval(32, Interval.MINUTES);
-		const minutes33 = new Interval(33, Interval.MINUTES);
-		const minutes34 = new Interval(34, Interval.MINUTES);
-		const minutes35 = new Interval(35, Interval.MINUTES);
+		const minutes5 = new Interval(5, INTERVAL_UNITS.MINUTES);
+		const minutes6 = new Interval(6, INTERVAL_UNITS.MINUTES);
+		const minutes7 = new Interval(7, INTERVAL_UNITS.MINUTES);
+		const minutes8 = new Interval(8, INTERVAL_UNITS.MINUTES);
+		const minutes11 = new Interval(11, INTERVAL_UNITS.MINUTES);
+		const minutes12 = new Interval(12, INTERVAL_UNITS.MINUTES);
+		const minutes13 = new Interval(13, INTERVAL_UNITS.MINUTES);
+		const minutes14 = new Interval(14, INTERVAL_UNITS.MINUTES);
+		const minutes15 = new Interval(15, INTERVAL_UNITS.MINUTES);
+		const minutes31 = new Interval(31, INTERVAL_UNITS.MINUTES);
+		const minutes32 = new Interval(32, INTERVAL_UNITS.MINUTES);
+		const minutes33 = new Interval(33, INTERVAL_UNITS.MINUTES);
+		const minutes34 = new Interval(34, INTERVAL_UNITS.MINUTES);
+		const minutes35 = new Interval(35, INTERVAL_UNITS.MINUTES);
 
 		const events3minutes5 = new Threshold(3, minutes5);
 		const events12minutes5 = new Threshold(12, minutes5);
@@ -300,22 +262,14 @@ class ReferenceStatisticalEventAnalysisEngineTest {
 		return metaDataCol;
 	}
 
-	private sleep(millis: number): Promise<null> {
-		return new Promise((resolve, reject) => {
-			setTimeout(() => {
-				resolve(null);
-			}, millis);
-		});
-
-	}
-
 	public static async runTests() {
+		console.log();
+		console.log('----- Run ReferenceStatisticalEventAnalysisEngineTest -----');
 		const test = new ReferenceStatisticalEventAnalysisEngineTest();
+		test.initializeTest();
 		await test.testAttackCreation();
 	}
 
 }
 
-(async () => {
-	await ReferenceStatisticalEventAnalysisEngineTest.runTests();
-})();
+export {ReferenceStatisticalEventAnalysisEngineTest};

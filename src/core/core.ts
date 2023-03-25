@@ -11,13 +11,13 @@ import { AttackStore, EventStore, ResponseStore } from './storage/storage.js';
 
 interface IEquals {
 
-	equals(obj: Object | null): boolean
+	equals(obj: Object | null | undefined): boolean
 
 }
 
 interface IAppsensorEntity extends IEquals {
 
-   getId(): string;
+   getId(): string | undefined;
 
    setId(id: string): void;
 }
@@ -26,9 +26,9 @@ class AppsensorEntity implements IAppsensorEntity {
 	// @Id
 	// @Column(columnDefinition = "integer")
 	// @GeneratedValue
-	protected id: string = '';
+	protected id?: string | undefined = '';
 
-	public  getId(): string {
+	public  getId(): string | undefined {
 		return this.id;
 	}
 
@@ -36,8 +36,8 @@ class AppsensorEntity implements IAppsensorEntity {
 		this.id = id;
 	}
 
-	public equals(obj: Object | null): boolean {
-		if (obj === null)
+	public equals(obj: Object | null | undefined): boolean {
+		if (obj === null || obj === undefined)
 			return false;
 		if (this.constructor.name !== obj.constructor.name)
 			return false;
@@ -101,22 +101,16 @@ class KeyValuePair extends AppsensorEntity {
 
 }
 
+enum INTERVAL_UNITS {
+	"MILLISECONDS" = "milliseconds",
+	"SECONDS" = "seconds",
+	"MINUTES" = "minutes",
+	"HOURS" = "hours",
+	"DAYS" = "days"
+}
+
 class Interval extends AppsensorEntity {
 
-	/** Constant representing milliseconds unit of time */
-	public static   MILLISECONDS = "milliseconds";
-	
-	/** Constant representing seconds unit of time */
-	public static   SECONDS = "seconds";
-	
-	/** Constant representing minutes unit of time */
-	public static   MINUTES = "minutes";
-	
-	/** Constant representing hours unit of time */
-	public static   HOURS = "hours";
-	
-	/** Constant representing days unit of time */
-	public static   DAYS = "days";
 
 	/** 
 	 * Duration portion of interval, ie. '3' if you wanted 
@@ -133,9 +127,9 @@ class Interval extends AppsensorEntity {
 	 * SECONDS, MINUTES, HOURS, DAYS.
 	 */
 	// @Column
-	private unit: string = Interval.MINUTES;
+	private unit: string = INTERVAL_UNITS.MINUTES;
 
-	public constructor(duration: number = 0, unit: string = Interval.MINUTES) {
+	public constructor(duration: number = 0, unit: string = INTERVAL_UNITS.MINUTES) {
 		super();
 		if (duration === 0) {
 			console.warn("Interval's duration is 0");
@@ -165,15 +159,15 @@ class Interval extends AppsensorEntity {
 	public toMillis(): number {
 		let millis: number = 0;
 		
-		if (Interval.MILLISECONDS === this.getUnit()) {
+		if (INTERVAL_UNITS.MILLISECONDS === this.getUnit()) {
 			millis = this.getDuration();
-		} else if (Interval.SECONDS === this.getUnit()) {
+		} else if (INTERVAL_UNITS.SECONDS === this.getUnit()) {
 			millis = 1000 * this.getDuration();
-		} else if (Interval.MINUTES === this.getUnit()) {
+		} else if (INTERVAL_UNITS.MINUTES === this.getUnit()) {
 			millis = 1000 * 60 * this.getDuration();
-		} else if (Interval.HOURS === this.getUnit()) {
+		} else if (INTERVAL_UNITS.HOURS === this.getUnit()) {
 			millis = 1000 * 60 * 60 * this.getDuration();
-		} else if (Interval.DAYS === this.getUnit()) {
+		} else if (INTERVAL_UNITS.DAYS === this.getUnit()) {
 			millis = 1000 * 60 * 60 * 24 * this.getDuration();
 		} 
 		
@@ -282,11 +276,11 @@ class Response  extends AppsensorEntity {
 	
 	/** User the response is for */
 	// @ManyToOne(cascade = CascadeType.ALL)
-	private user: User | null = null;
+	private user?: User | null | undefined = null;
 	
 	/** When the event occurred */
 	// @Column
-	private timestamp: Date = new Date();
+	private timestamp?: Date | undefined = new Date();
 	
 	/** String representing response action name */
 	// @Column
@@ -294,18 +288,18 @@ class Response  extends AppsensorEntity {
 	
 	/** Interval response should last for, if applicable. Ie. block access for 30 minutes */
 	// @ManyToOne(cascade = CascadeType.ALL)
-	private interval: Interval | null = null;
+	private interval: Interval | null | undefined = null;
 
 	/** Client application name that response applies to. */
 	// @ManyToOne(cascade = CascadeType.ALL)
-	private detectionSystem: DetectionSystem | null = null;
+	private detectionSystem?: DetectionSystem | null | undefined = null;
 	
 	/** Represent extra metadata, anything client wants to send */
 	// @ElementCollection
 	// @OneToMany(cascade = CascadeType.ALL)
-	private metadata: KeyValuePair[] = [];
+	private metadata?: KeyValuePair[] = [];
 	
-	private active: boolean = false;
+	private active?: boolean = false;
 	
 	public constructor(user: User | null = null, 
 		               action: string = '', 
@@ -320,7 +314,7 @@ class Response  extends AppsensorEntity {
 		this.setInterval(interval);
 	}
 	
-	public getUser(): User | null {
+	public getUser(): User | null | undefined {
 		return this.user;
 	}
 
@@ -329,7 +323,7 @@ class Response  extends AppsensorEntity {
 		return this;
 	}
 
-	public getTimestamp(): Date {
+	public getTimestamp(): Date | undefined {
 		return this.timestamp;
 	}
 
@@ -351,16 +345,16 @@ class Response  extends AppsensorEntity {
 		return this;
 	}
 
-	public getInterval(): Interval | null {
+	public getInterval(): Interval | null | undefined {
 		return this.interval;
 	}
 
-	public setInterval(interval: Interval | null): Response {
+	public setInterval(interval: Interval | null | undefined): Response {
 		this.interval = interval;
 		return this;
 	}
 
-	public getDetectionSystem(): DetectionSystem | null {
+	public getDetectionSystem(): DetectionSystem | null | undefined {
 		return this.detectionSystem;
 	}
 
@@ -369,7 +363,7 @@ class Response  extends AppsensorEntity {
 		return this;
 	}
 	
-	public getMetadata(): KeyValuePair[] {
+	public getMetadata(): KeyValuePair[] | undefined {
 		return this.metadata;
 	}
 
@@ -380,22 +374,23 @@ class Response  extends AppsensorEntity {
 	public isActive(): boolean {
 		
 		// if there is no interval, the response is executed immediately and hence does not have active/inactive state
-		if (this.interval == null) {
+		if (this.interval === null || this.interval === undefined || 
+			this.timestamp === undefined) {
 			return false;
 		}
 		
 		let localActive: boolean = false;
 		
-		//??
-		// DateTime responseStartTime = DateUtils.fromString(getTimestamp());
-		// DateTime responseEndTime = responseStartTime.plus(interval.toMillis());
 		
-		// DateTime now = DateUtils.getCurrentTimestamp();
+		const responseStartTime = this.timestamp;
+		const responseEndTime = new Date(responseStartTime.getTime() + this.interval.toMillis());
 		
-		// // only active if current time between response start and end time
-		// if (responseStartTime.isBefore(now) && responseEndTime.isAfter(now)) {
-		// 	localActive = true;
-		// }
+		const now = Date.now();
+		
+		// only active if current time between response start and end time
+		if (responseStartTime.getTime() < now && responseEndTime.getTime() > now) {
+			localActive = true;
+		}
 		
 		this.active = localActive;
 		
@@ -421,8 +416,12 @@ class Response  extends AppsensorEntity {
 		
 		const other = obj as Response;
 		
+		const otherTimestamp = other.getTimestamp();
 		return Utils.equalsEntitys(this.user, other.getUser()) &&
-			   this.timestamp.getTime() === other.getTimestamp().getTime() &&
+			   ((this.timestamp === null && otherTimestamp === null) ||
+			    (this.timestamp === undefined && otherTimestamp === undefined) ||	
+			    (this.timestamp instanceof Date &&  otherTimestamp instanceof Date && 
+				 this.timestamp.getTime() === otherTimestamp.getTime())) &&
 			   this.action === other.getAction() && 
 			   Utils.equalsEntitys(this.interval, other.getInterval()) &&
 			   Utils.equalsEntitys(this.detectionSystem, other.getDetectionSystem()) &&
@@ -463,7 +462,7 @@ class Category {
 class DetectionPoint  extends AppsensorEntity {
 
 	// @Column
-	private guid: string = '';
+	private guid?: string = '';
 
 
 	/**
@@ -476,7 +475,7 @@ class DetectionPoint  extends AppsensorEntity {
 	 * Identifier for the detection point. (ex. "IE1", "RE2")
 	 */
 	// @Column
-	private label: string = '';
+	private label?: string | undefined = '';
 
 	/**
 	 * {@link Threshold} for determining whether given detection point (associated {@link Event})
@@ -516,16 +515,16 @@ class DetectionPoint  extends AppsensorEntity {
 		return this;
 	}
 
-	public getLabel(): string {
+	public getLabel(): string | undefined {
 		return this.label;
 	}
 
-	public setLabel(label: string): DetectionPoint {
+	public setLabel(label: string | undefined): DetectionPoint {
 		this.label = label;
 		return this;
 	}
 
-	public getGuid(): string {
+	public getGuid(): string | undefined {
 		return this.guid;
 	}
 
@@ -575,7 +574,7 @@ class DetectionPoint  extends AppsensorEntity {
 		let matches: boolean = true;
 
 		matches &&= (this.category !== null) ? this.category === other.getCategory() : true;
-		matches &&= (this.label !== null) ? this.label === other.getLabel() : true;
+		matches &&= (this.label) ? this.label === other.getLabel() : true;
 
 		return matches;
 	}
@@ -588,7 +587,7 @@ class DetectionPoint  extends AppsensorEntity {
 		let matches: boolean = true;
 
 		matches &&= (this.category !== null) ? this.category === other.getCategory() : true;
-		matches &&= (this.label !== null) ? this.label === other.getLabel() : true;
+		matches &&= (this.label) ? this.label === other.getLabel() : true;
 		matches &&= (this.threshold !== null) ? Utils.equalsEntitys(this.threshold, other.getThreshold()) : true;
 
 		return matches;
@@ -640,13 +639,16 @@ class IPAddress extends AppsensorEntity {
 	// private transient GeoLocator geoLocator;
 	private geoLocator: GeoLocator  | null = null;
 
-	public constructor(address: string = '', geoLocation: GeoLocation  | null = null) {
+	public constructor(address: string = '', 
+	                   geoLocation: GeoLocation  | null = null, 
+					   geoLocator: GeoLocator  | null = null) {
 		super();
 		if (address !== '' && !ipaddrlib.isValid(address)) {// InetAddresses.isInetAddress(address)) {
 			throw new Error("IP Address string is invalid: " + address);
 		}
 		this.address = address;
 		this.geoLocation = geoLocation;
+		this.geoLocator = geoLocator;
 	}
 	
 	public fromString(ipString: string): IPAddress {
@@ -708,7 +710,15 @@ class IPAddress extends AppsensorEntity {
 		
 		return this;
 	}
-	
+
+	public getGeoLocator(): GeoLocator  | null {
+		return this.geoLocator;
+	}
+
+	public setGeoLocator(geoLocator: GeoLocator  | null) {
+		this.geoLocator = geoLocator;
+	}
+
 	// @Override
 	// public int hashCode() {
 	// 	return new HashCodeBuilder(17,31).
@@ -860,7 +870,7 @@ class User extends AppsensorEntity {
 	// 			toHashCode();
 	// }
 	
-	public override equals(obj: Object | null): boolean {
+	public override equals(obj: Object | null | undefined): boolean {
 		if (!super.equals(obj))
 			return false;
 		if (this === obj)
@@ -897,14 +907,6 @@ class Resource extends AppsensorEntity {
 	 */
 	// @Column
 	private method: string = '';
-
-	public getId(): string {
-		return this.id;
-	}
-
-	public setId(id: string): void {
-		this.id = id;
-	}
 
 	public getLocation(): string {
 		return this.location;
@@ -1225,11 +1227,11 @@ class Attack extends AppsensorEntity {
 		this.metadata = metadata;
 	}
 
-	public  getName(): string {
-		let name: string = "";
+	public  getName(): string | undefined {
+		let name: string | undefined = "";
 
-		if (this.rule == null && this.detectionPoint) {
-			name = this.detectionPoint.getLabel();
+		if (this.rule === null) {
+			name = Utils.getDetectionPointLabel(this.detectionPoint);
 		} else if (this.rule) {
 			name = this.rule.getName() == null ? this.rule.getGuid() : this.rule.getName();
 		}
@@ -1317,7 +1319,7 @@ class ClientApplication implements IEquals {
 	private roles: Role[] = [];
 
 	/** The {@link IPAddress} of the client application, optionally set in the server configuration */
-	private ipAddress: IPAddress | null = null;
+	private ipAddress?: IPAddress | null | undefined = null;
 	
 	public getName(): string {
 		return this.name;
@@ -1332,7 +1334,7 @@ class ClientApplication implements IEquals {
 		return this.roles;
 	}
 
-	public getIpAddress(): IPAddress | null {
+	public getIpAddress(): IPAddress | null | undefined {
 		return this.ipAddress;
 	}
 
@@ -1533,15 +1535,20 @@ class AppSensorServer {
 
 class Utils {
 	//expected entities of same type 
-	public static equalsEntitys(ent1: IEquals | null, ent2: IEquals | null): boolean {
+	public static equalsEntitys(ent1: IEquals | null | undefined, 
+		                        ent2: IEquals | null | undefined): boolean {
 		return (ent1 === null && ent2 === null) || 
-		       (ent1 !== null && ent1.equals(ent2))
+		       (ent1 === undefined && ent2 === undefined) ||
+		       (ent1 !== null && ent1 !== undefined && ent1.equals(ent2))
 	}
 
-	public static equalsArrayEntitys(ent1: IEquals[] | null, ent2: IEquals[] | null): boolean {
-		if (ent1 === null && ent2 === null) {
+	public static equalsArrayEntitys(ent1: IEquals[] | null | undefined, ent2: IEquals[] | null | undefined): boolean {
+		if ((ent1 === null && ent2 === null) || 
+		    (ent1 === undefined && ent2 === undefined)) {
 			return true;
-		} else if (ent1 !== null && ent2 !== null && ent1.length === ent2.length) {
+		} else if (ent1 !== null && ent2 !== null && 
+			       ent1 !== undefined && ent2 !== undefined &&
+			       ent1.length === ent2.length) {
 			for (let i = 0; i < ent1.length; i++) {
 				if (!ent1[i].equals(ent2[i])) {
 					return false;
@@ -1555,8 +1562,23 @@ class Utils {
 		}
 	}
 
+	public static getUserName(user: User | null | undefined): string | undefined {
+		let userName = undefined;
+        if (user) {
+            userName = user.getUsername();
+        }
+		return userName;
+	}
+
+	public static getDetectionPointLabel(detPoint: DetectionPoint | null): string | undefined {
+        let detPointLabel = undefined
+        if (detPoint) {
+            detPointLabel = detPoint.getLabel()
+        }
+		return detPointLabel;
+	}
 }
 
-export {IEquals, AppsensorEntity, KeyValuePair, InetAddress, IPAddress, Interval, Threshold, Response, 
+export {IEquals, AppsensorEntity, KeyValuePair, InetAddress, IPAddress, INTERVAL_UNITS, Interval, Threshold, Response, 
 	    DetectionPoint, DetectionSystem, RequestHandler, AppSensorEvent, Attack, User, ClientApplication, 
 		Utils, AppSensorClient, AppSensorServer, Category, Resource};

@@ -1,4 +1,4 @@
-import {AppsensorEntity, Interval, Response, DetectionPoint, Utils} from '../core.js'
+import {AppsensorEntity, Interval, Response, DetectionPoint, Utils, INTERVAL_UNITS} from '../core.js'
 
 class Notification extends Interval {
 
@@ -9,7 +9,7 @@ class Notification extends Interval {
 	private monitorPoint: DetectionPoint | null = null;
 
 	public constructor(duration: number = 0, 
-		               unit: string = Interval.MINUTES, 
+		               unit: string = INTERVAL_UNITS.MINUTES, 
 					   startTime: Date | null = null, 
 		               monitorPoint: DetectionPoint | null = null) {
 		super(duration, unit);

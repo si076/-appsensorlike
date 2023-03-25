@@ -1,4 +1,4 @@
-import { DetectionPoint, Category, Interval} from "../../../core/core.js";
+import { DetectionPoint, Category, Interval, INTERVAL_UNITS} from "../../../core/core.js";
 import { MonitorPoint, Notification } from "../../../core/rule/rule.js";
 import { AggregateEventAnalysisEngine } from "../appsensor-analysis-rules.js";
 
@@ -13,11 +13,11 @@ class TrimTest {
 	private static buildQueue(): Notification[] {
 		const queue: Notification[] = [];
 
-		queue.push(new Notification(2, Interval.MINUTES, new Date(10), TrimTest.point1));
-		queue.push(new Notification(2, Interval.MINUTES, new Date(11), TrimTest.point1));
-		queue.push(new Notification(2, Interval.MINUTES, new Date(12), TrimTest.point1));
-		queue.push(new Notification(2, Interval.MINUTES, new Date(13), TrimTest.point1));
-		queue.push(new Notification(2, Interval.MINUTES, new Date(14), TrimTest.point1));
+		queue.push(new Notification(2, INTERVAL_UNITS.MINUTES, new Date(10), TrimTest.point1));
+		queue.push(new Notification(2, INTERVAL_UNITS.MINUTES, new Date(11), TrimTest.point1));
+		queue.push(new Notification(2, INTERVAL_UNITS.MINUTES, new Date(12), TrimTest.point1));
+		queue.push(new Notification(2, INTERVAL_UNITS.MINUTES, new Date(13), TrimTest.point1));
+		queue.push(new Notification(2, INTERVAL_UNITS.MINUTES, new Date(14), TrimTest.point1));
 
 		return queue;
 	}
@@ -85,7 +85,8 @@ class TrimTest {
 	}
 
     public static runTests() {
-        console.log('Run TrimTest');
+		console.log();
+        console.log('----- Run TrimTest -----');
         
         TrimTest.testTrimOne();
         TrimTest.testTrimNone();

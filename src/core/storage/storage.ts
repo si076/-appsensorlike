@@ -369,14 +369,17 @@ abstract class ResponseStore {
 			//check detection system match if detection systems specified
 			let detectionSystemMatch: boolean = true;
 			const respDetSystemId = response.getDetectionSystem();
-			if (detectionSystemIds != null && detectionSystemIds.length > 0 && respDetSystemId !== null) {
+			if (detectionSystemIds && detectionSystemIds.length > 0 && 
+				respDetSystemId) {
 				detectionSystemMatch = detectionSystemIds.indexOf(respDetSystemId.getDetectionSystemId()) > -1 ;
 			}
 			
-			let earliestMatch: boolean = true; 
-			if (earliest !== null) {
+			const responseTimestamp = response.getTimestamp();
 
-				const responseTimestampMillis = response.getTimestamp().getTime();
+			let earliestMatch: boolean = true; 
+			if (earliest !== null && responseTimestamp instanceof Date) {
+
+				const responseTimestampMillis = responseTimestamp.getTime();
 				const earliestMillis = earliest.getTime();
 
 				earliestMatch =	(earliestMillis < responseTimestampMillis || earliestMillis === responseTimestampMillis)

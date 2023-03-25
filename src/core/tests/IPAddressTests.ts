@@ -79,6 +79,7 @@ class IPAddressTests {
 	// }
 	
     public static runTests() {
+        console.log();
         console.log('-> Start of IPAddressTests');
 
         IPAddressTests.testFromStringInvalidFormat();

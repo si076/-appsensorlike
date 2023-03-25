@@ -1,6 +1,6 @@
 import { AggregateEventAnalysisEngine } from "../appsensor-analysis-rules.js";
 import {MonitorPoint, Clause, Notification} from "../../../core/rule/rule.js"
-import { Category, DetectionPoint, Interval } from "../../../core/core.js";
+import { Category, DetectionPoint, Interval, INTERVAL_UNITS } from "../../../core/core.js";
 
 import assert from 'assert';
 
@@ -28,7 +28,7 @@ class CheckClauseTest {
         const clause: Clause = new Clause(points);
 
         const sensors: Notification[] = [];
-        sensors.push(new Notification(2, Interval.MINUTES, new Date(10), CheckClauseTest.point1));
+        sensors.push(new Notification(2, INTERVAL_UNITS.MINUTES, new Date(10), CheckClauseTest.point1));
 
         assert.ok(CheckClauseTest.engine.checkClause(clause, sensors));
 
@@ -45,8 +45,8 @@ class CheckClauseTest {
         const clause: Clause = new Clause(points);
 
         const sensors: Notification[] = [];
-        sensors.push(new Notification(2, Interval.MINUTES, new Date(10), CheckClauseTest.point1));
-        sensors.push(new Notification(3, Interval.MINUTES, new Date(10), CheckClauseTest.point2));
+        sensors.push(new Notification(2, INTERVAL_UNITS.MINUTES, new Date(10), CheckClauseTest.point1));
+        sensors.push(new Notification(3, INTERVAL_UNITS.MINUTES, new Date(10), CheckClauseTest.point2));
 
         assert.ok(CheckClauseTest.engine.checkClause(clause, sensors));
 
@@ -62,8 +62,8 @@ class CheckClauseTest {
         const clause: Clause = new Clause(points);
 
         const sensors: Notification[] = [];
-        sensors.push(new Notification(2, Interval.MINUTES, new Date(10), CheckClauseTest.point1));
-        sensors.push(new Notification(3, Interval.MINUTES, new Date(10), CheckClauseTest.point2));
+        sensors.push(new Notification(2, INTERVAL_UNITS.MINUTES, new Date(10), CheckClauseTest.point1));
+        sensors.push(new Notification(3, INTERVAL_UNITS.MINUTES, new Date(10), CheckClauseTest.point2));
 
         assert.ok(CheckClauseTest.engine.checkClause(clause, sensors));
 
@@ -95,7 +95,7 @@ class CheckClauseTest {
         const clause: Clause = new Clause(points);
 
         const sensors: Notification[] = [];
-        sensors.push(new Notification(2, Interval.MINUTES, new Date(10), CheckClauseTest.point1));
+        sensors.push(new Notification(2, INTERVAL_UNITS.MINUTES, new Date(10), CheckClauseTest.point1));
 
         assert.equal(CheckClauseTest.engine.checkClause(clause, sensors), false);
 
@@ -103,7 +103,8 @@ class CheckClauseTest {
     }
 
     public static runTests() {
-        console.log('Run CheckClauseTest');
+        console.log();
+        console.log('----- Run CheckClauseTest -----');
         CheckClauseTest.testExactMatchOneDetectionPoint();
         CheckClauseTest.testExactMatchTwoDetectionPoints();
         CheckClauseTest.testExtraDetectionPoints();
