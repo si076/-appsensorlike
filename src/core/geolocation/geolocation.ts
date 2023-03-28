@@ -1,9 +1,9 @@
-import {AppsensorEntity, InetAddress} from '../core.js'
+import {AppsensorEntity} from '../core.js'
 
 class GeoLocation extends AppsensorEntity {
 
-	private latitude: number = 0.0;
-	private longitude: number = 0.0;
+	protected latitude: number = 0.0;
+	protected longitude: number = 0.0;
 	
 	public constructor(latitude: number, longitude: number) {
 		super();
@@ -71,7 +71,7 @@ interface GeoLocator {
 	 * @return populated {@link GeoLocation} object.
 	 */
 	// public GeoLocation readLocation(InetAddress address);
-	readLocation(address: InetAddress): GeoLocation;
+	readLocation(address: string): Promise<GeoLocation | null>;
 }
 
 export {GeoLocation, GeoLocator};

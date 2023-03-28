@@ -750,7 +750,7 @@ class AggregateEventAnalysisEngineIntegrationTest extends BaseTest {
 
         this.addEvent(AggregateEventAnalysisEngineIntegrationTest.detectionPoint1, time);
         this.addEvent(AggregateEventAnalysisEngineIntegrationTest.detectionPoint1, new Date(time.getTime() + 1 * 60 * 1000));
-        this.addEvent(AggregateEventAnalysisEngineIntegrationTest.detectionPoint1, new Date(time.getTime() + 2));
+        this.addEvent(AggregateEventAnalysisEngineIntegrationTest.detectionPoint1, new Date(time.getTime() + 2 * 60 * 1000));
 
         assert.equal(1, this.appSensorServer!.getAttackStore()!.findAttacks(ruleCriteria).length);
 

@@ -86,6 +86,13 @@ abstract class AttackStore {
 	 */
 	// @Inject @AttackStoreListener
 	public setListeners(listeners: AttackListener[]): void {
+		if (listeners.length === 0) {
+			//clear already added listeners since this field is static and registerListeners
+			//check for class uniqueness
+			//this is essential when executing analysis tests en mass
+			AttackStore.listeners = [];
+		}
+
 		for (const listener of listeners) {
 			this.registerListener(listener);
 		}
@@ -237,6 +244,13 @@ abstract class EventStore {
 	 */
 	// @Inject @EventStoreListener
 	public setListeners(listeners: EventListener[]) {
+		if (listeners.length === 0) {
+			//clear already added listeners since this field is static and registerListeners
+			//check for class uniqueness
+			//this is essential when executing analysis tests en mass
+			EventStore.listeners = [];
+		}
+
 		for (const listener of listeners) {
 			this.registerListener(listener);
 		}
@@ -435,6 +449,12 @@ abstract class ResponseStore {
 	 */
 	// @Inject @ResponseStoreListener
 	public setListeners(listeners: ResponseListener[]): void {
+		if (listeners.length === 0) {
+			//clear already added listeners since this field is static and registerListeners
+			//check for class uniqueness
+			//this is essential when executing analysis tests en mass
+			ResponseStore.listeners = [];
+		}
 		for (const listener of listeners) {
 			this.registerListener(listener);	
 		}

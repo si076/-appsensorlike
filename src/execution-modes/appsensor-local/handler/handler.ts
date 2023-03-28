@@ -20,7 +20,7 @@ class LocalRequestHandler implements RequestHandler {
 	// @Override
 	public addEvent(event: AppSensorEvent) {
         const detSystem = event.getDetectionSystem();
-		if (LocalRequestHandler.detectionSystemId == null && detSystem !== null) {
+		if (LocalRequestHandler.detectionSystemId === null && detSystem !== null) {
 			LocalRequestHandler.detectionSystemId = detSystem.getDetectionSystemId();
 		}
 		

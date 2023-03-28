@@ -42,6 +42,10 @@ abstract class BaseTest {
 
 		this.clearStores();
 
+		this.appSensorServer.getAttackStore()!.setListeners([]);
+		this.appSensorServer.getEventStore()!.setListeners([]);
+		this.appSensorServer.getResponseStore()!.setListeners([]);
+
 		// const rulesEngine = this.getRulesEngine();
         const attackAnalysisEngines = this.getAttackAnalysisEngines();
         this.appSensorServer.setAttackAnalysisEngines(attackAnalysisEngines);

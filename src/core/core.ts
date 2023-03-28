@@ -620,14 +620,6 @@ class DetectionPoint  extends AppsensorEntity {
 	// }
 }
 
-class InetAddress {
-	ipStr: string;
-
-	constructor(ipStr: string) {
-		this.ipStr = ipStr;
-	}
-}
-
 class IPAddress extends AppsensorEntity {
 
 	private address: string = '';
@@ -637,54 +629,32 @@ class IPAddress extends AppsensorEntity {
 
 	// @Autowired(required = false)
 	// private transient GeoLocator geoLocator;
-	private geoLocator: GeoLocator  | null = null;
+	// private geoLocator: GeoLocator  | null = null;
 
 	public constructor(address: string = '', 
-	                   geoLocation: GeoLocation  | null = null, 
-					   geoLocator: GeoLocator  | null = null) {
+	                   geoLocation: GeoLocation  | null = null) {
 		super();
 		if (address !== '' && !ipaddrlib.isValid(address)) {// InetAddresses.isInetAddress(address)) {
 			throw new Error("IP Address string is invalid: " + address);
 		}
 		this.address = address;
 		this.geoLocation = geoLocation;
-		this.geoLocator = geoLocator;
 	}
 	
-	public fromString(ipString: string): IPAddress {
-		if (!ipaddrlib.isValid(ipString)) { //InetAddresses.isInetAddress(ipString)) {
-			throw new Error("IP Address string is invalid: " + ipString);
-		}
-
-		let localGeo: GeoLocation | null = null;
-		
-		if(this.geoLocator != null) {
-			localGeo = this.geoLocator.readLocation(this.asInetAddress(ipString));
-		}
-
-		return new IPAddress(ipString, localGeo);
-	}
-	
-	//??
-	// private InetAddress asInetAddress(ipString: string) {
-	// 	switch (arguments.length) {
-	// 		case 1:
-	// 			return InetAddresses.forString(ipString);
-		
-	// 		default:
-	// 			return InetAddresses.forString(this.getAddressAsString())
+	// public async fromString(ipString: string): Promise<IPAddress> {
+	// 	if (!ipaddrlib.isValid(ipString)) { //InetAddresses.isInetAddress(ipString)) {
+	// 		throw new Error("IP Address string is invalid: " + ipString);
 	// 	}
-	// }
-	private asInetAddress(ipString: string): InetAddress {
-		switch (arguments.length) {
-			case 1:
-				return new InetAddress(ipString);//InetAddresses.forString(ipString);
-		
-			default:
-				return new InetAddress(this.getAddressAsString()); //InetAddresses.forString(this.getAddressAsString())
-		}
-	}
 
+	// 	let localGeo: GeoLocation | null = null;
+		
+	// 	if(this.geoLocator != null) {
+	// 		localGeo = await this.geoLocator.readLocation(ipString);
+	// 	}
+
+	// 	return new IPAddress(ipString, localGeo);
+	// }
+	
 	public setAddress(address: string): IPAddress {
 		this.address = address;
 		
@@ -711,13 +681,13 @@ class IPAddress extends AppsensorEntity {
 		return this;
 	}
 
-	public getGeoLocator(): GeoLocator  | null {
-		return this.geoLocator;
-	}
+	// public getGeoLocator(): GeoLocator  | null {
+	// 	return this.geoLocator;
+	// }
 
-	public setGeoLocator(geoLocator: GeoLocator  | null) {
-		this.geoLocator = geoLocator;
-	}
+	// public setGeoLocator(geoLocator: GeoLocator  | null) {
+	// 	this.geoLocator = geoLocator;
+	// }
 
 	// @Override
 	// public int hashCode() {
@@ -756,12 +726,13 @@ class DetectionSystem extends AppsensorEntity {
 	private ipAddress: IPAddress  | null = null;
 	
 	// private transient IPAddress locator;
-	private locator: IPAddress | null = null;
+	// private locator: IPAddress | null = null;
 
 	public constructor(detectionSystemId: string = '', ipAddress: IPAddress  | null = null) {
 		super();
-		this.setDetectionSystemId(detectionSystemId);
 		this.setIPAddress(ipAddress);
+		this.setDetectionSystemId(detectionSystemId);
+		// this.setIPAddress(ipAddress);
 	}
 	
 	public getDetectionSystemId(): string {
@@ -771,10 +742,12 @@ class DetectionSystem extends AppsensorEntity {
 	public setDetectionSystemId(detectionSystemId: string): DetectionSystem {
 		this.detectionSystemId = detectionSystemId;
 		
-		// if IP is used as system id, setup IP address w/ geolocation
-		if (this.locator != null && ipaddrlib.isValid(detectionSystemId)) { //InetAddresses.isInetAddress(detectionSystemId)) {
-			this.ipAddress = this.locator.fromString(detectionSystemId);
-		}
+		// This logic is outside now, allowing asynchronous resolution of location
+		// 
+		// // if IP is used as system id, setup IP address w/ geolocation
+		// if (this.ipAddress === null && this.locator != null && ipaddrlib.isValid(detectionSystemId)) { //InetAddresses.isInetAddress(detectionSystemId)) {
+		// 	this.ipAddress = this.locator.fromString(detectionSystemId);
+		// }
 		
 		return this;
 	}
@@ -827,7 +800,7 @@ class User extends AppsensorEntity {
 	private ipAddress: IPAddress | null = null;
 	
 	// private transient IPAddress locator;
-	private locator: IPAddress | null = null;
+	// private locator: IPAddress | null = null;
 
 	public constructor(username: string = '', ipAddress: IPAddress | null = null) {
 		super();
@@ -843,10 +816,12 @@ class User extends AppsensorEntity {
 	public setUsername(username: string): User {
 		this.username = username;
 		
-		// if IP is used as username, setup IP address w/ geolocation
-		if (this.locator != null && this.ipAddress == null && ipaddrlib.isValid(username)) { //InetAddresses.isInetAddress(username)) {
-			this.ipAddress = this.locator.fromString(username);
-		}
+		// This logic is outside now, allowing asynchronous resolution of location
+		// 
+		// // if IP is used as username, setup IP address w/ geolocation
+		// if (this.locator != null && this.ipAddress == null && ipaddrlib.isValid(username)) {
+		// 	this.ipAddress = this.locator.fromString(username);
+		// }
 		
 		return this;
 	}
@@ -1577,8 +1552,23 @@ class Utils {
         }
 		return detPointLabel;
 	}
+
+	public static async fromString(ipString: string, geoLocator: GeoLocator): Promise<IPAddress> {
+		if (!ipaddrlib.isValid(ipString)) {
+			throw new Error("IP Address string is invalid: " + ipString);
+		}
+
+		let localGeo: GeoLocation | null = null;
+		
+		if(geoLocator !== null) {
+			localGeo = await geoLocator.readLocation(ipString);
+		}
+
+		return new IPAddress(ipString, localGeo);
+	}
+	
 }
 
-export {IEquals, AppsensorEntity, KeyValuePair, InetAddress, IPAddress, INTERVAL_UNITS, Interval, Threshold, Response, 
+export {IEquals, AppsensorEntity, KeyValuePair, IPAddress, INTERVAL_UNITS, Interval, Threshold, Response, 
 	    DetectionPoint, DetectionSystem, RequestHandler, AppSensorEvent, Attack, User, ClientApplication, 
 		Utils, AppSensorClient, AppSensorServer, Category, Resource};

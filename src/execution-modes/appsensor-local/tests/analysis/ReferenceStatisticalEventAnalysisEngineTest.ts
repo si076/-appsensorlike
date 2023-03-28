@@ -12,7 +12,7 @@ class ReferenceStatisticalEventAnalysisEngineTest extends BaseTest {
 
 	private sleepAmount: number = 1;
 
-    private ipAddressLocator: IPAddress = new IPAddress();
+    // private ipAddressLocator: IPAddress = new IPAddress();
 
 	protected override initializeTest(): void {
 
@@ -21,8 +21,6 @@ class ReferenceStatisticalEventAnalysisEngineTest extends BaseTest {
 		this.appSensorServer.getConfiguration()!.setDetectionPoints(this.loadMockedDetectionPoints());
 	}
 
-    // @Ignore
-	// @Test
 	private async testAttackCreation() {
 		console.log('--> testAttackCreation');
 
@@ -236,7 +234,7 @@ class ReferenceStatisticalEventAnalysisEngineTest extends BaseTest {
 
     private generateUserBob(): User {
         const bob = new User("bob");
-        bob.setIPAddress(this.ipAddressLocator.fromString("8.8.8.8"));
+        bob.setIPAddress(new IPAddress("8.8.8.8"));
 
         return bob;
     }
@@ -250,7 +248,7 @@ class ReferenceStatisticalEventAnalysisEngineTest extends BaseTest {
 
     private generateDetectionSystemLocalhostMe(): DetectionSystem {
         const detectionSystem = new DetectionSystem("localhostme");
-        detectionSystem.setIPAddress(this.ipAddressLocator.fromString("9.9.9.9"));
+        detectionSystem.setIPAddress(new IPAddress("9.9.9.9"));
 
         return detectionSystem;
     }

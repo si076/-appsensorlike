@@ -31,7 +31,7 @@ class IPAddressTests {
 	public static testFromStringInvalidAddress(): void {
         const address = "123.123.123.456";
         assert.throws(() => {
-		                this.ipAddress.fromString(address);
+		                new IPAddress(address);
                       },
                       {
                         name: "Error",
@@ -43,23 +43,23 @@ class IPAddressTests {
 	// @Test
 	public static testFromStringValid(): void {
         assert.doesNotThrow(() => {
-            this.ipAddress.fromString("1.2.3.4");
+            new IPAddress("1.2.3.4");
         });
 		
         assert.doesNotThrow(() => {
-            this.ipAddress.fromString("255.255.255.255");
+            new IPAddress("255.255.255.255");
         });
 		
         assert.doesNotThrow(() => {
-            this.ipAddress.fromString("2001:cdba:0000:0000:0000:0000:3257:9652");
+            new IPAddress("2001:cdba:0000:0000:0000:0000:3257:9652");
         });
 		
         assert.doesNotThrow(() => {
-            this.ipAddress.fromString("2001:cdba:0:0:0:0:3257:9652");
+            new IPAddress("2001:cdba:0:0:0:0:3257:9652");
         });
 		
         assert.doesNotThrow(() => {
-            this.ipAddress.fromString("2001:cdba::3257:9652");
+            new IPAddress("2001:cdba::3257:9652");
         });
 		
 	}

@@ -4,6 +4,7 @@ import { SimpleAggregateEventAnalysisEngineTest } from "./analysis/SimpleAggrega
 import { MultipleDetectionPointsSameLabelEventAnalysisEngineTest } from "./analysis/MultipleDetectionPointsSameLabelEventAnalysisEngineTest.js";
 
 import * as readline from 'readline';
+import { IPAddressGeoLocationTest } from "./core/IPAddressGeoLocationTest.js";
 
 async function runTests(readInf: readline.Interface | null = null) {
 
@@ -19,7 +20,8 @@ async function runTests(readInf: readline.Interface | null = null) {
     console.log(" 1: SimpleAggregateEventAnalysisEngineTest tests");
     console.log(" 2: ReferenceStatisticalEventAnalysisEngineTest tests");
     console.log(" 3: AggregateEventAnalysisEngineIntegrationTest tests");
-    console.log(" 4: MultipleDetectionPointsSameLabelEventAnalysisEngineTest tests")
+    console.log(" 4: MultipleDetectionPointsSameLabelEventAnalysisEngineTest tests");
+    console.log(" 5: IPAddressGeoLocationTest tests");
     const choice: string = await new Promise((resolve, reject) => {
         rl!.question("To run all tests press 'a', to execute specific test choose a number:", (choice: string) => {
             resolve(choice);
@@ -54,6 +56,13 @@ async function testChoice(choice: string) {
         case "4":  
         case "a": {
             await MultipleDetectionPointsSameLabelEventAnalysisEngineTest.runTests();
+            if (choice !== 'a') {
+                break;
+            }
+        }
+        case "5":  
+        case "a": {
+            await IPAddressGeoLocationTest.runTests();
             if (choice !== 'a') {
                 break;
             }
