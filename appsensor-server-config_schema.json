@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "additionalProperties": false,
+    "additionalProperties": true,
     "definitions": {
         "Clause": {
             "additionalProperties": false,
@@ -15,7 +15,8 @@
                     "items": {
                         "$ref": "#/definitions/DetectionPoint"
                     },
-                    "type": "array"
+                    "type": "array",
+                    "minItems": 1
                 }
             },
             "required": [
@@ -67,7 +68,8 @@
                     "items": {
                         "type": "string"
                     },
-                    "type": "array"
+                    "type": "array",
+                    "minItems": 1
                 }
             },
             "required": [
@@ -85,7 +87,8 @@
                 },
                 "guid": {
                     "default": "",
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}"
                 },
                 "id": {
                     "default": "",
@@ -102,7 +105,8 @@
                     "items": {
                         "$ref": "#/definitions/Response"
                     },
-                    "type": "array"
+                    "type": "array",
+                    "minItems": 1
                 },
                 "threshold": {
                     "anyOf": [
@@ -119,6 +123,7 @@
             },
             "required": [
                 "category",
+                "id",
                 "responses",
                 "threshold"
             ],
@@ -145,23 +150,11 @@
                         }
                     ],
                     "default": null
-                },
-                "locator": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/definitions/IPAddress"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "default": null
                 }
             },
             "required": [
                 "detectionSystemId",
-                "ipAddress",
-                "locator"
+                "ipAddress"
             ],
             "type": "object"
         },
@@ -174,7 +167,8 @@
                     "items": {
                         "$ref": "#/definitions/Clause"
                     },
-                    "type": "array"
+                    "type": "array",
+                    "minItems": 1
                 },
                 "id": {
                     "default": "",
@@ -221,8 +215,44 @@
             ],
             "type": "object"
         },
-        "GeoLocator": {
+        "IClient": {
             "additionalProperties": false,
+            "properties": {
+                "clientName": {
+                    "type": "string"
+                },
+                "detectionPoints": {
+                    "items": {
+                        "$ref": "#/definitions/DetectionPoint"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "clientName",
+                "detectionPoints"
+            ],
+            "type": "object"
+        },
+        "IDetectionPoints": {
+            "additionalProperties": false,
+            "properties": {
+                "clients": {
+                    "items": {
+                        "$ref": "#/definitions/IClient"
+                    },
+                    "type": "array"
+                },
+                "detectionPoints": {
+                    "items": {
+                        "$ref": "#/definitions/DetectionPoint"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "detectionPoints"
+            ],
             "type": "object"
         },
         "IPAddress": {
@@ -243,17 +273,6 @@
                     ],
                     "default": null
                 },
-                "geoLocator": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/definitions/GeoLocator"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "default": null
-                },
                 "id": {
                     "default": "",
                     "type": "string"
@@ -261,8 +280,7 @@
             },
             "required": [
                 "address",
-                "geoLocation",
-                "geoLocator"
+                "geoLocation"
             ],
             "type": "object"
         },
@@ -272,7 +290,8 @@
                 "duration": {
                     "default": 0,
                     "description": "Duration portion of interval, ie. '3' if you wanted \nto represent an interval of '3 minutes'",
-                    "type": "number"
+                    "type": "number",
+                    "exclusiveMinimum": 0
                 },
                 "id": {
                     "default": "",
@@ -398,12 +417,14 @@
                     "items": {
                         "$ref": "#/definitions/Expression"
                     },
-                    "type": "array"
+                    "type": "array",
+                    "minItems": 1
                 },
                 "guid": {
                     "default": "",
                     "description": "Unique identifier",
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}"
                 },
                 "id": {
                     "default": "",
@@ -420,7 +441,8 @@
                     "items": {
                         "$ref": "#/definitions/Response"
                     },
-                    "type": "array"
+                    "type": "array",
+                    "minItems": 1
                 },
                 "window": {
                     "anyOf": [
@@ -450,7 +472,8 @@
                 "count": {
                     "default": 0,
                     "description": "The count at which this threshold is triggered.",
-                    "type": "number"
+                    "type": "number",
+                    "exclusiveMinimum": 0
                 },
                 "id": {
                     "default": "",
@@ -493,17 +516,6 @@
                     ],
                     "default": null
                 },
-                "locator": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/definitions/IPAddress"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "default": null
-                },
                 "username": {
                     "default": "",
                     "type": "string"
@@ -511,7 +523,6 @@
             },
             "required": [
                 "ipAddress",
-                "locator",
                 "username"
             ],
             "type": "object"
@@ -525,7 +536,8 @@
             "items": {
                 "$ref": "#/definitions/ClientApplication"
             },
-            "type": "array"
+            "type": "array",
+            "minItems": 1
         },
         "configurationFile": {
             "type": "string"
@@ -534,13 +546,11 @@
             "items": {
                 "$ref": "#/definitions/CorrelationSet"
             },
-            "type": "array"
+            "type": "array",
+            "minItems": 1
         },
         "detectionPoints": {
-            "items": {
-                "$ref": "#/definitions/DetectionPoint"
-            },
-            "type": "array"
+            "$ref": "#/definitions/IDetectionPoints"
         },
         "geolocateIpAddresses": {
             "type": "boolean"
@@ -552,7 +562,8 @@
             "items": {
                 "$ref": "#/definitions/Rule"
             },
-            "type": "array"
+            "type": "array",
+            "minItems": 1
         },
         "serverHostName": {
             "type": "string"

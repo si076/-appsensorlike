@@ -3,13 +3,23 @@ import { CorrelationSet } from "../../correlation/correlation.js";
 import { Rule } from "../../rule/rule.js";
 // import { IServerConfiguration } from "./server_config_defs.js";
 
+interface IClient {
+	clientName: string;
+	detectionPoints: DetectionPoint[];
+}
+
+interface IDetectionPoints {
+	clients?: IClient[]; 
+	detectionPoints: DetectionPoint[];
+} 
+
 interface IServerConfiguration {
 
 	configurationFile?: string;
 
 	rules?: Rule[];
 
-	detectionPoints: DetectionPoint[];
+	detectionPoints: IDetectionPoints;
 
 	correlationSets?: CorrelationSet[];
 
@@ -31,11 +41,11 @@ interface IServerConfiguration {
 
 abstract class ServerConfiguration implements IServerConfiguration {
 
-	configurationFile: string = '';
+	configurationFile: string | undefined;
 
 	rules: Rule[] = [];
 
-	detectionPoints: DetectionPoint[] = [];
+	detectionPoints: IDetectionPoints = {detectionPoints: []};
 
 	correlationSets: CorrelationSet[] = [];
 
@@ -49,9 +59,9 @@ abstract class ServerConfiguration implements IServerConfiguration {
 
 	serverSocketTimeout: number = 0;
 
-	geolocateIpAddresses: boolean = false;
+	// geolocateIpAddresses: boolean | undefined;
 
-	geolocationDatabasePath: string = '';
+	// geolocationDatabasePath: string | undefined;
 
 	//Change for adding new custom client specific detection points
 	customDetectionPoints: Map<string, DetectionPoint[]> = new Map<string, DetectionPoint[]>();
@@ -68,7 +78,7 @@ abstract class ServerConfiguration implements IServerConfiguration {
 		return this;
 	}
 
-	public getConfigurationFile(): string {
+	public getConfigurationFile(): string | undefined {
 		return this.configurationFile;
 	}
 
@@ -87,11 +97,11 @@ abstract class ServerConfiguration implements IServerConfiguration {
 	}
 
 	public getDetectionPoints(): DetectionPoint[] {
-		return this.detectionPoints;
+		return this.detectionPoints.detectionPoints;
 	}
 
 	public setDetectionPoints(detectionPoints: DetectionPoint[]): ServerConfiguration {
-		this.detectionPoints = detectionPoints;
+		this.detectionPoints.detectionPoints = detectionPoints;
 		return this;
 	}
 
@@ -153,25 +163,25 @@ abstract class ServerConfiguration implements IServerConfiguration {
 		return this;
 	}
 
-	public isGeolocateIpAddresses(): boolean {
-		return this.geolocateIpAddresses;
-	}
+	// public isGeolocateIpAddresses(): boolean {
+	// 	return this.geolocateIpAddresses;
+	// }
 
-	public setGeolocateIpAddresses(geolocateIpAddresses: boolean): ServerConfiguration {
-		this.geolocateIpAddresses = geolocateIpAddresses;
+	// public setGeolocateIpAddresses(geolocateIpAddresses: boolean): ServerConfiguration {
+	// 	this.geolocateIpAddresses = geolocateIpAddresses;
 
-		return this;
-	}
+	// 	return this;
+	// }
 
-	public getGeolocationDatabasePath(): string {
-		return this.geolocationDatabasePath;
-	}
+	// public getGeolocationDatabasePath(): string {
+	// 	return this.geolocationDatabasePath;
+	// }
 
-	public setGeolocationDatabasePath(geolocationDatabasePath: string): ServerConfiguration {
-		this.geolocationDatabasePath = geolocationDatabasePath;
+	// public setGeolocationDatabasePath(geolocationDatabasePath: string): ServerConfiguration {
+	// 	this.geolocationDatabasePath = geolocationDatabasePath;
 
-		return this;
-	}
+	// 	return this;
+	// }
 
 	/**
 	 * Find related detection systems based on a given detection system.
@@ -308,15 +318,16 @@ abstract class ServerConfiguration implements IServerConfiguration {
 
 		const other: ServerConfiguration = obj as ServerConfiguration;
 
-		return Utils.equalsArrayEntitys(this.detectionPoints, other.getDetectionPoints()) &&
+		return Utils.equalsArrayEntitys(this.detectionPoints.detectionPoints, other.getDetectionPoints()) &&
                Utils.equalsArrayEntitys(this.correlationSets, other.getCorrelationSets()) &&
 			   this.clientApplicationIdentificationHeaderName === other.getClientApplicationIdentificationHeaderName() &&
                Utils.equalsArrayEntitys(this.clientApplications, other.getClientApplications()) &&
 			   this.serverHostName === other.getServerHostName() &&
 			   this.serverPort === other.getServerPort() &&
-			   this.serverSocketTimeout === other.getServerSocketTimeout() &&
-			   this.geolocateIpAddresses === other.isGeolocateIpAddresses() &&
-			   this.geolocationDatabasePath === other.getGeolocationDatabasePath();
+			   this.serverSocketTimeout === other.getServerSocketTimeout();
+			//     &&
+			//    this.geolocateIpAddresses === other.isGeolocateIpAddresses() &&
+			//    this.geolocationDatabasePath === other.getGeolocationDatabasePath();
 	}
 
 	// @Override
@@ -355,4 +366,4 @@ interface ServerConfigurationReader {
 	read(configurationLocation: string, validatorLocation: string | null, reload: boolean): ServerConfiguration | null;
 }
 
-export {IServerConfiguration, ServerConfiguration, ServerConfigurationReader};
+export {IClient, IServerConfiguration, ServerConfiguration, ServerConfigurationReader};

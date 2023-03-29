@@ -5,6 +5,10 @@ class CorrelationSet implements IEquals {
 	/** {@link ClientApplication}s that are represented in this correlation set */
 	private clientApplications: string[] = [];
 	
+	constructor(clientApplications: string[] = []) {
+		this.clientApplications = clientApplications;
+	}
+
 	public getClientApplications(): string[] {
 		return this.clientApplications;
 	}

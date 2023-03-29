@@ -26,7 +26,7 @@ abstract class BaseTest {
 
 		this.appSensorServer.setConfiguration(
 			new JSONServerConfigurationReader()
-					.read('./appsensor-server-config.json', './appsensor-server-config_schema.json'));
+					.read('./execution-modes/appsensor-local/tests/analysis/appsensor-server-config.json'));
 					
 		const emptyRules: Rule[] = [];
 		this.appSensorServer.getConfiguration()!.setRules(emptyRules);

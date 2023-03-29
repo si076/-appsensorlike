@@ -26,13 +26,13 @@ class AppsensorEntity implements IAppsensorEntity {
 	// @Id
 	// @Column(columnDefinition = "integer")
 	// @GeneratedValue
-	protected id?: string | undefined = '';
+	protected id?: string | undefined;
 
 	public  getId(): string | undefined {
 		return this.id;
 	}
 
-	public setId(id: string): void {
+	public setId(id: string | undefined): void {
 		this.id = id;
 	}
 
@@ -276,11 +276,11 @@ class Response  extends AppsensorEntity {
 	
 	/** User the response is for */
 	// @ManyToOne(cascade = CascadeType.ALL)
-	private user?: User | null | undefined = null;
+	private user?: User | null | undefined;
 	
 	/** When the event occurred */
 	// @Column
-	private timestamp?: Date | undefined = new Date();
+	private timestamp?: Date | undefined;
 	
 	/** String representing response action name */
 	// @Column
@@ -288,37 +288,49 @@ class Response  extends AppsensorEntity {
 	
 	/** Interval response should last for, if applicable. Ie. block access for 30 minutes */
 	// @ManyToOne(cascade = CascadeType.ALL)
-	private interval: Interval | null | undefined = null;
+	private interval?: Interval | null | undefined;
 
 	/** Client application name that response applies to. */
 	// @ManyToOne(cascade = CascadeType.ALL)
-	private detectionSystem?: DetectionSystem | null | undefined = null;
+	private detectionSystem?: DetectionSystem | null | undefined;
 	
 	/** Represent extra metadata, anything client wants to send */
 	// @ElementCollection
 	// @OneToMany(cascade = CascadeType.ALL)
-	private metadata?: KeyValuePair[] = [];
+	private metadata?: KeyValuePair[] | undefined;
 	
-	private active?: boolean = false;
+	private active?: boolean;
 	
-	public constructor(user: User | null = null, 
+	public constructor(user: User | null | undefined = undefined, 
 		               action: string = '', 
-					   timestamp: Date | null = null, 
-					   detectionSystem: DetectionSystem | null = null, 
-					   interval: Interval | null = null) {
+					   timestamp: Date | undefined = undefined, 
+					   detectionSystem: DetectionSystem | null | undefined = undefined, 
+					   interval: Interval | null | undefined = undefined) {
 		super();
-		this.setUser(user);
-		this.setAction(action);
-		this.setTimestamp(timestamp);
-		this.setDetectionSystem(detectionSystem);
-		this.setInterval(interval);
+		if (user !== undefined) {
+			this.user = user;
+		}
+
+		this.action = action;
+
+		if (timestamp !== undefined) {
+			this.timestamp = timestamp;
+		}
+
+		if (detectionSystem !== undefined) {
+			this.detectionSystem = detectionSystem;
+		}
+
+		if (interval !== undefined) {
+			this.interval = interval;
+		}
 	}
 	
 	public getUser(): User | null | undefined {
 		return this.user;
 	}
 
-	public setUser(user: User | null): Response {
+	public setUser(user: User | null | undefined): Response {
 		this.user = user;
 		return this;
 	}
@@ -327,7 +339,7 @@ class Response  extends AppsensorEntity {
 		return this.timestamp;
 	}
 
-	public setTimestamp(timestamp: Date | null): Response {
+	public setTimestamp(timestamp: Date | undefined): Response {
 		if (timestamp) {
 			this.timestamp = new Date(timestamp);
 		} else {
@@ -358,7 +370,7 @@ class Response  extends AppsensorEntity {
 		return this.detectionSystem;
 	}
 
-	public setDetectionSystem(detectionSystem: DetectionSystem | null): Response {
+	public setDetectionSystem(detectionSystem: DetectionSystem | null | undefined): Response {
 		this.detectionSystem = detectionSystem;
 		return this;
 	}
@@ -462,7 +474,7 @@ class Category {
 class DetectionPoint  extends AppsensorEntity {
 
 	// @Column
-	private guid?: string = '';
+	protected guid?: string | undefined;
 
 
 	/**
@@ -475,7 +487,7 @@ class DetectionPoint  extends AppsensorEntity {
 	 * Identifier for the detection point. (ex. "IE1", "RE2")
 	 */
 	// @Column
-	private label?: string | undefined = '';
+	private label?: string | undefined;
 
 	/**
 	 * {@link Threshold} for determining whether given detection point (associated {@link Event})
@@ -493,27 +505,46 @@ class DetectionPoint  extends AppsensorEntity {
 	// private Collection<Response> responses = new ArrayList<Response>();
 	private responses: Response[] = [];
 
-	public constructor(category: string = '', 
-					   label: string = '', 
+	public constructor(category: string, 
+					   label: string, 
 	                   threshold: Threshold  | null = null, 
 					   responses: Response[] = [], 
-					   guid: string = '') {
+					   guid: string | undefined = undefined
+					   ) {
 		super();
-		this.setCategory(category);
-		this.setLabel(label);
-		this.setThreshold(threshold);
-		this.setResponses(responses);
-		this.setGuid(guid);
+		if (category.trim().length === 0) {
+			throw new Error('Detection point category cannot be empty!');
+		}
+		this.category = category;
+
+		//label can be empty when it was read from a configuration
+		//but in this case it is set to be equal to id
+		//for more details about that change in the original java code 
+		//see https://github.com/jtmelton/appsensor/issues/18
+
+		if (label.trim().length === 0) {
+			throw new Error('Detection point label cannot be empty when set with constructor!');
+		}
+		this.label = label;
+		//here we set id as well since it hasn't been set so far
+		this.id = this.label;
+
+		this.threshold = threshold;
+		this.responses = responses;
+
+		if (guid !== undefined) {
+			this.guid = guid;
+		}
 	}
 
 	public getCategory(): string {
 		return this.category;
 	}
 
-	public setCategory(category: string): DetectionPoint {
-		this.category = category;
-		return this;
-	}
+	// public setCategory(category: string): DetectionPoint {
+	// 	this.category = category;
+	// 	return this;
+	// }
 
 	public getLabel(): string | undefined {
 		return this.label;
@@ -1294,8 +1325,13 @@ class ClientApplication implements IEquals {
 	private roles: Role[] = [];
 
 	/** The {@link IPAddress} of the client application, optionally set in the server configuration */
-	private ipAddress?: IPAddress | null | undefined = null;
+	private ipAddress?: IPAddress | undefined;
 	
+	constructor(name: string = '', roles: Role[] = []) {
+		this.name = name;
+		this.roles = roles;
+	}
+
 	public getName(): string {
 		return this.name;
 	}
@@ -1309,12 +1345,13 @@ class ClientApplication implements IEquals {
 		return this.roles;
 	}
 
-	public getIpAddress(): IPAddress | null | undefined {
+	public getIpAddress(): IPAddress | undefined {
 		return this.ipAddress;
 	}
 
-	public setIpAddress(ipAddress: IPAddress | null): void {
+	public setIpAddress(ipAddress: IPAddress): ClientApplication {
 		this.ipAddress = ipAddress;
+		return this;
 	}
 	
 	public equals(obj: Object | null): boolean {

@@ -63,10 +63,8 @@ class SimpleAggregateEventAnalysisEngineTest extends BaseTest {
 		const detectionPoints: DetectionPoint[] = [];
 
 		// dp1: 3 events in 5 minutes
-		const detectionPoint1 = new DetectionPoint();
+		const detectionPoint1 = new DetectionPoint(Category.INPUT_VALIDATION, "IE1");
 
-		detectionPoint1.setCategory(Category.INPUT_VALIDATION);
-		detectionPoint1.setLabel("IE1");
 		detectionPoint1.setThreshold(new Threshold(3, new Interval(5, INTERVAL_UNITS.MINUTES)));
 		detectionPoint1.setResponses(SimpleAggregateEventAnalysisEngineTest.generateResponses());
 

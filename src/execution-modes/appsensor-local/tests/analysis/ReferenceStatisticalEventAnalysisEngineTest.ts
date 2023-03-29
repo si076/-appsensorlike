@@ -240,10 +240,7 @@ class ReferenceStatisticalEventAnalysisEngineTest extends BaseTest {
     }
 
     private generateDetectionPoint1(): DetectionPoint {
-        const detectionPoint1 = new DetectionPoint();
-        detectionPoint1.setCategory(Category.INPUT_VALIDATION);
-        detectionPoint1.setLabel("IE1");
-        return detectionPoint1;
+        return new DetectionPoint(Category.INPUT_VALIDATION, "IE1");
     }
 
     private generateDetectionSystemLocalhostMe(): DetectionSystem {

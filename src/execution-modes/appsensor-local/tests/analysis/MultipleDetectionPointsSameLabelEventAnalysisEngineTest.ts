@@ -10,15 +10,13 @@ class MultipleDetectionPointsSameLabelEventAnalysisEngineTest extends BaseTest {
 
 	private static bob = new User("bob");
 
-	private static detectionPoint1 = new DetectionPoint();
+	private static detectionPoint1 = new DetectionPoint(Category.REQUEST, "RE7");
 
 	private static detectionSystems1: string[] = [];
 
 	private static detectionSystem1 = new DetectionSystem("localhostme");
 
 	static {
-		MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionPoint1.setCategory(Category.REQUEST);
-		MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionPoint1.setLabel("RE7");
 
 		MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionSystems1.push(
 			MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionSystem1.getDetectionSystemId());

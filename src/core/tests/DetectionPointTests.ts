@@ -10,15 +10,13 @@ class DetectionPointTest {
 	// 	point1.typeAndThresholdMatches(null);
 	// }
 	
-	// @Test
-	public static testTypeMatchesEmptyDetectionPoints(): void {
-		const point1: DetectionPoint = new DetectionPoint();
-		const point2: DetectionPoint = new DetectionPoint();
+	// public static testTypeMatchesEmptyDetectionPoints(): void {
+	// 	const point1: DetectionPoint = new DetectionPoint();
+	// 	const point2: DetectionPoint = new DetectionPoint();
 		
-		assert.equal(point1.typeAndThresholdMatches(point2), true);
-	}
+	// 	assert.equal(point1.typeAndThresholdMatches(point2), true);
+	// }
 	
-	// @Test
 	public static testTypeMatchesFullMismatch(): void {
 		const point1: DetectionPoint = new DetectionPoint("a", "a1", 
 				new Threshold(5, new Interval(1, INTERVAL_UNITS.SECONDS)));
@@ -28,7 +26,6 @@ class DetectionPointTest {
 		assert.equal(point1.typeAndThresholdMatches(point2), false);
 	}
 	
-	// @Test
 	public static testTypeMatchesCategoryMismatch(): void {
 		const point1: DetectionPoint = new DetectionPoint("a", "a1", 
 				new Threshold(5, new Interval(1, INTERVAL_UNITS.SECONDS)));
@@ -38,7 +35,6 @@ class DetectionPointTest {
 		assert.equal(point1.typeAndThresholdMatches(point2), false);
 	}
 	
-	// @Test
 	public static testTypeMatchesLabelMismatch(): void {
 		const point1: DetectionPoint = new DetectionPoint("a", "a1", 
 				new Threshold(5, new Interval(1, INTERVAL_UNITS.SECONDS)));
@@ -48,7 +44,6 @@ class DetectionPointTest {
 		assert.equal(point1.typeAndThresholdMatches(point2), false);
 	}
 	
-	// @Test
 	public static testTypeMatchesThresholdMismatch(): void {
 		const point1: DetectionPoint = new DetectionPoint("a", "a1", 
 				new Threshold(5, new Interval(1, INTERVAL_UNITS.SECONDS)));
@@ -58,7 +53,6 @@ class DetectionPointTest {
 		assert.equal(point1.typeAndThresholdMatches(point2), false);
 	}
 	
-	// @Test
 	public static testTypeMatchesThresholdMatch(): void {
 		const point1: DetectionPoint = new DetectionPoint("a", "a1", 
 				new Threshold(5, new Interval(1, INTERVAL_UNITS.SECONDS)));
@@ -72,7 +66,7 @@ class DetectionPointTest {
 		console.log();
         console.log('-> Start of DetectionPointTest');
 
-        DetectionPointTest.testTypeMatchesEmptyDetectionPoints();
+        // DetectionPointTest.testTypeMatchesEmptyDetectionPoints();
         DetectionPointTest.testTypeMatchesFullMismatch();
         DetectionPointTest.testTypeMatchesCategoryMismatch();
         DetectionPointTest.testTypeMatchesLabelMismatch();

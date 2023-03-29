@@ -3,8 +3,8 @@ import EventEmitter from 'events';
 import Ajv, { AnySchemaObject, ErrorObject } from "ajv"
 import addFormats from "ajv-formats"
 
-import { ServerConfiguration, ServerConfigurationReader } from "../../../core/configuration/server/server_configuration.js";
-import { Clause, Expression, Rule } from '../../../core/rule/rule.js';
+import { IClient, ServerConfiguration, ServerConfigurationReader } from "../../../core/configuration/server/server_configuration.js";
+import { Clause, Expression, MonitorPoint, Rule } from '../../../core/rule/rule.js';
 import { ClientApplication, DetectionPoint, DetectionSystem, Interval, IPAddress, KeyValuePair, Response, Threshold, User } from '../../../core/core.js';
 import { CorrelationSet } from '../../../core/correlation/correlation.js';
 import { GeoLocation } from '../../../core/geolocation/geolocation.js';
@@ -65,7 +65,7 @@ class JSONServerConfigurationReader implements ServerConfigurationReader {
         const threshold = new Threshold();
         threshold.setInterval(interval);
 
-        const detPoint = new DetectionPoint();
+        const detPoint = new DetectionPoint("something", "something");
         detPoint.setThreshold(threshold);
         detPoint.setResponses([response]);
 
@@ -84,7 +84,13 @@ class JSONServerConfigurationReader implements ServerConfigurationReader {
         JSONServerConfigurationReader.configPrototypesSample.rules = [rule];
 
 
-        JSONServerConfigurationReader.configPrototypesSample.detectionPoints = [detPoint];
+        JSONServerConfigurationReader.configPrototypesSample.detectionPoints.clients = [
+            {
+                clientName: "client",
+                detectionPoints: [detPoint]
+            }
+        ];
+        JSONServerConfigurationReader.configPrototypesSample.detectionPoints.detectionPoints = [detPoint];
 
         const correlSet = new CorrelationSet();
         JSONServerConfigurationReader.configPrototypesSample.correlationSets = [correlSet];
@@ -117,10 +123,14 @@ class JSONServerConfigurationReader implements ServerConfigurationReader {
             if (config) {
                 this.setPrototypeInDepth(config, JSONServerConfigurationReader.configPrototypesSample);
 
+                this.customPoints(config);
+
                 //set detection points' label to be as id 
                 //for more details about that change in the original java code 
                 //see https://github.com/jtmelton/appsensor/issues/18
                 this.adjustDetectionPoints(config.getDetectionPoints());
+
+                this.adjustRulesMonitorPoints(config);
 
             }
         } catch (error) {
@@ -130,6 +140,8 @@ class JSONServerConfigurationReader implements ServerConfigurationReader {
                 console.error(error);
             }
         }
+
+        // console.log(JSON.stringify(config, null, 2));
 
         if (config && validatorLocation !== null) {
             // console.log('Validating config...');
@@ -163,6 +175,49 @@ class JSONServerConfigurationReader implements ServerConfigurationReader {
         
         return config;
     }
+
+    private customPoints(config: ServerConfiguration) {
+        const customDetectionPoints = new Map<string, DetectionPoint[]>();
+
+        if (config.detectionPoints.clients) {
+            config.detectionPoints.clients.forEach(el => {
+
+                //set detection points' label to be as id 
+                //for more details about that change in the original java code 
+                //see https://github.com/jtmelton/appsensor/issues/18
+                this.adjustDetectionPoints(el.detectionPoints);
+
+                customDetectionPoints.set(el.clientName, el.detectionPoints);
+            });
+
+            config.setCustomDetectionPoints(customDetectionPoints);
+        }
+    }
+
+    private adjustRulesMonitorPoints(config: ServerConfiguration) {
+        if (config.rules) {
+            config.rules.forEach(rl => {
+                rl.getExpressions().forEach(ex => {
+                    ex.getClauses().forEach(cl => {
+                        const monitPoints: MonitorPoint[] = [];
+
+                        cl.getMonitorPoints().forEach(dp => {
+
+                            //set detection point's label to be as id 
+                            //for more details about that change in the original java code 
+                            //see https://github.com/jtmelton/appsensor/issues/18
+                            dp.setLabel(dp.getId());
+
+                            monitPoints.push(new MonitorPoint(dp));
+                        });
+
+                        cl.setMonitorPoints(monitPoints);
+                    });
+                })
+            });
+        }
+    }
+
 
     private validateConfig(config: ServerConfiguration, validatorLocation: string): ErrorObject<string, Record<string, any>, unknown>[] | null | undefined {
         // console.log('>>> ConfigurationManager.validateConfig');
@@ -232,4 +287,4 @@ class JSONServerConfigurationReader implements ServerConfigurationReader {
 
 }
 
-export {JSONServerConfigurationReader};
+export {JSONServerConfiguration, JSONServerConfigurationReader};

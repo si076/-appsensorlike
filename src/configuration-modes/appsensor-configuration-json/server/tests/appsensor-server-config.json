@@ -1,0 +1,560 @@
+{
+    "clientApplicationIdentificationHeaderName": "X-Appsensor-Client-Application-Name",
+
+    "serverHostName": "localhost",
+
+    "serverPort": 8080,
+
+    "serverSocketTimeout": 10,
+
+    "clientApplications": [
+        {
+            "name": "myclientapp1",
+            "roles": [
+                "ADD_EVENT",
+                "ADD_ATTACK",
+                "GET_RESPONSES",
+                "EXECUTE_REPORT"
+            ]
+        },
+        {
+            "name": "myclientapp2",
+            "roles": [
+                "GET_RESPONSES",
+                "EXECUTE_REPORT"
+            ],
+            "ipAddress": {
+                "address": "1.1.1.1",
+                "geoLocation": {
+                    "latitude": -26.3811,
+                    "longitude": 27.8376
+                }
+            }
+        }
+    ],
+
+    "correlationSets": [
+        {
+            "clientApplications": [
+                "server1",
+                "server3"
+            ]
+        },
+        {
+            "clientApplications": [
+                "server2",
+                "server4"
+            ]
+        }
+    ],
+
+    
+    "detectionPoints": {
+        "clients": [
+            {
+                "clientName": "client1",
+                "detectionPoints": [
+                    {
+                        "category": "Request",
+                        "id": "RE3",
+                        "threshold": {
+                            "count": 13,
+                            "interval": {
+                                "unit": "minutes",
+                                "duration": 6
+                            }
+                        },
+                        "responses": [
+                            {
+                                "action": "log"
+                            },
+                            {
+                                "action": "logout"
+                            },
+                            {
+                                "action": "disableUser"
+                            },
+                            {
+                                "action": "disableComponentForSpecificUser",
+                                "interval": {
+                                    "unit": "minutes",
+                                    "duration": 33
+                                }
+                            },
+                            {
+                                "action": "disableComponentForAllUsers",
+                                "interval": {
+                                    "unit": "minutes",
+                                    "duration": 13
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "category": "Request",
+                        "id": "RE4",
+                        "threshold": {
+                            "count": 14,
+                            "interval": {
+                                "unit": "minutes",
+                                "duration": 7
+                            }
+                        },
+                        "responses": [
+                            {
+                                "action": "log"
+                            },
+                            {
+                                "action": "logout"
+                            },
+                            {
+                                "action": "disableUser"
+                            },
+                            {
+                                "action": "disableComponentForSpecificUser",
+                                "interval": {
+                                    "unit": "minutes",
+                                    "duration": 34
+                                }
+                            },
+                            {
+                                "action": "disableComponentForAllUsers",
+                                "interval": {
+                                    "unit": "minutes",
+                                    "duration": 14
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "clientName": "client2",
+                "detectionPoints": [
+                    {
+                        "category": "Request",
+                        "id": "RE5",
+                        "threshold": {
+                            "count": 15,
+                            "interval": {
+                                "unit": "minutes",
+                                "duration": 8
+                            }
+                        },
+                        "responses": [
+                            {
+                                "action": "log"
+                            },
+                            {
+                                "action": "logout"
+                            },
+                            {
+                                "action": "disableUser"
+                            },
+                            {
+                                "action": "disableComponentForSpecificUser",
+                                "interval": {
+                                    "unit": "minutes",
+                                    "duration": 35
+                                }
+                            },
+                            {
+                                "action": "disableComponentForAllUsers",
+                                "interval": {
+                                    "unit": "minutes",
+                                    "duration": 15
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "category": "Request",
+                        "id": "RE7",
+                        "threshold": {
+                            "count": 2,
+                            "interval": {
+                                "unit": "minutes",
+                                "duration": 8
+                            }
+                        },
+                        "responses": [
+                            {
+                                "action": "log"
+                            }
+                        ]
+                    },
+                    {
+                        "category": "Request",
+                        "id": "RE7",
+                        "threshold": {
+                            "count": 5,
+                            "interval": {
+                                "unit": "minutes",
+                                "duration": 5
+                            }
+                        },
+                        "responses": [
+                            {
+                                "action": "logout"
+                            }
+                        ]
+                    },
+                    {
+                        "category": "Input Validation",
+                        "id": "IE15",
+                        "threshold": {
+                            "count": 3,
+                            "interval": {
+                                "unit": "minutes",
+                                "duration": 5
+                            }
+                        },
+                        "responses": [
+                            {
+                                "action": "log"
+                            },
+                            {
+                                "action": "disableComponentForSpecificUser",
+                                "interval": {
+                                    "unit": "seconds",
+                                    "duration": 20
+                                }
+                            },
+                            {
+                                "action": "disableComponentForAllUsers",
+                                "interval": {
+                                    "unit": "seconds",
+                                    "duration": 45
+                                }
+                            }
+                        ]
+                    }
+            
+                ]
+            }
+        ],
+        "detectionPoints": [
+        {
+            "category": "Input Validation",
+            "id": "IE1",
+            "threshold": {
+                "count": 11,
+                "interval": {
+                    "unit": "minutes",
+                    "duration": 4
+                }
+            },
+            "responses": [
+                {
+                    "action": "log"
+                },
+                {
+                    "action": "logout"
+                },
+                {
+                    "action": "disableUser"
+                },
+                {
+                    "action": "disableComponentForSpecificUser",
+                    "interval": {
+                        "unit": "minutes",
+                        "duration": 31
+                    }
+                },
+                {
+                    "action": "disableComponentForAllUsers",
+                    "interval": {
+                        "unit": "minutes",
+                        "duration": 11
+                    }
+                }
+            ]
+        },
+        {
+            "category": "Input Validation",
+            "id": "IE2",
+            "threshold": {
+                "count": 12,
+                "interval": {
+                    "unit": "minutes",
+                    "duration": 5
+                }
+            },
+            "responses": [
+                {
+                    "action": "log"
+                },
+                {
+                    "action": "logout"
+                },
+                {
+                    "action": "disableUser"
+                },
+                {
+                    "action": "disableComponentForSpecificUser",
+                    "interval": {
+                        "unit": "minutes",
+                        "duration": 32
+                    }
+                },
+                {
+                    "action": "disableComponentForAllUsers",
+                    "interval": {
+                        "unit": "minutes",
+                        "duration": 12
+                    }
+                }
+            ]
+        }
+    ]},
+
+    "rules": [
+        {
+            "name": "Rule1",
+            "guid": "00000000-0000-0000-0000-000000000001",
+            "expressions": [
+                {
+                    "clauses": [
+                        {
+                            "monitorPoints": [
+                                {
+                                    "guid": "00000000-0001-00e1-00c1-000000000001",
+                                    "category": "Input Validation",
+                                    "id": "IE1",
+                                    "threshold": {
+                                        "count": 11,
+                                        "interval": {
+                                            "unit": "minutes",
+                                            "duration": 4
+                                        }
+                                    },
+                                    "responses": [
+                                        {
+                                            "action": "log"
+                                        },
+                                        {
+                                            "action": "logout"
+                                        },
+                                        {
+                                            "action": "disableUser"
+                                        },
+                                        {
+                                            "action": "disableComponentForSpecificUser",
+                                            "interval": {
+                                                "unit": "minutes",
+                                                "duration": 31
+                                            }
+                                        },
+                                        {
+                                            "action": "disableComponentForAllUsers",
+                                            "interval": {
+                                                "unit": "minutes",
+                                                "duration": 11
+                                            }
+                                        }
+                                    ]
+                                },
+                                {
+                                    "guid": "00000000-0001-00e1-00c1-000000000002",
+                                    "category": "Input Validation",
+                                    "id": "IE2",
+                                    "threshold": {
+                                        "count": 12,
+                                        "interval": {
+                                            "unit": "minutes",
+                                            "duration": 5
+                                        }
+                                    },
+                                    "responses": [
+                                        {
+                                            "action": "log"
+                                        },
+                                        {
+                                            "action": "logout"
+                                        },
+                                        {
+                                            "action": "disableUser"
+                                        },
+                                        {
+                                            "action": "disableComponentForSpecificUser",
+                                            "interval": {
+                                                "unit": "minutes",
+                                                "duration": 32
+                                            }
+                                        },
+                                        {
+                                            "action": "disableComponentForAllUsers",
+                                            "interval": {
+                                                "unit": "minutes",
+                                                "duration": 12
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "monitorPoints": [
+                                {
+                                    "guid": "00000000-0001-00e1-00c2-000000000001",
+                                    "category": "Request",
+                                    "id": "RE7",
+                                    "threshold": {
+                                        "count": 2,
+                                        "interval": {
+                                            "unit": "minutes",
+                                            "duration": 8
+                                        }
+                                    },
+                                    "responses": [
+                                        {
+                                            "action": "log"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "window": {
+                        "duration": 5,
+                        "unit": "minutes"
+                    }
+                },
+                {
+                    "clauses": [
+                        {
+                            "monitorPoints": [
+                                {
+                                    "guid": "00000000-0001-00e2-00c1-000000000001",
+                                    "category": "Request",
+                                    "id": "RE5",
+                                    "threshold": {
+                                        "count": 15,
+                                        "interval": {
+                                            "unit": "minutes",
+                                            "duration": 8
+                                        }
+                                    },
+                                    "responses": [
+                                        {
+                                            "action": "log"
+                                        },
+                                        {
+                                            "action": "logout"
+                                        },
+                                        {
+                                            "action": "disableUser"
+                                        },
+                                        {
+                                            "action": "disableComponentForSpecificUser",
+                                            "interval": {
+                                                "unit": "minutes",
+                                                "duration": 35
+                                            }
+                                        },
+                                        {
+                                            "action": "disableComponentForAllUsers",
+                                            "interval": {
+                                                "unit": "minutes",
+                                                "duration": 15
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "window": null
+                }
+            ],
+            "window": {
+                "duration": 10,
+                "unit": "minutes"
+
+            },
+            "responses": [
+                {
+                    "action": "log"
+                },
+                {
+                    "action": "logout"
+                },
+                {
+                    "action": "disableUser"
+                },
+                {
+                    "action": "disableComponentForSpecificUser",
+                    "interval": {
+                        "unit": "minutes",
+                        "duration": 32
+                    }
+                },
+                {
+                    "action": "disableComponentForAllUsers",
+                    "interval": {
+                        "unit": "minutes",
+                        "duration": 12
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Rule2",
+            "guid": "00000000-0000-0000-0000-000000000002",
+            "expressions": [
+                {
+                    "clauses": [
+                        {
+                            "monitorPoints": [
+                                {
+                                    "guid": "00000000-0002-00e1-00c1-000000000001",
+                                    "category": "Input Validation",
+                                    "id": "IE15",
+                                    "threshold": {
+                                        "count": 3,
+                                        "interval": {
+                                            "unit": "minutes",
+                                            "duration": 5
+                                        }
+                                    },
+                                    "responses": [
+                                        {
+                                            "action": "log"
+                                        },
+                                        {
+                                            "action": "disableComponentForSpecificUser",
+                                            "interval": {
+                                                "unit": "seconds",
+                                                "duration": 20
+                                            }
+                                        },
+                                        {
+                                            "action": "disableComponentForAllUsers",
+                                            "interval": {
+                                                "unit": "seconds",
+                                                "duration": 45
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "window": {
+                        "duration": 2,
+                        "unit": "seconds"
+                    }
+                }
+            ],
+            "window": {
+                "duration": 3,
+                "unit": "seconds"
+            },
+            "responses": [
+                {
+                    "action": "logout"
+                }
+            ]
+        }
+    ]
+}

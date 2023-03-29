@@ -92,13 +92,19 @@ class Notification extends Interval {
 }
 
 class MonitorPoint extends DetectionPoint {
-
+	
 	public constructor(detectionPoint: DetectionPoint, guid: string = '') {
 		super(detectionPoint.getCategory(),
-				detectionPoint.getLabel(),
-				detectionPoint.getThreshold(),
-				detectionPoint.getResponses(),
-				guid);
+			  (() => {
+				//to satisfy TS
+				const label = detectionPoint.getLabel();
+				const id = detectionPoint.getId();
+				return label !== undefined ? label : (id !== undefined ? id : '');
+
+			  })(),
+			  detectionPoint.getThreshold(),
+			  detectionPoint.getResponses());
+		this.guid = guid !== '' ? guid : detectionPoint.getGuid();
 	}
 }
 
