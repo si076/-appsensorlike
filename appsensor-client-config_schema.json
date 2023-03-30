@@ -1,0 +1,68 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "definitions": {
+        "ServerConnection": {
+            "additionalProperties": false,
+            "properties": {
+                "clientApplicationIdentificationHeaderName": {
+                    "description": "The client application identifier header name, optionally overridden",
+                    "type": "string"
+                },
+                "clientApplicationIdentificationHeaderValue": {
+                    "default": "",
+                    "description": "The client application identifier header value",
+                    "type": "string"
+                },
+                "port": {
+                    "description": "The port to connect to - optional and used only in certain protocols (ie. thrift)",
+                    "type": "number",
+                    "minimum": 0
+                },
+                "socketTimeout": {
+                    "description": "The socket timeout for the connection (in milliseconds) - optional and used only in certain protocols (ie. thrift)",
+                    "type": "number",
+                    "minimum": 0
+                },
+                "type": {
+                    "default": "",
+                    "description": "type of server connection: rest/soap",
+                    "type": "string"
+                },
+                "url": {
+                    "default": "",
+                    "description": "The url to connect to",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "clientApplicationIdentificationHeaderValue",
+                "type",
+                "url"
+            ],
+            "type": "object"
+        }
+    },
+    "properties": {
+        "configurationFile": {
+            "type": "string"
+        },
+        "serverConnection": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/ServerConnection"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "description": "Server connection with configuration info for rest/soap connections"
+        }
+    },
+    "required": [
+        "serverConnection"
+    ],
+    "type": "object"
+}
+

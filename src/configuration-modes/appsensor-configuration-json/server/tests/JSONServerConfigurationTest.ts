@@ -208,6 +208,10 @@ class JSONServerConfigurationTest {
 
         assert.deepStrictEqual(configActual, configExpected);
 
+        //just tests some methods to ensure that the config object has got proper prototype
+        assert.strictEqual(configActual.getDetectionPoints()![0].getThreshold()!.getInterval()!.getDuration(), 4);
+        assert.strictEqual(configActual.getRules()![0].getExpressions()[1].getClauses()[0].getMonitorPoints()[0].getResponses()[2].getAction(), "disableUser");
+
         console.log('<-- testConfigurationReadOfAllElements ');
     }
 

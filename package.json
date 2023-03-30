@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "gen_server_config_schema": "\"C:/Program Files/nodejs_12/npx\" typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-server-config_schema.json IServerConfiguration"
+    "gen_server_config_schema": "\"C:/Program Files/nodejs_12/npx\" typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-server-config_schema.json IServerConfiguration",
+    "gen_client_config_schema": "\"C:/Program Files/nodejs_12/npx\" typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-client-config_schema.json ClientConfiguration"
   },
   "repository": {
     "type": "git",

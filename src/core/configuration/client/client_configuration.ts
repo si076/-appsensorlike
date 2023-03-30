@@ -11,7 +11,7 @@ interface ClientConfigurationReader {
 	 * @return populated configuration object
 	 * @throws ConfigurationException
 	 */
-	read(): ClientConfiguration;
+	read(): ClientConfiguration | null;
 	
 	/**
 	 * 
@@ -20,12 +20,12 @@ interface ClientConfigurationReader {
 	 * @return populated configuration object
 	 * @throws ConfigurationException
 	 */
-	read(configurationLocation: string, validatorLocation: string): ClientConfiguration;
+	read(configurationLocation: string, validatorLocation: string | null, reload: boolean): ClientConfiguration | null;
 }
 
 class ServerConnection implements IEquals {
 	
-	private static DEFAULT_HEADER_NAME = "X-Appsensor-Client-Application-Name";
+	public static DEFAULT_HEADER_NAME = "X-Appsensor-Client-Application-Name";
 	
 	/** type of server connection: rest/soap */
 	private type: string = '';
@@ -34,16 +34,16 @@ class ServerConnection implements IEquals {
 	private url: string = '';
 	
 	/** The client application identifier header name, optionally overridden */
-	private clientApplicationIdentificationHeaderName: string = '';
+	private clientApplicationIdentificationHeaderName?: string;
 	
 	/** The client application identifier header value */
 	private clientApplicationIdentificationHeaderValue: string = '';
 	
 	/** The port to connect to - optional and used only in certain protocols (ie. thrift) */
-	private port: number = 0;
+	private port?: number;
 	
 	/** The socket timeout for the connection (in milliseconds) - optional and used only in certain protocols (ie. thrift) */
-	private socketTimeout: number = 0;
+	private socketTimeout?: number;
 	
 	public getType(): string {
 		return this.type;
@@ -64,7 +64,7 @@ class ServerConnection implements IEquals {
 		return this;
 	}
 	
-	public getClientApplicationIdentificationHeaderName(): string {
+	public getClientApplicationIdentificationHeaderName(): string | undefined {
 		return this.clientApplicationIdentificationHeaderName;
 	}
 	
@@ -91,7 +91,7 @@ class ServerConnection implements IEquals {
 		return this;
 	}
 	
-	public getPort(): number {
+	public getPort(): number | undefined {
 		return this.port;
 	}
 
@@ -101,7 +101,7 @@ class ServerConnection implements IEquals {
 		return this;
 	}
 
-	public getSocketTimeout(): number {
+	public getSocketTimeout(): number | undefined {
 		return this.socketTimeout;
 	}
 
@@ -158,12 +158,12 @@ class ServerConnection implements IEquals {
 
 class ClientConfiguration implements IEquals {
 
-	private configurationFile: string = '';
+	private configurationFile?: string;
 	
 	/** Server connection with configuration info for rest/soap connections */
 	private serverConnection: ServerConnection | null = null;
 	
-	public getConfigurationFile(): string {
+	public getConfigurationFile(): string | undefined {
 		return this.configurationFile;
 	}
 

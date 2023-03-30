@@ -1,0 +1,11 @@
+{
+    "serverConnection": {
+        "type": "ws",
+        "url": "http://localhost:9000/myapp/",
+        "clientApplicationIdentificationHeaderName": "X-Appsensor-Client-Application-Name",
+        "clientApplicationIdentificationHeaderValue": "something",
+        "port": 9000,
+        "socketTimeout": 1000
+    }
+    
+}
