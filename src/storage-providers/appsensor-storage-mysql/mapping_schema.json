@@ -1,0 +1,98 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "definitions": {
+        "IArrayStoreTable": {
+            "additionalProperties": false,
+            "properties": {
+                "uuidColumnName": {
+                    "type": "string"
+                },
+                "valueColumnName": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "uuidColumnName",
+                "valueColumnName"
+            ],
+            "type": "object"
+        },
+        "IClassToTableMap": {
+            "additionalProperties": false,
+            "properties": {
+                "properties": {
+                    "additionalProperties": {
+                        "$ref": "#/definitions/IPropertyMap"
+                    },
+                    "type": "object"
+                },
+                "table": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "properties",
+                "table"
+            ],
+            "type": "object"
+        },
+        "IPropertyMap": {
+            "additionalProperties": false,
+            "properties": {
+                "arrayElementClass": {
+                    "type": "string"
+                },
+                "arrayTable": {
+                    "type": "string"
+                },
+                "class": {
+                    "type": "string"
+                },
+                "column": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "column"
+            ],
+            "type": "object"
+        }
+    },
+    "properties": {
+        "arrayStoreTables": {
+            "additionalProperties": {
+                "$ref": "#/definitions/IArrayStoreTable"
+            },
+            "type": "object"
+        },
+        "cacheControl": {
+            "additionalProperties": false,
+            "properties": {
+                "doNotCacheClasses": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "doNotCacheClasses"
+            ],
+            "type": "object"
+        },
+        "classesToTablesMap": {
+            "additionalProperties": {
+                "$ref": "#/definitions/IClassToTableMap"
+            },
+            "type": "object"
+        }
+    },
+    "required": [
+        "arrayStoreTables",
+        "cacheControl",
+        "classesToTablesMap"
+    ],
+    "type": "object"
+}
+

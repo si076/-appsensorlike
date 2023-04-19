@@ -5,13 +5,13 @@ import { Clause, Expression, MonitorPoint, Rule } from '../../../core/rule/rule.
 import { ClientApplication, DetectionPoint, DetectionSystem, Interval, IPAddress, KeyValuePair, Response, Threshold, User } from '../../../core/core.js';
 import { CorrelationSet } from '../../../core/correlation/correlation.js';
 import { GeoLocation } from '../../../core/geolocation/geolocation.js';
-import { JSONConfig } from '../JSONConfig.js';
+import { JSONConfigReadValidate } from '../../../utils/Utils.js';
 
 
 class JSONServerConfiguration extends ServerConfiguration {
 }
 
-class JSONServerConfigurationReader extends JSONConfig implements ServerConfigurationReader {
+class JSONServerConfigurationReader extends JSONConfigReadValidate implements ServerConfigurationReader {
 
     private configFile: string = 'appsensor-server-config.json';
     private configSchemaFile: string = 'appsensor-server-config_schema.json'; 
@@ -73,57 +73,35 @@ class JSONServerConfigurationReader extends JSONConfig implements ServerConfigur
         JSONServerConfigurationReader.configPrototypesSample.clientApplications = [clientAppl];
     }
 
-    read(configurationLocation: string = '', validatorLocation: string | null = '', reload: boolean = false): ServerConfiguration | null {
+    public override read(configurationLocation: string = '', validatorLocation: string | null = '', reload: boolean = false): ServerConfiguration | null {
         let config: ServerConfiguration | null = null;
 
 
         if (configurationLocation === '') {
             configurationLocation = this.configFile;
-            // throw new Error('JSONServerConfigurationReader: configurationLocation cannot be null!');
         };
 
         if (validatorLocation === '') {
             validatorLocation = this.configSchemaFile;
-            // throw new Error('JSONServerConfigurationReader: validatorLocation cannot be null!');
         };
 
-        try {
-            // config = JSON.parse(fs.readFileSync(configurationLocation, 'utf8'), (key, value) => {
-            //     console.log(key + ' -> ' + value);
-            // });
-            config = JSON.parse(fs.readFileSync(configurationLocation, 'utf8'));
-            if (config) {
-                this.setPrototypeInDepth(config, JSONServerConfigurationReader.configPrototypesSample);
+        config = super.read(configurationLocation, validatorLocation, reload);
 
-                this.customPoints(config);
+        if (config) {
+            this.setPrototypeInDepth(config, JSONServerConfigurationReader.configPrototypesSample);
 
-                //set detection points' label to be as id 
-                //for more details about that change in the original java code 
-                //see https://github.com/jtmelton/appsensor/issues/18
-                this.adjustDetectionPoints(config.getDetectionPoints());
+            this.customPoints(config);
 
-                this.adjustRulesMonitorPoints(config);
+            //set detection points' label to be as id 
+            //for more details about that change in the original java code 
+            //see https://github.com/jtmelton/appsensor/issues/18
+            this.adjustDetectionPoints(config.getDetectionPoints());
 
-            }
-        } catch (error) {
-            if (!reload) {
-                throw error;
-            } else {
-                console.error(error);
-            }
+            this.adjustRulesMonitorPoints(config);
+
         }
 
         // console.log(JSON.stringify(config, null, 2));
-
-        if (config && validatorLocation !== null) {
-            // console.log('Validating config...');
-
-            const valid = this.validateConfig(config, validatorLocation, reload);
-            if (!valid) {
-                //There is(are) validation error(s) reported by validateConfig
-                config = null;
-            }
-        }
         
         return config;
     }

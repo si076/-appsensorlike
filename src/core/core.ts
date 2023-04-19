@@ -9,13 +9,28 @@ import { ResponseHandler, UserManager } from './response/response.js';
 import {Rule} from './rule/rule.js'
 import { AttackStore, EventStore, ResponseStore } from './storage/storage.js';
 
+class ObjectValidationError extends Error {
+
+	invalidObj: Object;
+
+	constructor(message: string, invalidObj: Object) {
+		super(message);
+		this.invalidObj = invalidObj;
+	}
+}
+
 interface IEquals {
 
 	equals(obj: Object | null | undefined): boolean
 
 }
 
-interface IAppsensorEntity extends IEquals {
+interface IValidate {
+
+	checkValid(): void;
+}
+
+interface IAppsensorEntity extends IEquals, IValidate {
 
    getId(): string | undefined;
 
@@ -45,6 +60,8 @@ class AppsensorEntity implements IAppsensorEntity {
 		return true;	
 	}
 
+	checkValid(): void {
+	}
 }
 
 class KeyValuePair extends AppsensorEntity {
@@ -91,6 +108,15 @@ class KeyValuePair extends AppsensorEntity {
 		return this.key === otherPair.key  && this.value === otherPair.value;
     }
 
+	public override checkValid(): void {
+		if (this.key.trim().length === 0) {
+			throw new ObjectValidationError("key cannot be empty string", this);
+		}
+		if (this.value.trim().length === 0) {
+			throw new ObjectValidationError("value cannot be empty string", this);
+		}
+	}
+
 	// public toString(): string {
 	// 	return new ToStringBuilder(this)
 	// 			.append("id", id)
@@ -127,9 +153,9 @@ class Interval extends AppsensorEntity {
 	 * SECONDS, MINUTES, HOURS, DAYS.
 	 */
 	// @Column
-	private unit: string = INTERVAL_UNITS.MINUTES;
+	private unit: INTERVAL_UNITS = INTERVAL_UNITS.MINUTES;
 
-	public constructor(duration: number = 0, unit: string = INTERVAL_UNITS.MINUTES) {
+	public constructor(duration: number = 0, unit: INTERVAL_UNITS = INTERVAL_UNITS.MINUTES) {
 		super();
 		if (duration === 0) {
 			console.warn("Interval's duration is 0");
@@ -151,7 +177,7 @@ class Interval extends AppsensorEntity {
 		return this.unit;
 	}
 
-	public setUnit(unit: string): Interval {
+	public setUnit(unit: INTERVAL_UNITS): Interval {
 		this.unit = unit;
 		return this;
 	}
@@ -193,7 +219,16 @@ class Interval extends AppsensorEntity {
 		return this.duration === other.getDuration() && this.unit === other.getUnit();
 	}
 	
+	public override checkValid(): void {
+		if (this.duration < 0) {
+			throw new ObjectValidationError("duration cannot be negative", this);
+		}
 
+        const units = Object.values(INTERVAL_UNITS);
+        if (units.indexOf(this.unit) === -1) {
+			throw new ObjectValidationError("unit is not of INTERVAL_UNITS", this);
+		}
+	}
 	// @Override
 	// public String toString() {
 	// 	return new ToStringBuilder(this).
@@ -261,7 +296,14 @@ class Threshold extends AppsensorEntity {
 			   Utils.equalsEntitys(this.interval, other.getInterval());
 	}
 
-	
+	public override checkValid(): void {
+		if (this.count < 0) {
+			throw new ObjectValidationError("count cannot be negative", this);
+		}
+		if (this.interval) {
+			this.interval.checkValid();
+		}
+	}
 	// @Override
 	// public String toString() {
 	// 	return new ToStringBuilder(this).
@@ -440,7 +482,27 @@ class Response  extends AppsensorEntity {
 			   Utils.equalsArrayEntitys(this.metadata, other.getMetadata());
 	}
 	
+	public override checkValid(): void {
+		if (this.action.trim().length === 0) {
+			throw new ObjectValidationError("action cannot be empty string", this);
+		}
 
+		if (this.user) {
+			this.user.checkValid();
+		}
+		if (this.detectionSystem) {
+			this.detectionSystem.checkValid();
+		}
+		if (this.interval) {
+			this.interval.checkValid();
+		}
+		if (this.metadata) {
+			this.metadata.forEach(element => {
+				element.checkValid();
+			});
+			 
+		}
+	}
 	// @Override
 	// public String toString() {
 	// 	return new ToStringBuilder(this).
@@ -505,26 +567,15 @@ class DetectionPoint  extends AppsensorEntity {
 	// private Collection<Response> responses = new ArrayList<Response>();
 	private responses: Response[] = [];
 
-	public constructor(category: string, 
-					   label: string, 
+	public constructor(category: string = '', 
+					   label: string | undefined = undefined, 
 	                   threshold: Threshold  | null = null, 
 					   responses: Response[] = [], 
 					   guid: string | undefined = undefined
 					   ) {
 		super();
-		if (category.trim().length === 0) {
-			throw new Error('Detection point category cannot be empty!');
-		}
 		this.category = category;
 
-		//label can be empty when it was read from a configuration
-		//but in this case it is set to be equal to id
-		//for more details about that change in the original java code 
-		//see https://github.com/jtmelton/appsensor/issues/18
-
-		if (label.trim().length === 0) {
-			throw new Error('Detection point label cannot be empty when set with constructor!');
-		}
 		this.label = label;
 		//here we set id as well since it hasn't been set so far
 		this.id = this.label;
@@ -639,6 +690,28 @@ class DetectionPoint  extends AppsensorEntity {
 			   this.guid === other.getGuid();
 	}
 
+	public override checkValid(): void {
+		if (this.category.trim().length === 0) {
+			throw new ObjectValidationError('category cannot be empty string!', this);
+		}
+
+		//label can be empty when it is read from a configuration
+		//but in this case it is set to be equal to id
+		//for more details about that change in the original java code 
+		//see https://github.com/jtmelton/appsensor/issues/18
+		if (this.label && this.label.trim().length === 0) {
+			throw new ObjectValidationError('label cannot be empty string!', this);
+		}
+
+		if (this.guid && this.guid.trim().length === 0) {
+			throw new ObjectValidationError('guid, when defined, cannot be empty string', this);
+		}
+
+		if (this.threshold) {
+			this.threshold.checkValid();
+		}
+
+	}
 	// @Override
 	// public String toString() {
 	// 	return new ToStringBuilder(this).
@@ -665,9 +738,6 @@ class IPAddress extends AppsensorEntity {
 	public constructor(address: string = '', 
 	                   geoLocation: GeoLocation  | null = null) {
 		super();
-		if (address !== '' && !ipaddrlib.isValid(address)) {// InetAddresses.isInetAddress(address)) {
-			throw new Error("IP Address string is invalid: " + address);
-		}
 		this.address = address;
 		this.geoLocation = geoLocation;
 	}
@@ -739,6 +809,15 @@ class IPAddress extends AppsensorEntity {
 		       Utils.equalsEntitys(this.geoLocation, other.getGeoLocation());
 	}
 	
+	public override checkValid(): void {
+		if (!ipaddrlib.isValid(this.address)) {
+			throw new ObjectValidationError("IP Address string is invalid: " + this.address, this);
+		}
+		
+		if (this.geoLocation) {
+			this.geoLocation.checkValid();
+		}
+	}
 	// @Override
 	// public String toString() {
 	// 	return new ToStringBuilder(this).
@@ -813,6 +892,12 @@ class DetectionSystem extends AppsensorEntity {
 		return this.detectionSystemId === other.getDetectionSystemId();
 	}
 	
+	public override checkValid(): void {
+		
+		if (this.ipAddress) {
+			this.ipAddress.checkValid();
+		}
+	}
 	// @Override
 	// public String toString() {
 	// 	return new ToStringBuilder(this).
@@ -887,6 +972,12 @@ class User extends AppsensorEntity {
 		return this.username === other.getUsername();
 	}
 	
+	public override checkValid(): void {
+		
+		if (this.ipAddress) {
+			this.ipAddress.checkValid();
+		}
+	}
 	// @Override
 	// public String toString() {
 	// 	return new ToStringBuilder(this).
@@ -914,6 +1005,12 @@ class Resource extends AppsensorEntity {
 	// @Column
 	private method: string = '';
 
+	constructor(location: string = '', method: string = '') {
+		super();
+		this.location = location;
+		this.method = method;
+	}
+
 	public getLocation(): string {
 		return this.location;
 	}
@@ -939,6 +1036,16 @@ class Resource extends AppsensorEntity {
 		const other: Resource = obj as Resource;
 
 		return this.location === other.getLocation() && this.method === other.getMethod();
+	}
+
+	public override checkValid(): void {
+		if (this.location.trim().length === 0) {
+			throw new ObjectValidationError('location cannot be empty string!', this);
+		}
+
+		if (this.method.trim().length === 0) {
+			throw new ObjectValidationError('method cannot be empty string!', this);
+		}
 	}
 }
 
@@ -1094,6 +1201,27 @@ class AppSensorEvent extends AppsensorEntity {
 			   Utils.equalsArrayEntitys(this.metadata, other.getMetadata());
 	}
 
+	public override checkValid(): void {
+		if (this.user) {
+			this.user.checkValid();
+		}
+
+		if (this.detectionSystem) {
+			this.detectionSystem.checkValid();
+		}
+
+		if (this.detectionPoint) {
+			this.detectionPoint.checkValid();
+		}
+
+		if (this.resource) {
+			this.resource.checkValid();
+		}
+
+		this.metadata.forEach(element => {
+			element.checkValid();
+		});
+	}
 	// @Override
 	// public String toString() {
 	// 	return new ToStringBuilder(this).
@@ -1273,6 +1401,31 @@ class Attack extends AppsensorEntity {
 			   Utils.equalsArrayEntitys(this.metadata, other.getMetadata());
 	}
 
+	public override checkValid(): void {
+		if (this.user) {
+			this.user.checkValid();
+		}
+
+		if (this.detectionSystem) {
+			this.detectionSystem.checkValid();
+		}
+
+		if (this.detectionPoint) {
+			this.detectionPoint.checkValid();
+		}
+
+		if (this.resource) {
+			this.resource.checkValid();
+		}
+
+		if (this.rule) {
+			this.rule.checkValid();
+		}
+
+		this.metadata.forEach(element => {
+			element.checkValid();
+		});
+	}
 	// @Override
 	// public String toString() {
 	// 	return new ToStringBuilder(this).
@@ -1549,18 +1702,18 @@ class Utils {
 	//expected entities of same type 
 	public static equalsEntitys(ent1: IEquals | null | undefined, 
 		                        ent2: IEquals | null | undefined): boolean {
-		return (ent1 === null && ent2 === null) || 
-		       (ent1 === undefined && ent2 === undefined) ||
+		return (ent1 === ent2) ||
 		       (ent1 !== null && ent1 !== undefined && ent1.equals(ent2))
 	}
 
-	public static equalsArrayEntitys(ent1: IEquals[] | null | undefined, ent2: IEquals[] | null | undefined): boolean {
-		if ((ent1 === null && ent2 === null) || 
-		    (ent1 === undefined && ent2 === undefined)) {
+	public static equalsArrayEntitys(ent1: IEquals[] | null | undefined, 
+		                             ent2: IEquals[] | null | undefined): boolean {
+		if (ent1 === ent2) {
 			return true;
 		} else if (ent1 !== null && ent2 !== null && 
 			       ent1 !== undefined && ent2 !== undefined &&
 			       ent1.length === ent2.length) {
+			//consider the arrays are sorted
 			for (let i = 0; i < ent1.length; i++) {
 				if (!ent1[i].equals(ent2[i])) {
 					return false;
@@ -1572,6 +1725,132 @@ class Utils {
 		} else {
 			return false;
 		}
+	}
+
+	public static equalsOnProperties(obj1: Object | null | undefined, 
+						 			 obj2: Object | null | undefined, 
+									 propMap: Map<string, string[]>,
+						 			 propertyNamesFunc: (obj: Object, propMap: Map<string, string[]>) => string[]): boolean {
+		if (obj1 === obj2) {
+			return true;
+		}
+
+		if (!(obj1 !== null && obj1 !== undefined &&
+			  obj2 !== null && obj2 !== undefined)) {
+			return false;
+		}
+
+		if (obj1.constructor.name !== obj2.constructor.name) {
+			return false;
+		}
+
+		const properties = propertyNamesFunc(obj1, propMap);
+		
+		let equal = true;
+
+		for (let index = 0; index < properties.length; index++) {
+			const propName = properties[index];
+
+			const propDescr1 = Object.getOwnPropertyDescriptor(obj1, propName);
+			const propDescr2 = Object.getOwnPropertyDescriptor(obj2, propName);
+
+			if (!propDescr1 && !propDescr2) {
+				continue;
+			}
+
+			if ((propDescr1 && !propDescr2) || 
+			    (!propDescr1 && propDescr2)) {
+				equal = false;
+
+				break;
+			}
+
+			if (propDescr1!.value instanceof Array) {
+				equal = Utils.equalsArrayEntitysOnProperties(propDescr1!.value, 
+															 propDescr2!.value, 
+															 propMap,
+															 propertyNamesFunc);
+
+			} else if (propDescr1!.value instanceof Object) {
+				equal = Utils.equalsOnProperties(propDescr1!.value, 
+					                             propDescr2!.value, 
+												 propMap,
+												 propertyNamesFunc);
+
+			} else {
+				equal = propDescr1!.value === propDescr2!.value;
+			}
+
+			if (!equal) {
+				break;
+			}
+		}
+
+		return equal;	
+	}
+
+	public static equalsArrayEntitysOnProperties(obj1: Object[] | null | undefined, 
+		                             			 obj2: Object[] | null | undefined,
+												 propMap: Map<string, string[]>,
+												 propertyNamesFunc: (obj: Object, propMap: Map<string, string[]>) => string[]): boolean {
+		if (obj1 === obj2) {
+			return true;
+		} else if (obj1 !== null && obj2 !== null && 
+			       obj1 !== undefined && obj2 !== undefined &&
+			       obj1.length === obj2.length) {
+			//consider the arrays are sorted
+			for (let i = 0; i < obj1.length; i++) {
+				if (!Utils.equalsOnProperties(obj1[i], obj2[i], propMap, propertyNamesFunc)) {
+					return false;
+				}
+			}
+
+			return true;
+
+		} else {
+			return false;
+		}
+	}
+
+	public static allOrOnlySpecifiedProperties(obj: Object | null | undefined, 
+											   onlyPropertiesToCompareMap: Map<string, string[]>): string[] {
+		let propertiesToCompare: string[] = [];
+		if (obj) {
+			propertiesToCompare = Object.getOwnPropertyNames(obj);
+
+			let onlyPropertiesToCompare = onlyPropertiesToCompareMap.get(obj.constructor.name);
+			if (!onlyPropertiesToCompare) {
+				onlyPropertiesToCompare = onlyPropertiesToCompareMap.get('*');
+			}
+				
+			if (onlyPropertiesToCompare) {
+				propertiesToCompare = onlyPropertiesToCompare;
+			}
+		}
+
+		return propertiesToCompare;	
+	}
+
+
+	public static allOrWithoutExcludedProperties(obj: Object | null | undefined,
+												 excludedPropertiesFromCompareMap: Map<string, string[]>): string[] {
+		
+		let propertiesToCompare: string[] = [];
+		if (obj) {
+			propertiesToCompare = Object.getOwnPropertyNames(obj);
+
+			let propertiesToIgnore = excludedPropertiesFromCompareMap.get(obj.constructor.name);
+			if (!propertiesToIgnore) {
+				propertiesToIgnore = excludedPropertiesFromCompareMap.get('*');
+
+			}
+
+			if (propertiesToIgnore) {
+				propertiesToCompare = propertiesToCompare.filter(el => propertiesToIgnore!.indexOf(el) === -1);
+			}
+		}
+
+		return propertiesToCompare;
 	}
 
 	public static getUserName(user: User | null | undefined): string | undefined {
@@ -1608,4 +1887,4 @@ class Utils {
 
 export {IEquals, AppsensorEntity, KeyValuePair, IPAddress, INTERVAL_UNITS, Interval, Threshold, Response, 
 	    DetectionPoint, DetectionSystem, RequestHandler, AppSensorEvent, Attack, User, ClientApplication, 
-		Utils, AppSensorClient, AppSensorServer, Category, Resource};
+		Utils, AppSensorClient, AppSensorServer, Category, Resource, ObjectValidationError, IValidate};

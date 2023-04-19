@@ -28,7 +28,40 @@ class ValidationError extends Error implements ErrorObject {
 
 }
 
-class JSONConfig {
+class JSONConfigReadValidate {
+
+    protected read(configurationLocation: string, validatorLocation: string | null, reload: boolean): any {
+        let config: any = null;
+
+        if (configurationLocation === '') {
+            throw new Error('JSONConfig: configurationLocation cannot be null!');
+        };
+
+
+        try {
+            config = JSON.parse(fs.readFileSync(configurationLocation, 'utf8'));
+        } catch (error) {
+            if (!reload) {
+                throw error;
+            } else {
+                console.error(error);
+            }
+        }
+
+        if (config && validatorLocation !== null) {
+            // console.log('Validating config...');
+
+            const valid = this.validateConfig(config, validatorLocation, reload);
+            if (!valid) {
+                //There is(are) validation error(s) reported by validateConfig
+                config = null;
+            }
+        }
+
+        return config;
+    }
+
+
 
     protected validateConfig(config: any, validatorLocation: string, reload: boolean): boolean {
 
@@ -108,4 +141,4 @@ class JSONConfig {
 
 }
 
-export {JSONConfig};
+export {JSONConfigReadValidate};

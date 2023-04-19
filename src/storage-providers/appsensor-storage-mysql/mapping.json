@@ -1,0 +1,236 @@
+{
+    "arrayStoreTables": {
+        "metadata": {
+            "uuidColumnName": "metadata_uuid", 
+            "valueColumnName": "key_value_pair_id"
+        }
+    },
+
+    "classesToTablesMap": {
+        "KeyValuePair": {
+            "table": "key_value_pair",
+            "properties": {
+                "key": {
+                    "column": "key"
+                },
+                "value": {
+                    "column": "value"
+                }
+            }
+        },
+        "Interval": {
+            "table": "interval",
+            "properties": {
+                "duration": {
+                    "column": "duration"
+                },
+                "unit": {
+                    "column": "unit"
+                }
+            }
+        },
+        "Threshold": {
+            "table": "threshold",
+            "properties": {
+                "count": {
+                    "column": "t_count"
+                },
+                "interval": {
+                    "class": "Interval",
+                    "column": "interval_id"
+                }
+            }
+        },
+        "GeoLocation": {
+            "table": "geo_location",
+            "properties": {
+                "latitude": {
+                    "column": "latitude"
+                },
+                "longitude": {
+                    "column": "longitude"
+                }
+            }
+        },
+        "IPAddress": {
+            "table": "ipaddress",
+            "properties": {
+                "address": {
+                    "column": "address"
+                },
+                "geoLocation": {
+                    "column": "geo_location",
+                    "class": "GeoLocation"
+                }
+            }
+        },
+        "User": {
+            "table": "user",
+            "properties": {
+                "username": {
+                    "column": "username"
+                },
+                "ipAddress": {
+                    "column": "ip_address",
+                    "class": "IPAddress"
+                }
+            }
+        },
+        "DetectionSystem": {
+            "table": "detection_system",
+            "properties": {
+                "detectionSystemId": {
+                    "column": "detection_system_id"
+                },
+                "ipAddress": {
+                    "column": "ip_address",
+                    "class": "IPAddress"
+                }
+            }
+        },
+        "DetectionPoint": {
+            "table": "detection_point",
+            "properties": {
+                "guid": {
+                    "column": "guid"
+                },
+                "category": {
+                    "column": "category"
+                },
+                "label": {
+                    "column": "label"
+                },
+                "threshold": {
+                    "class": "Threshold",
+                    "column": "threshold_id"
+                }
+            }
+        },
+        "Resource": {
+            "table": "resource",
+            "properties": {
+                "location": {
+                    "column": "location"
+                },
+                "method": {
+                    "column": "method"
+                }
+            }
+        },
+        "Rule": {
+            "table": "rule",
+            "properties": {
+                "guid": {
+                    "column": "guid"
+                },
+                "name": {
+                    "column": "name"
+                },
+                "window": {
+                    "column": "window_id",
+                    "class": "Interval"
+                }
+            }
+        },
+        "Attack": {
+            "table": "attack",
+            "properties": {
+                "user": {
+                    "class": "User",
+                    "column": "user_id"
+                },
+                "detectionPoint": {
+                    "class": "DetectionPoint",
+                    "column": "detection_point_id"
+                },
+                "timestamp": {
+                    "column": "timestamp"
+                },
+                "detectionSystem": {
+                    "class": "DetectionSystem",
+                    "column": "detection_system_id"
+                },
+                "resource": {
+                    "class": "Resource",
+                    "column": "resource_id"
+                },
+                "rule": {
+                    "class": "Rule",
+                    "column": "rule_id"
+                },
+                "metadata": { 
+                    "class": "Array",
+                    "arrayElementClass": "KeyValuePair",
+                    "arrayTable": "metadata",
+                    "column": "metadata_uuid"
+                }
+            }
+        },
+        "AppSensorEvent": {
+            "table": "appsensorevent",
+            "properties": {
+                "user": {
+                    "class": "User",
+                    "column": "user_id"
+                },
+                "detectionPoint": {
+                    "class": "DetectionPoint",
+                    "column": "detection_point_id"
+                },
+                "timestamp": {
+                    "column": "timestamp"
+                },
+                "detectionSystem": {
+                    "class": "DetectionSystem",
+                    "column": "detection_system_id"
+                },
+                "resource": {
+                    "class": "Resource",
+                    "column": "resource_id"
+                },
+                "metadata": { 
+                    "class": "Array",
+                    "arrayElementClass": "KeyValuePair",
+                    "arrayTable": "metadata",
+                    "column": "metadata_uuid"
+                }
+            }
+        },
+        "Response": {
+            "table": "response",
+            "properties": {
+                "user": {
+                    "class": "User",
+                    "column": "user_id"
+                },
+                "timestamp": {
+                    "column": "timestamp"
+                },
+                "action": {
+                    "column": "action"
+                },
+                "interval": {
+                    "class": "Interval",
+                    "column": "interval_id"
+                },
+                "detectionSystem": {
+                    "class": "DetectionSystem",
+                    "column": "detection_system_id"
+                },
+                "metadata": { 
+                    "class": "Array",
+                    "arrayElementClass": "KeyValuePair",
+                    "arrayTable": "metadata",
+                    "column": "metadata_uuid"
+                },
+                "active": {
+                    "column": "active"
+                }
+            }
+        }
+    },
+
+    "cacheControl": {
+        "doNotCacheClasses": ["Attack", "Response"]
+    }
+}

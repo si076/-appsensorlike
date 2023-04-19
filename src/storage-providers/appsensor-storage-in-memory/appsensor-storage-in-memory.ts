@@ -14,11 +14,7 @@ class InMemoryAttackStore extends AttackStore {
 	 */
 	// @Override
 	public override addAttack(attack: Attack): void {
-        let userName = '';
-        const user = attack.getUser();
-        if (user) {
-            userName = user.getUsername();
-        }
+        let userName = Utils.getUserName(attack.getUser());;
         
 		console.warn("Security attack " + attack.getName() + " triggered by user: " + userName);
 

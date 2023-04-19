@@ -357,7 +357,7 @@ class AggregateEventAnalysisEngine extends EventAnalysisEngine {
 						const queueDuration: number = this.getQueueInterval(eventQueue, event).toMillis();
 						const start: Date = new Date(eventQueue[0].getTimestamp());
 
-						const notification: Notification = new Notification(queueDuration, "milliseconds", start, detectionPoint);
+						const notification: Notification = new Notification(queueDuration, INTERVAL_UNITS.MILLISECONDS, start, detectionPoint);
 						notificationQueue.push(notification);
 					}
 

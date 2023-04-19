@@ -1,4 +1,4 @@
-import {AppsensorEntity, Interval, Response, DetectionPoint, Utils, INTERVAL_UNITS} from '../core.js'
+import {AppsensorEntity, Interval, Response, DetectionPoint, Utils, INTERVAL_UNITS, ObjectValidationError} from '../core.js'
 
 class Notification extends Interval {
 
@@ -9,7 +9,7 @@ class Notification extends Interval {
 	private monitorPoint: DetectionPoint | null = null;
 
 	public constructor(duration: number = 0, 
-		               unit: string = INTERVAL_UNITS.MINUTES, 
+		               unit: INTERVAL_UNITS = INTERVAL_UNITS.MINUTES, 
 					   startTime: Date | null = null, 
 		               monitorPoint: DetectionPoint | null = null) {
 		super(duration, unit);
@@ -397,6 +397,15 @@ class Rule extends AppsensorEntity {
 			   this.guid === other.getGuid();
 	}
 
+	public override checkValid(): void {
+		if (this.guid.trim().length === 0) {
+			throw new ObjectValidationError('guid cannot be empty string!', this);
+		}
+
+		if (this.window) {
+			this.window.checkValid();
+		}
+	}
 	// @Override
 	// public String toString() {
 	// 	return new ToStringBuilder(this).

@@ -1,0 +1,250 @@
+import fs from 'fs';
+import { JSONConfigReadValidate } from '../../utils/Utils.js';
+
+interface IPropertyMap {
+    column: string,
+    class?: string,
+    arrayElementClass?: string,
+    arrayTable?: string
+}
+
+interface IClassToTableMap {
+    table: string,
+    properties: {
+        [propertyName: string]: IPropertyMap;
+    }
+}
+
+interface IArrayStoreTable {
+    uuidColumnName: string,
+    valueColumnName: string
+}
+
+interface IMapping {
+    arrayStoreTables: {
+        [tableName: string]: IArrayStoreTable
+    };
+
+    classesToTablesMap: {
+        [className: string]: IClassToTableMap;
+    };
+
+    cacheControl: {
+        doNotCacheClasses: string[]
+    };
+}
+
+class Mapping implements IMapping {
+
+    private static classPropertyNamesMap: Map<string, string[]> | null = null;
+    private static classPropsMapMap: Map<string, Map<string, IPropertyMap>> | null = null;
+
+    arrayStoreTables: { [tableName: string]: IArrayStoreTable; } = {};
+    classesToTablesMap: { [className: string]: IClassToTableMap; } = {};
+    cacheControl: {doNotCacheClasses: string[]} = {doNotCacheClasses: []};
+    
+
+    public getTableName(className: string): string {
+        return this.classesToTablesMap[className].table
+    }
+
+    public getClassNames(): string[] {
+        const classNames: string[] = [];
+
+        const entries = Object.entries(this.classesToTablesMap);
+        for (const entry of entries) {
+            classNames.push(entry[0]);
+        }
+
+        return classNames;
+    }
+
+    public isClassCachable(className: string): boolean {
+        return this.cacheControl.doNotCacheClasses.indexOf(className) === -1;
+    }
+
+    private getClassPropertiesMapMap(): Map<string, Map<string, IPropertyMap>> {
+        if (!Mapping.classPropsMapMap) {
+            Mapping.classPropsMapMap = new Map<string, Map<string, IPropertyMap>>();
+
+            const classNames = Object.getOwnPropertyNames(this.classesToTablesMap);
+
+            for (let i = 0; i < classNames.length; i++) {
+                const className = classNames[i];
+
+                const propDescr = Object.getOwnPropertyDescriptor(this.classesToTablesMap, className);
+                if (propDescr) {
+
+                    let propNamePropMap = Mapping.classPropsMapMap.get(className);
+                    if (!propNamePropMap) {
+                        propNamePropMap = new Map<string, IPropertyMap>();
+
+                        Mapping.classPropsMapMap.set(className, propNamePropMap);
+                    }
+
+                    const mappedProperties = Object.entries((propDescr.value as IClassToTableMap).properties);
+                    for (const propMap of mappedProperties) {
+                        propNamePropMap.set(propMap[0], propMap[1]);
+                    }
+                }
+            }
+
+        }
+
+        return Mapping.classPropsMapMap;
+    }
+
+    public getPropertyMap(className: string, propertyName: string): IPropertyMap | null {
+        let propMap = null;
+
+        const classPropsMapMap = this.getClassPropertiesMapMap();
+
+        const propNamePropMap = classPropsMapMap.get(className);
+        if (propNamePropMap) {
+            const propMapTmp = propNamePropMap.get(propertyName);
+            if (propMapTmp) {
+                propMap = propMapTmp;
+            }
+        }
+
+        return propMap;
+    }
+
+    public getColumnName(className: string, propertyName: string): string {
+        let columnName = propertyName;
+
+        const propMap = this.getPropertyMap(className, propertyName);
+        if (propMap && propMap.column !== undefined) {
+            columnName = propMap.column;
+        }
+
+        return columnName;
+    }
+
+    public getMappedClassPropertyNamesMap(): Map<string, string[]> {
+        if (!Mapping.classPropertyNamesMap) {
+            Mapping.classPropertyNamesMap = new Map<string, string[]>();
+
+            const classNames = Object.getOwnPropertyNames(this.classesToTablesMap);
+
+            for (let i = 0; i < classNames.length; i++) {
+                const className = classNames[i];
+
+                const propDescr = Object.getOwnPropertyDescriptor(this.classesToTablesMap, className);
+                if (propDescr) {
+                    const propNames = Object.getOwnPropertyNames((propDescr.value as IClassToTableMap).properties);
+                    Mapping.classPropertyNamesMap.set(className, propNames);
+                }
+            }
+        }
+
+        return Mapping.classPropertyNamesMap;
+    }
+
+    public getMappedClassPropertyNames(className: string): string[] {
+        let mappedProps: string[] = [];
+
+        const classNamePropsMap = this.getMappedClassPropertyNamesMap();
+
+        const props = classNamePropsMap.get(className);
+        if (props) {
+            mappedProps = props;
+        }
+
+        return mappedProps;
+    }
+
+    public getArrayTableName(className: string, propertyName: string): string | null {
+        let arrayTableName = null;
+
+        const propMap = this.getPropertyMap(className, propertyName);
+        if (propMap && propMap.arrayTable) {
+            arrayTableName = propMap.arrayTable;
+        }
+
+        return arrayTableName;
+    }
+
+    public getArrayTableDef(tableName: string): IArrayStoreTable | null {
+        let arrayTableDef: IArrayStoreTable | null = null;
+
+        const propDescr = Object.getOwnPropertyDescriptor(this.arrayStoreTables, tableName);
+        if (propDescr) {
+            arrayTableDef = propDescr.value;
+        }
+
+        return arrayTableDef;
+    }
+
+    // isTransientProp(className: string, propertyName: string) {
+    //     let result = false;
+
+    //     const propMap = this.getPropertyMap(className, propertyName);
+    //     if (propMap && propMap.transient) {
+    //         result =  propMap.transient;
+    //     }
+
+    //     return result;
+    // }
+
+    // getClassTransientProperties(className: string): string[] {
+    //     const transientProperties: string[] = [];
+
+    //     const entries: [string, IPropertyMap][] = Object.entries(this.classesToTablesMap[className].properties);
+
+    //     for (const entry of entries) {
+    //         if (entry[1].transient !== undefined && entry[1].transient) {
+    //             transientProperties.push(entry[0]);
+    //         }
+    //     }
+
+    //     return transientProperties;
+    // }
+
+    // getTransientPropertiesMap() {
+    //     if (!Mapping.transientPropsMap) {
+    //         Mapping.transientPropsMap = new Map<string, string[]>();
+
+    //         const classNames = Object.getOwnPropertyNames(this.classesToTablesMap);
+
+    //         for (let i = 0; i < classNames.length; i++) {
+    //             const className = classNames[i];
+
+    //             const transientProperties = this.getClassTransientProperties(className);
+    //             if (transientProperties.length > 0) {
+    //                 Mapping.transientPropsMap.set(className, transientProperties);
+    //             }
+    //         }
+    //     }
+
+    //     return Mapping.transientPropsMap;
+    // }
+
+}
+
+class MappingReader extends JSONConfigReadValidate {
+
+    private mappingFile = "./storage-providers/appsensor-storage-mysql/mapping.json";
+    private mappingSchemaFile = "./storage-providers/appsensor-storage-mysql/mapping_schema.json";
+
+    public override read(mappingLocation: string = '', validatorLocation: string | null = '', reload: boolean = false): Mapping | null {
+        console.log("Working directory:" + process.cwd());
+        let mapping : Mapping | null = null;
+
+        if (mappingLocation === '') {
+            mappingLocation = this.mappingFile;
+        };
+
+        if (validatorLocation === '') {
+            validatorLocation = this.mappingSchemaFile;
+        };
+
+        mapping = super.read(mappingLocation, validatorLocation, reload);
+
+        Object.setPrototypeOf(mapping, Mapping.prototype);
+
+        return mapping;
+    }
+}
+
+export {IArrayStoreTable, IClassToTableMap, IPropertyMap, Mapping, MappingReader};
