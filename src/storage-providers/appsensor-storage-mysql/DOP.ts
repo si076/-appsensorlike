@@ -1,4 +1,4 @@
-import { format, Pool, PoolConnection } from "mysql";
+import { format, PoolConnection, MysqlError } from "mysql";
 import * as _core from "../../core/core.js";
 import * as _geolocation from "../../core/geolocation/geolocation.js";
 import * as _rule from "../../core/rule/rule.js";
@@ -115,6 +115,9 @@ class Graph {
 
 }
 
+type TYPE_COMPARE_FUNCTION = (obj1: Object, obj2: Object) => boolean;
+type TYPE_FILTER_FUNCTION = (obj: Object) => boolean;
+
 class DOP {
 
     private static cachedObjects = new Map<string, Map<number | string, Object>>();
@@ -122,7 +125,7 @@ class DOP {
     private static mapping: Mapping | null;
 
     private static CLASS_NAMES: string[] = [];
-    private static TOPOLOGICAL_SORTED_CLASS_NAMES: string[] = [];
+    private static TOPOLOGICALLY_SORTED_CLASS_NAMES: string[] = [];
 
     private static CACHE_LOADED: boolean = false;
     private static CACHE_LOADED_EVENT = "CACHE_LOADED_EVENT";
@@ -132,6 +135,8 @@ class DOP {
     private static UNDEFINED_PROP_ID: number = -2;
 
     private static NULL_PROP_ID: number = -1;
+
+    
 
     // private static excludedPropertiesFromCompareMap = new Map<string, string[]>();
     // private static onlyPropertiesToCompareMap = new Map<string, string[]>();
@@ -210,7 +215,7 @@ class DOP {
                 const node = nodesWithNoIncomingEdges.shift();
 
                 if (node !== undefined) {
-                    DOP.TOPOLOGICAL_SORTED_CLASS_NAMES.push(DOP.CLASS_NAMES[node]);
+                    DOP.TOPOLOGICALLY_SORTED_CLASS_NAMES.push(DOP.CLASS_NAMES[node]);
 
                     const dependentNodes = graph.getDependentNodes(node);
 
@@ -235,49 +240,62 @@ class DOP {
 
     private static propertySetter = <U extends keyof T, T extends object>(obj: T) => (key: U, value: any) => { obj[key] = value };
 
+    private static createObjectOfClass(className: string): Object {
+        let obj: Object | null = null;
+        let retry = 0;
+        while (retry < 3) {
+            try {
+                switch (retry) {
+                    case 0:
+                        obj = new (_core as any)[className]();
+                        break;
+                    case 1:
+                        obj = new (_geolocation as any)[className]();
+                        break;
+                    case 2:
+                        obj = new (_rule as any)[className]();
+                        break;
+                            
+                }
+                if (obj) {
+                    break;
+                }
+            } catch (error) {
+                if (error instanceof TypeError) {
+                    retry++;    
+                } else {
+                    throw error;
+                }
+                
+            }
+        }
+
+        if (!obj) {
+            throw new Error(`Cannot create instance of class '${className}' because the class hasn't been found!`);
+        }
+
+        return obj;
+    }
+
     private static async loadCacheFromDB(connection: PoolConnection) {
         console.log('--> loadCacheFromDB');
         if (DOP.mapping) {
-            for (let c = 0; c < DOP.TOPOLOGICAL_SORTED_CLASS_NAMES.length; c++) {
-                const className = DOP.TOPOLOGICAL_SORTED_CLASS_NAMES[c];
-                 
+            for (let c = 0; c < DOP.TOPOLOGICALLY_SORTED_CLASS_NAMES.length; c++) {
+                const className = DOP.TOPOLOGICALLY_SORTED_CLASS_NAMES[c];
+                
+                if (!DOP.mapping.isClassCachable(className)) {
+                    continue;
+                }
+
                 const tableName = DOP.mapping.getTableName(className);
 
                 let sql = "select * from `" + tableName + "`";
 
-                let obj: Object | null = null;
-                let retry = 0;
-                while (retry < 3) {
-                    try {
-                        switch (retry) {
-                            case 0:
-                                obj = new (_core as any)[className]();
-                                break;
-                            case 1:
-                                obj = new (_geolocation as any)[className]();
-                                break;
-                            case 2:
-                                obj = new (_rule as any)[className]();
-                                break;
-                                    
-                        }
-                        if (obj) {
-                            break;
-                        }
-                    } catch (TypeError) {
-                        retry++;
-                    }
-                }
-
-                if (!obj) {
-                    throw new Error(`Cannot create instance of class '${className}' because the class hasn't been found!`);
-                }
+                const obj = DOP.createObjectOfClass(className);
         
                 await Utils.executeSQLOnDBProcResAsync(sql, 
                     (results, resolve) => {
-                        if (obj) { //just to assure TS that the obj hasn't been changed in the meantime
-                            DOP.createAndCacheObjectsFromResult(obj, "id", results, DOP.propertySetter, connection, resolve);
-                        }
+                        DOP.createAndCacheObjectsFromResult(obj, "id", results, DOP.propertySetter, connection, resolve);
                     
                     }, 
                     connection);
@@ -297,7 +315,9 @@ class DOP {
                                                                      results: any, 
                                                                      propSetter: ( (obj: T) => ( (key: U, value: any) => void )),
                                                                      connection: PoolConnection,
-                                                                     resolve: (value: T | PromiseLike<T>) => void) {
+                                                                     resolve: (value: Object[] | PromiseLike<Object[]>) => void): Promise<Object[]> {
+        const result: Object[] = [];                                                                 
+
         const className = obj.constructor.name;
 
         if (DOP.mapping && results instanceof Array) {
@@ -345,13 +365,19 @@ class DOP {
 
                 (newObject as _core.IValidate).checkValid();
 
-                DOP.putInCache(className, element[idColumnName], newObject);
+                if (DOP.mapping.isClassCachable(className)) {
+                    DOP.putInCache(className, element[idColumnName], newObject);
+                }
+
+                result.push(newObject);
             }
 
-            resolve(obj);
+            resolve(result);
         } else {
                 console.error(`Cannot create objects for class '${className}' because of internal error!`);
         }
+
+        return result;
     }
 
     private static async createAndCacheArrayTable(className: string,
@@ -406,7 +432,7 @@ class DOP {
         return array;
     }
 
-    public static compareOnMappedProps(obj1: Object, obj2: Object): boolean {
+    private static compareOnMappedProps(obj1: Object, obj2: Object): boolean {
         let equal = false;
 
         if (DOP.mapping) {
@@ -444,7 +470,7 @@ class DOP {
         return equal;
     }
 
-    public static putInCache(className: string, id: number | string, obj: Object) {
+    private static putInCache(className: string, id: number | string, obj: Object) {
         let idObjMap = DOP.cachedObjects.get(className);
 
         if (!idObjMap) {
@@ -453,27 +479,55 @@ class DOP {
         }
 
         idObjMap.set(id, obj);
+
+        console.log(`<-- putInCache: object of class: ${className}, with id: ${id}`);
     }
 
-    public static getCachedObjectId(obj: Object, 
-                                    compareFunc: (obj1: Object, obj2: Object) => boolean): number | string | null {
+    private static getCachedObjectId(obj: Object, 
+                                    compareFunc: TYPE_COMPARE_FUNCTION): number | string | null {
         let id = null;
 
-        const idObjMap = DOP.cachedObjects.get(obj.constructor.name);
+        const className = obj.constructor.name;
+
+        const idObjMap = DOP.cachedObjects.get(className);
         if (idObjMap) {
             const entries = idObjMap.entries();
             for (const entry of entries) {
                 
                 if (compareFunc(obj, entry[1])) {
                     id = entry[0];
+
+                    break;
                 }
             }
         }
 
+        console.log(`<-- getCachedObjectId: class: ${className}, id: ${id}`);
+
         return id;
     }
 
-    public static getCachedObjectForId(className: string,
+    private static getCachedObjectIds(className: string, 
+                                      filterFunc: TYPE_FILTER_FUNCTION): (number | string)[] {
+        const result: (number | string)[] = [];
+
+        const idObjMap = DOP.cachedObjects.get(className);
+        if (idObjMap) {
+            const entries = idObjMap.entries();
+            for (const entry of entries) {
+                
+                if (filterFunc(entry[1])) {
+                    result.push(entry[0]);
+                }
+            }
+        }
+
+        console.log(`<-- getCachedObjectIds: class: ${className}, result: ${result}`);
+
+        return result;
+    }
+
+    private static getCachedObjectForId(className: string,
                                         id: number | string): Object | null {
         let obj: Object | null = null;
 
@@ -484,9 +538,14 @@ class DOP {
                 
                 if (id === entry[0]) {
                     obj = entry[1];
+
+                    break;
                 }
             }
         }
+
+        const msg = obj ? 'found' : 'not found';
+        console.log(`<-- getCachedObjectForId: class: ${className}, id: ${id}, object: ${msg}`);
 
         return obj;
     }
@@ -497,64 +556,113 @@ class DOP {
     //     // action varchar(255), active bit not null, timestamp datetime, detection_system_id int, interval_id int, user_id int        
     // }
 
-    public static getSearchableProperties(obj: Object): string[] {
-        let propertyNames: string[] = Object.getOwnPropertyNames(obj);
+    public static async findObjects(className: string, propFilterFuncMap: Map<string, TYPE_FILTER_FUNCTION | string>): Promise<Object[]> {
+        console.log('--> findObjects');
 
-        //TODO
-        // const className = obj.constructor.name;
+        let result: Object[] = [];
 
-        // if (DOP.mapping) {
-        //     const propDescr = Object.getOwnPropertyDescriptor(DOP.mapping.onlySearchableFields,
-        //                                                       className);
-        //     if (propDescr) {
-        //         propertyNames = propDescr.value;
-        //     }
-        // }
+        if (DOP.mapping) {
 
-        return propertyNames;
-    }
+            const tableName = DOP.mapping.getTableName(className);
+            
+            let sql = `select * from ${tableName} where `
 
-    public static async findObject(obj: _core.IEquals, compareFunc: (obj1: Object, obj2: Object) => boolean): Promise<number | string | null> {
-        let id = DOP.getCachedObjectId(obj, compareFunc);
+            const propsToCompare = propFilterFuncMap.keys();
 
-        if (id !== null) {
-            return id;
+            let execSQL = true;
+            let i = -1;
+            for (const propName of propsToCompare) {
+                i++;
+
+                if (i > 0) {
+                    sql += ' AND '; 
+                }
+
+                const propMap = DOP.mapping.getPropertyMap(className, propName);
+                if (propMap) {
+
+                    const funcOrCondition = propFilterFuncMap.get(propName);
+                    if (propMap.class) {
+
+                        if (funcOrCondition && typeof funcOrCondition === "function") {
+                            const ids = DOP.getCachedObjectIds(propMap.class, funcOrCondition);
+
+                            if (ids.length === 0) {
+                                execSQL = false;
+
+                                break;
+                            }
+                            
+                            sql += propName + ' in ' + '(' + ids.join(',') + ')';
+                        } else {
+                            throw new Error(`Expected filter function for  ${className}'s property ${propName}`);
+                        }
+
+                    } else {
+
+                        if (funcOrCondition && typeof funcOrCondition === "string") {
+                            sql += '(' + propName + funcOrCondition + ')';
+                        } else {
+                            throw new Error(`Expected condition as string for ${className}'s property ${propName}`);
+                        }
+
+                    }
+
+                } else {
+                    throw new Error(`A mapping is not specified for ${className}'s property ${propName}`);
+                }
+            }
+
+            if (execSQL) {
+                const obj = DOP.createObjectOfClass(className);
+        
+                const connection: PoolConnection = await ConnectionManager.getConnection();
+
+                result = await Utils.executeSQLOnDBProcResAsync(sql, 
+                    (results, resolve) => {
+                        let res: Object[] = [];
+
+                        DOP.createAndCacheObjectsFromResult(obj, "id", results, DOP.propertySetter, connection, resolve);
+
+                        //actual result is resolved thru resolve function
+                        //
+                        return res;
+                    
+                    }, 
+                    connection);
+                
+            }
+
         }
 
-        //TODO
-        // let allPropertiesPrimitive = true;
+        console.log('<-- findObjects');
 
-        // const propertyNames = DOP.getSearchableProperties(obj);
-
-        // for (let i = 0; i < propertyNames.length; i++) {
-
-        // }        
-
-        // let sql = DOP.generateSQL(obj);
-
-        return id;
+        return result;
     }
 
-    public static generateSQL(objs: _core.IEquals[]): string {
-        let sql = '';
-
-        //TODO
-        // const className = obj.constructor.name;
-
-        // const tableName = this.getTableName(className);
-
-        // if (DOP.mapping) {
-        //     const propDescr = Object.getOwnPropertyDescriptor(DOP.mapping.onlySearchableFields, className);
-
-        //     if (propDescr) {
-                
-        //     }
-        // }
-
-        return sql;
+    public static async persistMany(objs: _core.IEquals[], 
+                                    //connetionErrorHandler: ((error: MysqlError) => void) = ConnectionManager.defaultErrorHandler
+                                    ) {
+        for (let i = 0; i < objs.length; i++) {
+            await DOP.persist(objs[i]);
+        }
     }
 
-    public static async persist(obj: _core.IEquals, connection: PoolConnection): Promise<number | string | null> {
+    
+    public static async persist(obj: Object,
+                                //connetionErrorHandler: ((error: MysqlError) => void) = ConnectionManager.defaultErrorHandler
+                                ) {
+        return Utils.executeInTransaction(obj, DOP._persist);
+
+    }   
+
+    private static async _persist(obj: Object, 
+                                  //connetionErrorHandler: ((error: MysqlError) => void) = ConnectionManager.defaultErrorHandler, 
+                                  connection: PoolConnection): Promise<number | string | null> {
+        const className = obj.constructor.name;
+
+        console.log(`--> persist: obj of class '${className}'`);
+
         let id = DOP.getCachedObjectId(obj, DOP.compareOnMappedProps);
 
         if (id !== null) {
@@ -563,8 +671,6 @@ class DOP {
 
         if (DOP.mapping) {
             
-            const className = obj.constructor.name;
-
             const keyValue = new Map<string, any>();
 
             const keys: string[] = DOP.mapping.getMappedClassPropertyNames(className);
@@ -580,16 +686,16 @@ class DOP {
                     if (propDescr.value instanceof Array) {
                     
                         const persistedObjID = await this.persistArray(className, 
-                                                                        key,
-                                                                        propDescr.value,
-                                                                        connection);
+                                                                       key,
+                                                                       propDescr.value,
+                                                                       connection);
 
                         keyValue.set(key, persistedObjID);
         
                     } else if (propDescr.value instanceof Object &&
                                !(propDescr.value instanceof Date)) {
         
-                        const persistedObjID = await DOP.persist(propDescr.value, connection);
+                        const persistedObjID = await DOP._persist(propDescr.value, connection);
 
                         keyValue.set(key, persistedObjID);
                     } else {
@@ -647,6 +753,8 @@ class DOP {
             }
         }
 
+        console.log(`<-- persist: obj of class '${className}'`);
+
         return id;
     }
 
@@ -654,6 +762,8 @@ class DOP {
                                       propName: string,
                                       array: any[],
                                       connection: PoolConnection): Promise<string | null> {
+        // console.log('--> persistArray');
+
         let uuid: string | number | null = null;     
         if (array && array.length > 0) {
             uuid = DOP.getCachedObjectId(array, DOP.compareOnMappedProps);
@@ -668,7 +778,7 @@ class DOP {
             const arEl = array[a];
 
             if (arEl instanceof Object) {
-                const persistedObjID = await DOP.persist(arEl as _core.IEquals, connection);
+                const persistedObjID = await DOP._persist(arEl as _core.IEquals, connection);
 
                 persistValues.push(persistedObjID);
             } else {
@@ -714,6 +824,8 @@ class DOP {
             }
         }
 
+        // console.log('<-- persistArray');
+        
         return uuid;
     }
 

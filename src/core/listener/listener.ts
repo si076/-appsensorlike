@@ -9,7 +9,7 @@ interface AttackListener {
 	 * 
 	 * @param attack {@link Attack} that is added to the {@link AttackStore}
 	 */
-	onAdd(attack: Attack): void;
+	onAdd(attack: Attack): Promise<void>;
 	
 }
 
@@ -22,7 +22,7 @@ interface EventListener {
 	 * 
 	 * @param event {@link Event} that is added to the {@link EventStore}
 	 */
-	onAdd(event: AppSensorEvent): void;
+	onAdd(event: AppSensorEvent): Promise<void>;
 }
 
 // @ResponseStoreListener
@@ -34,7 +34,7 @@ interface ResponseListener {
 	 * 
 	 * @param attack {@link Response} that is added to the {@link ResponseStore}
 	 */
-	onAdd(response: Response): void;
+	onAdd(response: Response): Promise<void>;
 }
 
 // @EventStoreListener
@@ -42,7 +42,7 @@ interface ResponseListener {
 // @ResponseStoreListener
 interface SystemListener extends EventListener, AttackListener, ResponseListener {
 
-    onAdd(event: AppSensorEvent | Attack | Response): void;
+    onAdd(event: AppSensorEvent | Attack | Response): Promise<void>;
 }
 
 export {AttackListener, EventListener, ResponseListener, SystemListener};

@@ -19,7 +19,7 @@ class LocalResponseAnalysisEngine extends ResponseAnalysisEngine {
 	 * @param response {@link Response} that has been added to the {@link ResponseStore}.
 	 */
 	// @Override
-	public override analyze(response: Response): void {
+	public override async analyze(response: Response): Promise<void> {
 		if(response == null) {
 			return;
 		}

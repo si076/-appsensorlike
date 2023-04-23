@@ -7,13 +7,13 @@ interface EventManager {
 	 * 
 	 * @param event {@link Event} to add
 	 */
-	addEvent(event: AppSensorEvent): void;
+	addEvent(event: AppSensorEvent): Promise<void>;
 	
 	/**
 	 * Add an {@link Attack}
 	 * @param attack {@link Attack} to add
 	 */
-	addAttack(attack: Attack): void;
+	addAttack(attack: Attack): Promise<void>;
 
 	/**
 	 * Retrieve any {@link Response}s generated that apply to this 
@@ -21,7 +21,7 @@ interface EventManager {
 	 *  
 	 * @return a Collection of {@link Response} objects 
 	 */
-	getResponses(earliest: Date): Response[];
+	getResponses(earliest: Date): Promise<Response[]>;
 }
 
 export {EventManager};

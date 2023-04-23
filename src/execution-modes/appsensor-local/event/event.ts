@@ -17,23 +17,23 @@ class LocalEventManager implements EventManager {
 	 * {@inheritDoc}
 	 */
 	// @Override
-	public addEvent(event: AppSensorEvent): void {
-		this.requestHandler.addEvent(event);
+	public async addEvent(event: AppSensorEvent): Promise<void> {
+		await this.requestHandler.addEvent(event);
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
 	// @Override
-	public addAttack(attack: Attack): void {
-		this.requestHandler.addAttack(attack);
+	public async addAttack(attack: Attack): Promise<void> {
+		await this.requestHandler.addAttack(attack);
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
 	// @Override
-	public getResponses(earliest: Date): Response[] {
+	public getResponses(earliest: Date): Promise<Response[]> {
 		return this.requestHandler.getResponses(earliest);
 	}
 	

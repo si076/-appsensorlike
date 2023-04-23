@@ -13,14 +13,14 @@ class InMemoryAttackStore extends AttackStore {
 	 * {@inheritDoc}
 	 */
 	// @Override
-	public override addAttack(attack: Attack): void {
+	public override async addAttack(attack: Attack): Promise<void> {
         let userName = Utils.getUserName(attack.getUser());;
         
 		console.warn("Security attack " + attack.getName() + " triggered by user: " + userName);
 
 		InMemoryAttackStore.attacks.push(attack);
 
-		super.notifyListeners(attack);
+		await super.notifyListeners(attack);
 	}
 
 	public clearAll(): void {
@@ -31,8 +31,8 @@ class InMemoryAttackStore extends AttackStore {
 	 * {@inheritDoc}
 	 */
 	// @Override
-	public override findAttacks(criteria: SearchCriteria): Attack[] {
-		return super._findAttacks(criteria, InMemoryAttackStore.attacks);
+	public override findAttacks(criteria: SearchCriteria): Promise<Attack[]> {
+		return Promise.resolve(super._findAttacks(criteria, InMemoryAttackStore.attacks));
 	}
 
 }
@@ -48,7 +48,7 @@ class InMemoryEventStore extends EventStore {
 	 * {@inheritDoc}
 	 */
 	// @Override
-	public override addEvent(event: AppSensorEvent): void {
+	public override async addEvent(event: AppSensorEvent): Promise<void> {
         const detPointLabel = Utils.getDetectionPointLabel(event.getDetectionPoint());
 
         const userName = Utils.getUserName(event.getUser());
@@ -57,7 +57,7 @@ class InMemoryEventStore extends EventStore {
 		
 		InMemoryEventStore.events.push(event);
 		
-		super.notifyListeners(event);
+		await super.notifyListeners(event);
 	}
 	
 	public clearAll(): void {
@@ -68,8 +68,8 @@ class InMemoryEventStore extends EventStore {
 	 * {@inheritDoc}
 	 */
 	// @Override
-	public findEvents(criteria: SearchCriteria): AppSensorEvent[] {
-		return super._findEvents(criteria, InMemoryEventStore.events);
+	public findEvents(criteria: SearchCriteria): Promise<AppSensorEvent[]> {
+		return Promise.resolve(super._findEvents(criteria, InMemoryEventStore.events));
 	}
 	
 }
@@ -85,14 +85,14 @@ class InMemoryResponseStore extends ResponseStore {
 	 * {@inheritDoc}
 	 */
 	// @Override
-	public override addResponse(response: Response): void {
+	public override async addResponse(response: Response): Promise<void> {
         let userName = Utils.getUserName(response.getUser());
 
 		console.warn("Security response " + response.getAction() + " triggered for user: " + userName);
 
 		InMemoryResponseStore.responses.push(response);
 		
-		super.notifyListeners(response);
+		await super.notifyListeners(response);
 	}
 	
 	public clearAll(): void {
@@ -103,8 +103,8 @@ class InMemoryResponseStore extends ResponseStore {
 	 * {@inheritDoc}
 	 */
 	// @Override
-	public findResponses(criteria: SearchCriteria): Response[] {
-		return super._findResponses(criteria, InMemoryResponseStore.responses);
+	public findResponses(criteria: SearchCriteria): Promise<Response[]> {
+		return Promise.resolve(super._findResponses(criteria, InMemoryResponseStore.responses));
 	}
 	
 }

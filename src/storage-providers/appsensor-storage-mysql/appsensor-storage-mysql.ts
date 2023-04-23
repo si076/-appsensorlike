@@ -6,16 +6,17 @@ import { DOP } from "./DOP.js";
 
 
 import _ from 'underscore';
+import { ConnectionManager } from "./connection_manager.js";
 
 class MySQLAttackStore extends AttackStore {
 
-    public override addAttack(attack: Attack): void {
+    public override async addAttack(attack: Attack): Promise<void> {
         let userName = coreUtils.getUserName(attack.getUser());;
         
 		console.warn("Security attack " + attack.getName() + " triggered by user: " + userName);
 
 
-        Utils.executeInTransaction(attack, DOP.persist)
+        DOP.persist(attack)
         .then((res) => {
             super.notifyListeners(attack);
         })
@@ -25,7 +26,7 @@ class MySQLAttackStore extends AttackStore {
 
     }
     
-    public override findAttacks(criteria: SearchCriteria): Attack[] {
+    public override findAttacks(criteria: SearchCriteria): Promise<Attack[]> {
         throw new Error("Method not implemented.");
     }
 
@@ -33,7 +34,7 @@ class MySQLAttackStore extends AttackStore {
 
 class MySQLEventStore extends EventStore {
     
-    public override addEvent(event: AppSensorEvent): void {
+    public override async addEvent(event: AppSensorEvent): Promise<void> {
         const detPointLabel = coreUtils.getDetectionPointLabel(event.getDetectionPoint());
 
         const userName = coreUtils.getUserName(event.getUser());
@@ -41,7 +42,7 @@ class MySQLEventStore extends EventStore {
 		console.warn("Security event " + detPointLabel + " triggered by user: " + userName);
 		
 
-        Utils.executeInTransaction(event, DOP.persist)
+        DOP.persist(event)
         .then((res) => {
             super.notifyListeners(event);
         })
@@ -51,7 +52,7 @@ class MySQLEventStore extends EventStore {
 
     }
 
-    public override findEvents(criteria: SearchCriteria): AppSensorEvent[] {
+    public override findEvents(criteria: SearchCriteria): Promise<AppSensorEvent[]> {
         throw new Error("Method not implemented.");
     }
 
@@ -59,12 +60,12 @@ class MySQLEventStore extends EventStore {
 
 class MySQLResponseStore extends ResponseStore {
 
-    public override addResponse(response: Response): void {
+    public override async addResponse(response: Response): Promise<void> {
         let userName = coreUtils.getUserName(response.getUser());
 
 		console.warn("Security response " + response.getAction() + " triggered for user: " + userName);
 
-        Utils.executeInTransaction(response, DOP.persist)
+        DOP.persist(response)
         .then((res) => {
             super.notifyListeners(response);
         })
@@ -74,7 +75,7 @@ class MySQLResponseStore extends ResponseStore {
 
     }
 
-    public override findResponses(criteria: SearchCriteria): Response[] {
+    public override findResponses(criteria: SearchCriteria): Promise<Response[]> {
         throw new Error("Method not implemented.");
     }
 

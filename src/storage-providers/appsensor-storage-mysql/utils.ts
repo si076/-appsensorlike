@@ -60,9 +60,11 @@ class Utils {
     }
 
     public static async executeInTransaction(obj: any, 
-                                        execInTransCallback: (obj: any, 
-                                            connection: PoolConnection) => Promise<any>,
-                                        retryCounter: number = 0): Promise<any> {
+                                             //connetionErrorHandler: (error: MysqlError) => void,
+                                             execInTransCallback: (obj: any, 
+                                                                   //connetionErrorHandler: ((error: MysqlError) => void),
+                                                                   connection: PoolConnection) => Promise<any>,
+                                             retryCounter: number = 0): Promise<any> {
         return new Promise((resolve, reject) => {
 
             // console.log('In executeInTransaction Promise');

@@ -75,23 +75,22 @@ class DOPTests {
 		const event2 = new AppSensorEvent(user, point1, detectionSystem, new Date());;
         event2.setResource(resource);
         event2.setMetadata(metadata);
+
+		const event3 = new AppSensorEvent(user, point2, detectionSystem, new Date());;
+        event3.setResource(resource);
+        event3.setMetadata(metadata);
+
+
+		const event4 = new AppSensorEvent(user, point3, detectionSystem, new Date());
+		const keyValue3 = new KeyValuePair("key3", "value3");
+		const metadata4 = metadata.slice();
+		metadata4.push(keyValue3);
+
+        event4.setResource(resource);
+        event4.setMetadata(metadata4);
 		
 
-        await new Promise((resolve, reject) => {
-			ConnectionManager.getPool().getConnection((err, connection) => {
-				if (err) {
-					
-					throw err;
-
-					return;    
-				}
-
-				DOP.persist(event1, connection);
-				DOP.persist(event2, connection);
-
-				resolve(null);
-			});
-		});
+		DOP.persistMany([event1,event2, event3, event4]);
 
         console.log('<-- persistObjects');
     } 

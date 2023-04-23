@@ -1,4 +1,4 @@
-import { IPAddress } from "../core.js";
+import { IPAddress, ObjectValidationError } from "../core.js";
 
 import * as assert from 'assert';
 
@@ -30,13 +30,11 @@ class IPAddressTests {
 	// @Test(expected=java.lang.IllegalArgumentException.class)
 	public static testFromStringInvalidAddress(): void {
         const address = "123.123.123.456";
+        const ipAddress = new IPAddress(address);
         assert.throws(() => {
-		                new IPAddress(address);
+                        ipAddress.checkValid();
                       },
-                      {
-                        name: "Error",
-                        message: `IP Address string is invalid: ${address}`
-                      }
+                      new ObjectValidationError("IP Address string is invalid: " + address, ipAddress)
         );
 	}
 	

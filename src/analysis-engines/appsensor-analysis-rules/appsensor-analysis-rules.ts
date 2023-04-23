@@ -26,9 +26,9 @@ class AggregateAttackAnalysisEngine extends AttackAnalysisEngine {
 	 * @param event the {@link Attack} that was added to the {@link AttackStore}
 	 */
 	// @Override
-	public analyze(attack: Attack) {
+	public async analyze(attack: Attack): Promise<void> {
 		if (attack != null && attack.getRule() != null) {
-			const response: Response = this.findAppropriateResponse(attack);
+			const response: Response = await this.findAppropriateResponse(attack);
 
 			if (response != null) {
                 let userName = Utils.getUserName(attack.getUser());
@@ -37,7 +37,7 @@ class AggregateAttackAnalysisEngine extends AttackAnalysisEngine {
 				
                 const responseStore = this.appSensorServer.getResponseStore();
                 if (responseStore !== null) {
-                    responseStore.addResponse(response);
+                    await responseStore.addResponse(response);
                 }
 				
 			}
@@ -50,7 +50,7 @@ class AggregateAttackAnalysisEngine extends AttackAnalysisEngine {
 	 * @param attack {@link Attack} that is being analyzed
 	 * @return {@link Response} to be executed for given {@link Attack}
 	 */
-	protected findAppropriateResponse(attack: Attack): Response {
+	protected async findAppropriateResponse(attack: Attack): Promise<Response> {
 		const triggeringRule: Rule | null = attack.getRule();
 
 		const criteria: SearchCriteria = new SearchCriteria().
@@ -66,7 +66,7 @@ class AggregateAttackAnalysisEngine extends AttackAnalysisEngine {
 		let existingResponses: Response[] = []; 
         const responseStore = this.appSensorServer.getResponseStore();
         if (responseStore !== null) {
-            existingResponses = responseStore.findResponses(criteria);
+            existingResponses = await responseStore.findResponses(criteria);
         }
 
 		let responseAction: string | null = null;
@@ -179,7 +179,7 @@ class AggregateEventAnalysisEngine extends EventAnalysisEngine {
 	 * @param event the {@link Event} that was added to the {@link EventStore}
 	 */
 	// @Override
-	public analyze(triggerEvent: AppSensorEvent): void {
+	public async analyze(triggerEvent: AppSensorEvent): Promise<void> {
 		const serverConfiguration = this.appSensorServer.getConfiguration();
 
 		if (serverConfiguration !== null) {
@@ -187,8 +187,12 @@ class AggregateEventAnalysisEngine extends EventAnalysisEngine {
 
 
 			for (const rule of rules) {
-				if (this.checkRule(triggerEvent, rule)) {
-					this.generateAttack(triggerEvent, rule);
+				// if (this.checkRule(triggerEvent, rule)) {
+				// 	this.generateAttack(triggerEvent, rule);
+				// }
+				const ruleFulfilled = await this.checkRule(triggerEvent, rule);
+				if (ruleFulfilled) {
+					await this.generateAttack(triggerEvent, rule);
 				}
 			}
 		}
@@ -204,8 +208,8 @@ class AggregateEventAnalysisEngine extends EventAnalysisEngine {
 	 * @param rule the {@link Rule} being evaluated
 	 * @return the boolean evaluation of the {@link Rule}
 	 */
-	protected checkRule(triggerEvent: AppSensorEvent, rule: Rule): boolean {
-		const notifications: Notification[] = this.getNotifications(triggerEvent, rule);
+	protected async checkRule(triggerEvent: AppSensorEvent, rule: Rule): Promise<boolean> {
+		const notifications: Notification[] = await this.getNotifications(triggerEvent, rule);
 
 		//PriorityQueue in java
 		let windowedNotifications: Notification[] = [];
@@ -338,9 +342,9 @@ class AggregateEventAnalysisEngine extends EventAnalysisEngine {
 	 * @param rule the {@link Rule} being evaluated
 	 * @return a queue of {@link TriggerEvents}
 	 */
-	protected getNotifications(triggerEvent: AppSensorEvent, rule: Rule): Notification[] {
+	protected async getNotifications(triggerEvent: AppSensorEvent, rule: Rule): Promise<Notification[]> {
 		const notificationQueue: Notification[] = [];
-		const events: AppSensorEvent[] = this.getApplicableEvents(triggerEvent, rule);
+		const events: AppSensorEvent[] = await this.getApplicableEvents(triggerEvent, rule);
 		const detectionPoints: DetectionPoint[] = rule.getAllDetectionPoints();
 
 		for (const detectionPoint of detectionPoints) {
@@ -423,7 +427,7 @@ class AggregateEventAnalysisEngine extends EventAnalysisEngine {
 	 * @param triggerEvent the {@link Event} that triggered the {@link Rule}
 	 * @param rule the {@link Rule} being evaluated
 	 */
-	public generateAttack(triggerEvent: AppSensorEvent, rule: Rule): void {
+	public async generateAttack(triggerEvent: AppSensorEvent, rule: Rule) {
 		let userName = Utils.getUserName(triggerEvent.getUser());
 
 		console.info("Attack generated on rule: " + rule.getGuid() + ", by user: " + userName);
@@ -438,7 +442,7 @@ class AggregateEventAnalysisEngine extends EventAnalysisEngine {
 
 		const attackStore = this.appSensorServer.getAttackStore();
 		if (attackStore !== null) {
-			attackStore.addAttack(attack);
+			await attackStore.addAttack(attack);
 		}
 		
 	}
@@ -450,7 +454,7 @@ class AggregateEventAnalysisEngine extends EventAnalysisEngine {
 	 * @param rule the {@link Rule} being evaluated
 	 * @return a list of {@link Event}s applicable to the {@link Rule}
 	 */
-	protected getApplicableEvents(triggerEvent: AppSensorEvent, rule: Rule): AppSensorEvent[] {
+	protected async getApplicableEvents(triggerEvent: AppSensorEvent, rule: Rule): Promise<AppSensorEvent[]> {
 		let events: AppSensorEvent[] = [];
 
 		let ruleStartTime: Date = triggerEvent.getTimestamp();
@@ -459,7 +463,7 @@ class AggregateEventAnalysisEngine extends EventAnalysisEngine {
 			ruleStartTime = new Date(ruleStartTime.getTime() - ruleWindow.toMillis());
 		}
 
-		const lastAttackTime: Date = this.findMostRecentAttackTime(triggerEvent, rule);
+		const lastAttackTime: Date = await this.findMostRecentAttackTime(triggerEvent, rule);
 		const earliest: Date = (ruleStartTime.getTime() > lastAttackTime.getTime()) ? ruleStartTime : lastAttackTime;
 
 		const criteria: SearchCriteria = new SearchCriteria().
@@ -474,7 +478,7 @@ class AggregateEventAnalysisEngine extends EventAnalysisEngine {
 
 		const eventStore = this.appSensorServer.getEventStore();
 		if (eventStore !== null) {
-			events = eventStore.findEvents(criteria);
+			events = await eventStore.findEvents(criteria);
 		}
 
 		events.sort((a, b) => { 
@@ -491,7 +495,7 @@ class AggregateEventAnalysisEngine extends EventAnalysisEngine {
 	 * @param rule the {@link Rule} being evaluated
 	 * @return a {@link DateTime} of the most recent attack related to the {@link Rule}
 	 */
-	protected findMostRecentAttackTime(triggerEvent: AppSensorEvent, rule: Rule): Date {
+	protected async findMostRecentAttackTime(triggerEvent: AppSensorEvent, rule: Rule): Promise<Date> {
 		let newest: Date = new Date(0);
 
 		let userName = Utils.getUserName(triggerEvent.getUser());
@@ -507,7 +511,7 @@ class AggregateEventAnalysisEngine extends EventAnalysisEngine {
 
 		const attackStore = this.appSensorServer.getAttackStore();
 		if (attackStore !== null) {
-			const attacks: Attack[] = attackStore.findAttacks(criteria);
+			const attacks: Attack[] = await attackStore.findAttacks(criteria);
 
 			for (const attack of attacks) {
 				const attackRule = attack.getRule();
@@ -534,7 +538,7 @@ class AggregateResponseAnalysisEngine extends ResponseAnalysisEngine {
 	 * @param response {@link Response} that has been added to the {@link ResponseStore}.
 	 */
 	// @Override
-	public analyze(response: Response): void {
+	public async analyze(response: Response): Promise<void> {
 		if (response != null) {
             let userName = Utils.getUserName(response.getUser());
 

@@ -34,7 +34,7 @@ abstract class AttackStore {
 	 *
 	 * @param attack the {@link org.owasp.appsensor.core.Attack} object to add to the AttackStore
 	 */
-	public abstract addAttack(attack: Attack): void;
+	public abstract addAttack(attack: Attack): Promise<void>;
 
 	/**
 	 * Finder for attacks in the AttackStore.
@@ -42,7 +42,7 @@ abstract class AttackStore {
 	 * @param criteria the {@link org.owasp.appsensor.core.criteria.SearchCriteria} object to search by
 	 * @return a {@link java.util.Collection} of {@link org.owasp.appsensor.core.Attack} objects matching the search criteria.
 	 */
-	public abstract findAttacks(criteria: SearchCriteria): Attack[];
+	public abstract findAttacks(criteria: SearchCriteria): Promise<Attack[]>;
 
 	/**
 	 * Register an {@link AttackListener} to notify when {@link Attack}s are added
@@ -71,9 +71,9 @@ abstract class AttackStore {
 	 *
 	 * @param response the {@link Attack} to notify each {@link AttackListener} about
 	 */
-	public notifyListeners(attack: Attack): void {
+	public async notifyListeners(attack: Attack) {
 		for (const listener of AttackStore.listeners) {
-			listener.onAdd(attack);
+			await listener.onAdd(attack);
 		}
 	}
 
@@ -192,7 +192,7 @@ abstract class EventStore {
 	 *
 	 * @param event the {@link org.owasp.appsensor.core.Event} to add to the EventStore
 	 */
-	public abstract addEvent(event: AppSensorEvent): void;
+	public abstract addEvent(event: AppSensorEvent): Promise<void>;
 
 	/**
 	 * A finder for Event objects in the EventStore
@@ -200,7 +200,7 @@ abstract class EventStore {
 	 * @param criteria the {@link org.owasp.appsensor.core.criteria.SearchCriteria} object to search by
 	 * @return a {@link java.util.Collection} of {@link org.owasp.appsensor.core.Event} objects matching the search criteria.
 	 */
-	public abstract findEvents(criteria: SearchCriteria): AppSensorEvent[];
+	public abstract findEvents(criteria: SearchCriteria): Promise<AppSensorEvent[]>;
 
 	/**
 	 * Register an {@link EventListener} to notify when {@link Event}s are added
@@ -229,9 +229,9 @@ abstract class EventStore {
 	 *
 	 * @param response the {@link Event} to notify each {@link EventListener} about
 	 */
-	public notifyListeners(event: AppSensorEvent) {
+	public async notifyListeners(event: AppSensorEvent) {
 		for (const listener of EventStore.listeners) {
-			listener.onAdd(event);
+			await listener.onAdd(event);
 		}
 	}
 
@@ -348,7 +348,7 @@ abstract class ResponseStore {
 	 * 
 	 * @param response {@link org.owasp.appsensor.core.Response} to add to the ResponseStore
 	 */
-	public abstract addResponse(response: Response): void;
+	public abstract addResponse(response: Response): Promise<void>;
 	
 
 	/**
@@ -357,7 +357,7 @@ abstract class ResponseStore {
 	 * @param criteria the {@link org.owasp.appsensor.core.criteria.SearchCriteria} object to search by
 	 * @return a {@link java.util.Collection} of {@link org.owasp.appsensor.core.Response} objects matching the search criteria.
 	 */
-	public abstract findResponses(criteria: SearchCriteria): Response[];
+	public abstract findResponses(criteria: SearchCriteria): Promise<Response[]>;
 	
 	/**
 	 * Finder for responses in the ResponseStore
@@ -434,9 +434,9 @@ abstract class ResponseStore {
 	 * 
 	 * @param response the {@link Response} to notify each {@link ResponseListener} about
 	 */
-	public notifyListeners(response: Response): void {
+	public async notifyListeners(response: Response) {
 		for (const listener of ResponseStore.listeners) {
-			listener.onAdd(response);
+			await listener.onAdd(response);
 		}
 	}
 	

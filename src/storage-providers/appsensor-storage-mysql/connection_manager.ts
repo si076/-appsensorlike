@@ -1,10 +1,10 @@
-import mysql, { PoolConfig } from 'mysql';
+import { PoolConfig, PoolConnection, MysqlError, Pool, createPool } from 'mysql';
 // import { ConfigurationManager, IConfiguration, TYPE_EVENT_CONFIG_RELOADED } from '../config/Configuration.mjs';
 import { strict as assert } from 'assert';
 
 class ConnectionManager {
 
-    private static pool: mysql.Pool | null = null;
+    private static pool: Pool | null = null;
 
     private static poolConfig: PoolConfig;
 
@@ -24,7 +24,7 @@ class ConnectionManager {
 
     }
 
-    static getPool(config: PoolConfig | null = null): mysql.Pool {
+    static getPool(config: PoolConfig | null = null): Pool {
         let poolConfig: PoolConfig = ConnectionManager.poolConfig;
         let considerRecreate: boolean = false;
 
@@ -54,11 +54,32 @@ class ConnectionManager {
             // const stack = new Error().stack
             // console.log( stack );
 
-            ConnectionManager.pool = mysql.createPool(poolConfig);
+            ConnectionManager.pool = createPool(poolConfig);
         } 
 
         return ConnectionManager.pool;
     }
+
+    public static getConnection(//connetionErrorHandler: ((error: MysqlError) => void) = ConnectionManager.defaultErrorHandler
+                               ): Promise<PoolConnection> {
+        return new Promise((resolve, reject) => {
+
+            ConnectionManager.getPool().getConnection((err, connection) => {
+                if (err) {
+                    
+                    reject(err);
+                    return;
+                }
+
+                resolve(connection)
+            });
+        });
+    }
+
+    public static defaultErrorHandler(error: MysqlError) {
+        console.error(error);
+    }
+
 }
 
 export {ConnectionManager};

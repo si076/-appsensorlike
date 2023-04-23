@@ -25,9 +25,9 @@ class ReferenceAttackAnalysisEngine extends AttackAnalysisEngine {
 	 * @param event the {@link Attack} that was added to the {@link AttackStore}
 	 */
 	// @Override
-	public analyze(attack: Attack): void {
+	public async analyze(attack: Attack): Promise<void> {
 		if (attack !== null && attack.getDetectionPoint() !== null) {
-			const response: Response = this.findAppropriateResponse(attack);
+			const response: Response = await this.findAppropriateResponse(attack);
 
 			if (response !== null) {
                 let userName = '';
@@ -38,7 +38,7 @@ class ReferenceAttackAnalysisEngine extends AttackAnalysisEngine {
 				console.info("Response set for user <" + userName  + "> - storing response action " + response.getAction());
                 const responseStore = this.appSensorServer.getResponseStore();
                 if (responseStore !== null) {
-                    responseStore.addResponse(response);
+                    await responseStore.addResponse(response);
                 }
 				
 			}
@@ -51,7 +51,7 @@ class ReferenceAttackAnalysisEngine extends AttackAnalysisEngine {
 	 * @param attack {@link Attack} that is being analyzed
 	 * @return {@link Response} to be executed for given {@link Attack}
 	 */
-	protected findAppropriateResponse(attack: Attack): Response {
+	protected async findAppropriateResponse(attack: Attack): Promise<Response> {
 		const triggeringDetectionPoint: DetectionPoint | null = attack.getDetectionPoint();
 
         
@@ -69,7 +69,7 @@ class ReferenceAttackAnalysisEngine extends AttackAnalysisEngine {
         let existingResponses: Response[] = [];
         const responseStore = this.appSensorServer.getResponseStore();
         if (responseStore !== null) {
-            existingResponses = responseStore.findResponses(criteria);
+            existingResponses = await responseStore.findResponses(criteria);
         }
 
 		let responseAction: string = '';
@@ -181,7 +181,7 @@ class ReferenceEventAnalysisEngine extends EventAnalysisEngine {
 	 * @param event the {@link Event} that was added to the {@link EventStore}
 	 */
 	// @Override
-	public analyze(event: AppSensorEvent): void {
+	public async analyze(event: AppSensorEvent): Promise<void> {
 
 		const criteria: SearchCriteria = new SearchCriteria().
 				setUser(event.getUser()).
@@ -197,7 +197,7 @@ class ReferenceEventAnalysisEngine extends EventAnalysisEngine {
 		let existingEvents: AppSensorEvent[] = [];
         const eventStore = this.appSensorServer.getEventStore();
         if (eventStore !== null) {
-            existingEvents = eventStore.findEvents(criteria);
+            existingEvents = await eventStore.findEvents(criteria);
         }
         
 
@@ -218,7 +218,7 @@ class ReferenceEventAnalysisEngine extends EventAnalysisEngine {
 
 				// filter and count events that match this detection point (filtering by threshold)
 				// and that are after the most recent attack (filter by timestamp)
-				let eventCount: number = this.countEvents(existingEvents, event, configuredDetectionPoint);
+				let eventCount: number = await this.countEvents(existingEvents, event, configuredDetectionPoint);
 
 				// if the event count is 0, reset to 1 -> we know at least 1 event has occurred (the one we're considering)
 				// this can occur sometimes when testing with dates out of the given range or due to clock drift
@@ -259,7 +259,7 @@ class ReferenceEventAnalysisEngine extends EventAnalysisEngine {
 
                     const attackStore = this.appSensorServer.getAttackStore();
                     if (attackStore !== null) {
-                        attackStore.addAttack(attack);
+                        await attackStore.addAttack(attack);
                     }
 					
 				}
@@ -279,9 +279,9 @@ class ReferenceEventAnalysisEngine extends EventAnalysisEngine {
 	 * @param configuredDetectionPoint the {@link DetectionPoint} we are currently considering
 	 * @return number of {@link Event}s matching time {@link Interval} and configured {@link DetectionPoint}
 	 */
-	protected countEvents(existingEvents: AppSensorEvent[], 
-                          triggeringEvent: AppSensorEvent, 
-                          configuredDetectionPoint: DetectionPoint): number {
+	protected async countEvents(existingEvents: AppSensorEvent[], 
+                          		triggeringEvent: AppSensorEvent, 
+                          		configuredDetectionPoint: DetectionPoint): Promise<number> {
 		let count: number = 0;
 
 		let intervalInMillis: number = 0;
@@ -297,7 +297,7 @@ class ReferenceEventAnalysisEngine extends EventAnalysisEngine {
 		const startTime: Date = new Date(Date.now() - intervalInMillis);
 
 		//count events after most recent attack.
-		const mostRecentAttackTime: Date = this.findMostRecentAttackTime(triggeringEvent, configuredDetectionPoint);
+		const mostRecentAttackTime: Date = await this.findMostRecentAttackTime(triggeringEvent, configuredDetectionPoint);
 
 		for (const event of existingEvents) {
 
@@ -330,7 +330,7 @@ class ReferenceEventAnalysisEngine extends EventAnalysisEngine {
 	 * @param configuredDetectionPoint {@link DetectionPoint} to use to find matching {@link Attack}s
 	 * @return timestamp representing last matching {@link Attack}, or -1L if not found
 	 */
-	protected findMostRecentAttackTime(event: AppSensorEvent, configuredDetectionPoint: DetectionPoint): Date {
+	protected async findMostRecentAttackTime(event: AppSensorEvent, configuredDetectionPoint: DetectionPoint): Promise<Date> {
 		let newest: Date = new Date(0);
 
 		const criteria: SearchCriteria = new SearchCriteria().
@@ -343,7 +343,7 @@ class ReferenceEventAnalysisEngine extends EventAnalysisEngine {
 				
         const attackStore = this.appSensorServer.getAttackStore();
         if (attackStore !== null) {
-            const attacks: Attack[] = attackStore.findAttacks(criteria);
+            const attacks: Attack[] = await attackStore.findAttacks(criteria);
 
             for (const attack of attacks) {
 				const attackTimestamp = attack.getTimestamp();
@@ -370,7 +370,7 @@ class ReferenceResponseAnalysisEngine extends ResponseAnalysisEngine {
 	 * @param response {@link Response} that has been added to the {@link ResponseStore}.
 	 */
 	// @Override
-	public analyze(response: Response): void {
+	public async analyze(response: Response): Promise<void> {
 		if (response != null) {
             let userName = Utils.getUserName(response.getUser());
 

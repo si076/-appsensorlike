@@ -1,12 +1,9 @@
-import { AggregateAttackAnalysisEngine, AggregateEventAnalysisEngine } from "../../../../analysis-engines/appsensor-analysis-rules/appsensor-analysis-rules.js";
 import { AppSensorEvent, Category, DetectionPoint, DetectionSystem, Interval, INTERVAL_UNITS, Response, Threshold, User } from "../../../../core/core.js";
 import { SearchCriteria } from "../../../../core/criteria/criteria.js";
 import { Clause, Expression, MonitorPoint, Rule } from "../../../../core/rule/rule.js";
 import { BaseTest } from "./BaseTest.js";
 
 import assert from "assert";
-import { AttackAnalysisEngine, EventAnalysisEngine } from "../../../../core/analysis/analysis.js";
-import { ReferenceAttackAnalysisEngine, ReferenceEventAnalysisEngine } from "../../../../analysis-engines/appsensor-analysis-reference/appsensor-analysis-reference.js";
 
 class SimpleAggregateEventAnalysisEngineTest extends BaseTest {
 
@@ -155,46 +152,58 @@ class SimpleAggregateEventAnalysisEngineTest extends BaseTest {
 		const detectionPoint1 = SimpleAggregateEventAnalysisEngineTest.detectionPoints![0];
 
 		// get events and attacks
-		let numEvents = this.appSensorServer.getEventStore()!.findEvents(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!).length;
-		let numDPAttacks = this.appSensorServer.getAttackStore()!.findAttacks(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!).length;
-		let numRuleAttacks = this.appSensorServer.getAttackStore()!.findAttacks(SimpleAggregateEventAnalysisEngineTest.criteria.get("rule1")!).length;
+		let eventsDP1 = await this.appSensorServer.getEventStore()!.findEvents(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!);
+		let attacksDP1 = await this.appSensorServer.getAttackStore()!.findAttacks(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!);
+		let attackRule1 = await this.appSensorServer.getAttackStore()!.findAttacks(SimpleAggregateEventAnalysisEngineTest.criteria.get("rule1")!);
+		let numEvents = eventsDP1.length;
+		let numDPAttacks = attacksDP1.length;
+		let numRuleAttacks = attackRule1.length;
 
-		// useless sanity check
-		assert.equal(numEvents, this.appSensorServer.getEventStore()!.findEvents(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!).length);
-		assert.equal(numDPAttacks, this.appSensorServer.getAttackStore()!.findAttacks(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!).length);
-		assert.equal(numRuleAttacks, this.appSensorServer.getAttackStore()!.findAttacks(SimpleAggregateEventAnalysisEngineTest.criteria.get("rule1")!).length);
+		// // useless sanity check
+		// assert.equal(numEvents, this.appSensorServer.getEventStore()!.findEvents(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!).length);
+		// assert.equal(numDPAttacks, this.appSensorServer.getAttackStore()!.findAttacks(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!).length);
+		// assert.equal(numRuleAttacks, this.appSensorServer.getAttackStore()!.findAttacks(SimpleAggregateEventAnalysisEngineTest.criteria.get("rule1")!).length);
 
 
 		// 3 events and triggered attack
 		await this.addEvents(SimpleAggregateEventAnalysisEngineTest.bob, detectionPoint1, 3);
 		numEvents += 3; numDPAttacks++; numRuleAttacks++;
 
-		assert.equal(numEvents, this.appSensorServer.getEventStore()!.findEvents(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!).length);
-		assert.equal(numDPAttacks, this.appSensorServer.getAttackStore()!.findAttacks(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!).length);
-		assert.equal(numRuleAttacks, this.appSensorServer.getAttackStore()!.findAttacks(SimpleAggregateEventAnalysisEngineTest.criteria.get("rule1")!).length);
+		eventsDP1 = await this.appSensorServer.getEventStore()!.findEvents(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!);
+		attacksDP1 = await this.appSensorServer.getAttackStore()!.findAttacks(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!);
+		attackRule1 = await this.appSensorServer.getAttackStore()!.findAttacks(SimpleAggregateEventAnalysisEngineTest.criteria.get("rule1")!);
+		assert.equal(numEvents, eventsDP1.length);
+		assert.equal(numDPAttacks, attacksDP1.length);
+		assert.equal(numRuleAttacks, attackRule1.length);
 
 		// 1 event and no new attack
 		await this.addEvents(SimpleAggregateEventAnalysisEngineTest.bob, detectionPoint1);
 		numEvents += 1;
 
-		assert.equal(numEvents, this.appSensorServer.getEventStore()!.findEvents(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!).length);
-		assert.equal(numDPAttacks, this.appSensorServer.getAttackStore()!.findAttacks(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!).length);
-		assert.equal(numRuleAttacks, this.appSensorServer.getAttackStore()!.findAttacks(SimpleAggregateEventAnalysisEngineTest.criteria.get("rule1")!).length);
+		eventsDP1 = await this.appSensorServer.getEventStore()!.findEvents(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!);
+		attacksDP1 = await this.appSensorServer.getAttackStore()!.findAttacks(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!);
+		attackRule1 = await this.appSensorServer.getAttackStore()!.findAttacks(SimpleAggregateEventAnalysisEngineTest.criteria.get("rule1")!);
+		assert.equal(numEvents, eventsDP1.length);
+		assert.equal(numDPAttacks, attacksDP1.length);
+		assert.equal(numRuleAttacks, attackRule1.length);
 
 		// 2 events and 2 total attack
 		await this.addEvents(SimpleAggregateEventAnalysisEngineTest.bob, detectionPoint1, 2);
 		numEvents += 2; numDPAttacks++; numRuleAttacks++;
 
-		assert.equal(numEvents, this.appSensorServer.getEventStore()!.findEvents(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!).length);
-		assert.equal(numDPAttacks, this.appSensorServer.getAttackStore()!.findAttacks(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!).length);
-		assert.equal(numRuleAttacks, this.appSensorServer.getAttackStore()!.findAttacks(SimpleAggregateEventAnalysisEngineTest.criteria.get("rule1")!).length);
+		eventsDP1 = await this.appSensorServer.getEventStore()!.findEvents(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!);
+		attacksDP1 = await this.appSensorServer.getAttackStore()!.findAttacks(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!);
+		attackRule1 = await this.appSensorServer.getAttackStore()!.findAttacks(SimpleAggregateEventAnalysisEngineTest.criteria.get("rule1")!);
+		assert.equal(numEvents, eventsDP1.length);
+		assert.equal(numDPAttacks, attacksDP1.length);
+		assert.equal(numRuleAttacks, attackRule1.length);
 
 		console.log('<-- test1_DP1');
 	}
 
 	protected async addEvents(user: User, detectionPoint: DetectionPoint, count: number = 1) {
 		for (let i=0; i < count; i++) {
-			this.appSensorClient.getEventManager()!.
+			await this.appSensorClient.getEventManager()!.
 				addEvent(new AppSensorEvent(user, detectionPoint, 
 										    SimpleAggregateEventAnalysisEngineTest.detectionSystem1, 
 											SimpleAggregateEventAnalysisEngineTest.time));

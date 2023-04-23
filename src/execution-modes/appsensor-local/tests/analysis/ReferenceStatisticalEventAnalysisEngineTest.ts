@@ -2,11 +2,9 @@ import { AppSensorEvent, Category, DetectionPoint,
 	     DetectionSystem, Interval, INTERVAL_UNITS, IPAddress, KeyValuePair, Resource, Response, 
 		 Threshold, User } from "../../../../core/core.js";
 import { SearchCriteria } from "../../../../core/criteria/criteria.js";
-import { ReferenceAttackAnalysisEngine, ReferenceEventAnalysisEngine } from "../../../../analysis-engines/appsensor-analysis-reference/appsensor-analysis-reference.js";
 
 import assert from "assert";
 import { BaseTest } from "./BaseTest.js";
-import { AttackAnalysisEngine, EventAnalysisEngine } from "../../../../core/analysis/analysis.js";
 
 class ReferenceStatisticalEventAnalysisEngineTest extends BaseTest {
 
@@ -31,57 +29,73 @@ class ReferenceStatisticalEventAnalysisEngineTest extends BaseTest {
 
 		await super.sleep(this.sleepAmount);
 
-		assert.equal(0, this.appSensorServer.getEventStore()!.findEvents(criteria).length);
-		assert.equal(0, this.appSensorServer.getAttackStore()!.findAttacks(criteria).length);
+		let events = await this.appSensorServer.getEventStore()!.findEvents(criteria);
+		let attacks = await this.appSensorServer.getAttackStore()!.findAttacks(criteria);
+		assert.equal(0, events.length);
+		assert.equal(0, attacks.length);
 
-		this.appSensorClient.getEventManager()!.addEvent(this.generateNewEvent());
-
-		await super.sleep(this.sleepAmount);
-
-		assert.equal(1, this.appSensorServer.getEventStore()!.findEvents(criteria).length);
-		assert.equal(0, this.appSensorServer.getAttackStore()!.findAttacks(criteria).length);
-
-        this.appSensorClient.getEventManager()!.addEvent(this.generateNewEvent());
+		await this.appSensorClient.getEventManager()!.addEvent(this.generateNewEvent());
 
 		await super.sleep(this.sleepAmount);
 
-		assert.equal(2, this.appSensorServer.getEventStore()!.findEvents(criteria).length);
-		assert.equal(0, this.appSensorServer.getAttackStore()!.findAttacks(criteria).length);
+		events = await this.appSensorServer.getEventStore()!.findEvents(criteria);
+		attacks = await this.appSensorServer.getAttackStore()!.findAttacks(criteria);
+		assert.equal(1, events.length);
+		assert.equal(0, attacks.length);
 
-        this.appSensorClient.getEventManager()!.addEvent(this.generateNewEvent());
-
-		await super.sleep(this.sleepAmount);
-
-		assert.equal(3, this.appSensorServer.getEventStore()!.findEvents(criteria).length);
-		assert.equal(1, this.appSensorServer.getAttackStore()!.findAttacks(criteria).length);
-
-        this.appSensorClient.getEventManager()!.addEvent(this.generateNewEvent());
+        await this.appSensorClient.getEventManager()!.addEvent(this.generateNewEvent());
 
 		await super.sleep(this.sleepAmount);
 
-		assert.equal(4, this.appSensorServer.getEventStore()!.findEvents(criteria).length);
-		assert.equal(1, this.appSensorServer.getAttackStore()!.findAttacks(criteria).length);
+		events = await this.appSensorServer.getEventStore()!.findEvents(criteria);
+		attacks = await this.appSensorServer.getAttackStore()!.findAttacks(criteria);
+		assert.equal(2, events.length);
+		assert.equal(0, attacks.length);
 
-        this.appSensorClient.getEventManager()!.addEvent(this.generateNewEvent());
-
-		await super.sleep(this.sleepAmount);
-
-		assert.equal(5, this.appSensorServer.getEventStore()!.findEvents(criteria).length);
-		assert.equal(1, this.appSensorServer.getAttackStore()!.findAttacks(criteria).length);
-
-        this.appSensorClient.getEventManager()!.addEvent(this.generateNewEvent());
+        await this.appSensorClient.getEventManager()!.addEvent(this.generateNewEvent());
 
 		await super.sleep(this.sleepAmount);
 
-		assert.equal(6, this.appSensorServer.getEventStore()!.findEvents(criteria).length);
-		assert.equal(2, this.appSensorServer.getAttackStore()!.findAttacks(criteria).length);
+		events = await this.appSensorServer.getEventStore()!.findEvents(criteria);
+		attacks = await this.appSensorServer.getAttackStore()!.findAttacks(criteria);
+		assert.equal(3, events.length);
+		assert.equal(1, attacks.length);
 
-        this.appSensorClient.getEventManager()!.addEvent(this.generateNewEvent());
+        await this.appSensorClient.getEventManager()!.addEvent(this.generateNewEvent());
 
 		await super.sleep(this.sleepAmount);
 
-		assert.equal(7, this.appSensorServer.getEventStore()!.findEvents(criteria).length);
-		assert.equal(2, this.appSensorServer.getAttackStore()!.findAttacks(criteria).length);
+		events = await this.appSensorServer.getEventStore()!.findEvents(criteria);
+		attacks = await this.appSensorServer.getAttackStore()!.findAttacks(criteria);
+		assert.equal(4, events.length);
+		assert.equal(1, attacks.length);
+
+        await this.appSensorClient.getEventManager()!.addEvent(this.generateNewEvent());
+
+		await super.sleep(this.sleepAmount);
+
+		events = await this.appSensorServer.getEventStore()!.findEvents(criteria);
+		attacks = await this.appSensorServer.getAttackStore()!.findAttacks(criteria);
+		assert.equal(5, events.length);
+		assert.equal(1, attacks.length);
+
+        await this.appSensorClient.getEventManager()!.addEvent(this.generateNewEvent());
+
+		await super.sleep(this.sleepAmount);
+
+		events = await this.appSensorServer.getEventStore()!.findEvents(criteria);
+		attacks = await this.appSensorServer.getAttackStore()!.findAttacks(criteria);
+		assert.equal(6, events.length);
+		assert.equal(2, attacks.length);
+
+        await this.appSensorClient.getEventManager()!.addEvent(this.generateNewEvent());
+
+		await super.sleep(this.sleepAmount);
+
+		events = await this.appSensorServer.getEventStore()!.findEvents(criteria);
+		attacks = await this.appSensorServer.getAttackStore()!.findAttacks(criteria);
+		assert.equal(7, events.length);
+		assert.equal(2, attacks.length);
 
 		console.log('<-- testAttackCreation');
 	}

@@ -4,10 +4,10 @@ import { AttackStore, EventStore, ResponseStore } from "../../core/storage/stora
 
 class RedisAttackStore extends AttackStore {
 
-    public addAttack(attack: Attack): void {
+    public addAttack(attack: Attack): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    public findAttacks(criteria: SearchCriteria): Attack[] {
+    public findAttacks(criteria: SearchCriteria): Promise<Attack[]> {
         throw new Error("Method not implemented.");
     }
 
@@ -15,10 +15,10 @@ class RedisAttackStore extends AttackStore {
 
 class RedisEventStore extends EventStore {
     
-    public addEvent(event: AppSensorEvent): void {
+    public addEvent(event: AppSensorEvent): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    public findEvents(criteria: SearchCriteria): AppSensorEvent[] {
+    public findEvents(criteria: SearchCriteria): Promise<AppSensorEvent[]> {
         throw new Error("Method not implemented.");
     }
 
@@ -26,10 +26,10 @@ class RedisEventStore extends EventStore {
 
 class RedisResponseStore extends ResponseStore {
 
-    public addResponse(response: Response): void {
+    public addResponse(response: Response): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    public findResponses(criteria: SearchCriteria): Response[] {
+    public findResponses(criteria: SearchCriteria): Promise<Response[]> {
         throw new Error("Method not implemented.");
     }
 

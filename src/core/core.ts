@@ -1450,13 +1450,13 @@ interface RequestHandler {
 	 * 
 	 * @param event Event to add
 	 */
-	addEvent(event: AppSensorEvent): void;
+	addEvent(event: AppSensorEvent): Promise<void>;
 	
 	/**
 	 * Add an Attack
 	 * @param attack Attack to add
 	 */
-	addAttack(attack: Attack): void;
+	addAttack(attack: Attack): Promise<void>;
 	
 	/**
 	 * Retrieve any responses generated that apply to this client application 
@@ -1465,7 +1465,7 @@ interface RequestHandler {
 	 * @param earliest Timestamp in the http://tools.ietf.org/html/rfc3339 format
 	 * @return a Collection of Response objects 
 	 */
-	getResponses(earliest: Date): Response[];
+	getResponses(earliest: Date): Promise<Response[]>;
 	
 }
 
@@ -1762,6 +1762,10 @@ class Utils {
 			    (!propDescr1 && propDescr2)) {
 				equal = false;
 
+				const val1 = propDescr1 ? propDescr1.value : undefined;
+				const val2 = propDescr2 ? propDescr2.value : undefined; 
+				console.log(`equalsOnProperties: class: ${obj1.constructor.name}, property: ${propName} '${val1}' <> '${val2}'`);
+
 				break;
 			}
 
@@ -1782,6 +1786,8 @@ class Utils {
 			}
 
 			if (!equal) {
+				console.log(`equalsOnProperties: class: ${obj1.constructor.name}, property: ${propName} '${propDescr1!.value}' <> '${propDescr2!.value}'`);
+
 				break;
 			}
 		}

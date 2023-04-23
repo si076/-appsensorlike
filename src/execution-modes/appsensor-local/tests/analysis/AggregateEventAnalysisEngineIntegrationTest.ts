@@ -1,13 +1,11 @@
-import { AggregateAttackAnalysisEngine, AggregateEventAnalysisEngine } from "../../../../analysis-engines/appsensor-analysis-rules/appsensor-analysis-rules.js";
-import { AttackAnalysisEngine, EventAnalysisEngine } from "../../../../core/analysis/analysis.js";
-import { ServerConfiguration } from "../../../../core/configuration/server/server_configuration.js";
+import { AggregateEventAnalysisEngine } from "../../../../analysis-engines/appsensor-analysis-rules/appsensor-analysis-rules.js";
+import { EventAnalysisEngine } from "../../../../core/analysis/analysis.js";
 import { AppSensorEvent, AppSensorServer, Category, DetectionPoint, DetectionSystem, Interval, INTERVAL_UNITS, Response, Threshold, User } from "../../../../core/core.js";
 import { SearchCriteria } from "../../../../core/criteria/criteria.js";
 import { Clause, Expression, MonitorPoint, Rule } from "../../../../core/rule/rule.js";
 
 import assert from "assert";
 import { BaseTest } from "./BaseTest.js";
-import { ReferenceAttackAnalysisEngine, ReferenceEventAnalysisEngine } from "../../../../analysis-engines/appsensor-analysis-reference/appsensor-analysis-reference.js";
 
 class AggregEventAnalysisEngIntegTest extends BaseTest {
 
@@ -314,8 +312,8 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
 
 	// this method doesn't actually wait, it just adds events with a predetermined time
 	// does not check anything
-	private addEvent(detectionPoint: DetectionPoint, time: Date): void {
-        this.appSensorClient!.getEventManager()!.addEvent(
+	private async addEvent(detectionPoint: DetectionPoint, time: Date) {
+        await this.appSensorClient!.getEventManager()!.addEvent(
             new AppSensorEvent(AggregEventAnalysisEngIntegTest.bob, 
                                 detectionPoint, 
                                 new DetectionSystem("localhostme"),
@@ -328,30 +326,32 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
                            eventCount: number, 
                            ruleName: string) {
         const attackStore = this.appSensorServer!.getAttackStore();
-        const attackCount: number = attackStore!.findAttacks(AggregEventAnalysisEngIntegTest.criteria.get(ruleName)!).length;
+		const attacks = await attackStore!.findAttacks(AggregEventAnalysisEngIntegTest.criteria.get(ruleName)!);
+        const attackCount: number = attacks.length;
 
         // let dateTime = new Date();
 
         const millis = time/eventCount;
 
         for (let i = 0; i < eventCount; i++) {
-            assert.equal(attackCount, attackStore!.findAttacks(AggregEventAnalysisEngIntegTest.criteria.get(ruleName)!).length);
+			const attacks = await attackStore!.findAttacks(AggregEventAnalysisEngIntegTest.criteria.get(ruleName)!);
+            assert.equal(attackCount, attacks.length);
 
-            // this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(AggregateEventAnalysisEngineIntegrationTest.bob, detectionPoint, new DetectionSystem("localhostme"), dateTime));
-            this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(AggregEventAnalysisEngIntegTest.bob, detectionPoint, new DetectionSystem("localhostme")));
-            // Thread.sleep(time/eventCount);
-            // dateTime = new Date(dateTime.getTime() + millis);
+            await this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(AggregEventAnalysisEngIntegTest.bob, detectionPoint, new DetectionSystem("localhostme")));
+
 			await super.sleep(millis);
         }
 	}
 
-	private assertEventsAndAttacks (eventCount: number, 
+	private async assertEventsAndAttacks (eventCount: number, 
                                     attackCount: number, 
-                                    criteria: SearchCriteria): void {
+                                    criteria: SearchCriteria): Promise<void> {
         if (criteria.getRule() === null) {
-            assert.equal(eventCount, this.appSensorServer!.getEventStore()!.findEvents(criteria).length);
+			const events = await this.appSensorServer!.getEventStore()!.findEvents(criteria);
+            assert.equal(eventCount, events.length);
         }
-        assert.equal(attackCount, this.appSensorServer!.getAttackStore()!.findAttacks(criteria).length);
+		const attacks = await this.appSensorServer!.getAttackStore()!.findAttacks(criteria);
+        assert.equal(attackCount, attacks.length);
 	}
 
 	// @Test
@@ -369,7 +369,8 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
                             3, 
                             "rule1");
 		this.assertEventsAndAttacks(3, 1, AggregEventAnalysisEngIntegTest.criteria.get("dp1")!);
-		assert.equal(1, this.appSensorServer!.getAttackStore()!.findAttacks(AggregEventAnalysisEngIntegTest.criteria.get("rule1")!).length);
+		let attacks = await this.appSensorServer!.getAttackStore()!.findAttacks(AggregEventAnalysisEngIntegTest.criteria.get("rule1")!);
+		assert.equal(1, attacks.length);
 
 		// 1 event and no new attack
 		await this.generateEvents(this.sleepAmount, 
@@ -377,7 +378,8 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
                             1,
                             "rule1");
 		this.assertEventsAndAttacks(4, 1, AggregEventAnalysisEngIntegTest.criteria.get("dp1")!);
-		assert.equal(1, this.appSensorServer!.getAttackStore()!.findAttacks(AggregEventAnalysisEngIntegTest.criteria.get("rule1")!).length);
+		attacks = await this.appSensorServer!.getAttackStore()!.findAttacks(AggregEventAnalysisEngIntegTest.criteria.get("rule1")!);
+		assert.equal(1, attacks.length);
 
 		// 2 events and 2 total attack
 		await this.generateEvents(this.sleepAmount * 2, 
@@ -385,7 +387,8 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
                             2, 
                             "rule1");
 		this.assertEventsAndAttacks(6, 2, AggregEventAnalysisEngIntegTest.criteria.get("dp1")!);
-		assert.equal(2, this.appSensorServer!.getAttackStore()!.findAttacks(AggregEventAnalysisEngIntegTest.criteria.get("rule1")!).length);
+		attacks = await this.appSensorServer!.getAttackStore()!.findAttacks(AggregEventAnalysisEngIntegTest.criteria.get("rule1")!);
+		assert.equal(2, attacks.length);
 
 		console.log('<-- test1_DP1');
 	}
@@ -667,7 +670,7 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
 
 	// test the scheduling bug
 	// @Test
-	public test7_DP1andDP4orDP1andDP3thenDP1(): void {
+	public async test7_DP1andDP4orDP1andDP3thenDP1() {
 		console.log('--> test7_DP1andDP4orDP1andDP3thenDP1');
 
 		let time = new Date(100 * 60 * 60 * 1000);
@@ -678,53 +681,55 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
 
         this.setRule(this.appSensorServer, AggregEventAnalysisEngIntegTest.rules[6]);
 
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, time);
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 1 * 60 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 2 * 60 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint4, new Date(time.getTime() + 3 * 60 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint4, new Date(time.getTime() + 4 * 60 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint4, new Date(time.getTime() + 5 * 60 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint4, new Date(time.getTime() + 6 * 60 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 8 * 60 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 9 * 60 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 10 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, time);
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 1 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 2 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint4, new Date(time.getTime() + 3 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint4, new Date(time.getTime() + 4 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint4, new Date(time.getTime() + 5 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint4, new Date(time.getTime() + 6 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 8 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 9 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 10 * 60 * 1000));
 
-		assert.equal(1, this.appSensorServer!.getAttackStore()!.findAttacks(ruleCriteria).length);
+		let attacks = await this.appSensorServer!.getAttackStore()!.findAttacks(ruleCriteria);
+		assert.equal(1, attacks.length);
 
 		time = new Date(time.getTime() + 1 * 60 * 60 * 1000);
 
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, time);
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 2 * 60 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint4, new Date(time.getTime() + 2 * 60 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 3 * 60 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint4, new Date(time.getTime() + 3 * 60 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 3 * 60 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 3 * 60 * 1000 + 30 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint4, new Date(time.getTime() + 4 * 60 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 4 * 60 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 4 * 60 * 1000 + 30 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 5 * 60 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 5 * 60 * 1000 + 30 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 6 * 60 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 6 * 60 * 1000 + 30 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 7 * 60 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 7 * 60 * 1000 + 30 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 8 * 60 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 8 * 60 * 1000 + 30 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 9 * 60 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint4, new Date(time.getTime() + 11 * 60 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 13 * 60 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 14 * 60 * 1000));
-		this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 15 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, time);
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 2 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint4, new Date(time.getTime() + 2 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 3 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint4, new Date(time.getTime() + 3 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 3 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 3 * 60 * 1000 + 30 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint4, new Date(time.getTime() + 4 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 4 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 4 * 60 * 1000 + 30 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 5 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 5 * 60 * 1000 + 30 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 6 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 6 * 60 * 1000 + 30 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 7 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 7 * 60 * 1000 + 30 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 8 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 8 * 60 * 1000 + 30 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint3, new Date(time.getTime() + 9 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint4, new Date(time.getTime() + 11 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 13 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 14 * 60 * 1000));
+		await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 15 * 60 * 1000));
 
-		assert.equal(2, this.appSensorServer!.getAttackStore()!.findAttacks(ruleCriteria).length);
+		attacks = await this.appSensorServer!.getAttackStore()!.findAttacks(ruleCriteria);
+		assert.equal(2, attacks.length);
 
 		console.log('<-- test7_DP1andDP4orDP1andDP3thenDP1');
 	}
 
 	// test the earliest attack bug
 		// @Test
-    public test8_DP1(): void {
+    public async test8_DP1() {
 		console.log('--> test8_DP1');
 
         let time = new Date(100 * 60 * 60 * 1000);
@@ -735,27 +740,31 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
 
         this.setRule(this.appSensorServer, AggregEventAnalysisEngIntegTest.rules[0]);
 
-        this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, time);
-        this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 1 * 60 * 1000));
-        this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 2 * 60 * 1000));
+        await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, time);
+        await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 1 * 60 * 1000));
+        await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 2 * 60 * 1000));
 
-        assert.equal(1, this.appSensorServer!.getAttackStore()!.findAttacks(ruleCriteria).length);
+		let attacks = await this.appSensorServer!.getAttackStore()!.findAttacks(ruleCriteria);
+        assert.equal(1, attacks.length);
 
-        this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 3 * 60 * 1000));
-        this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 4 * 60 * 1000));
+        await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 3 * 60 * 1000));
+        await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 4 * 60 * 1000));
 
-        assert.equal(1, this.appSensorServer!.getAttackStore()!.findAttacks(ruleCriteria).length);
+		attacks = await this.appSensorServer!.getAttackStore()!.findAttacks(ruleCriteria);
+        assert.equal(1, attacks.length);
 
         time = new Date(time.getTime() + 1 * 60 * 60 * 1000);
 
-        this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, time);
+        await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, time);
 
-        assert.equal(1, this.appSensorServer!.getAttackStore()!.findAttacks(ruleCriteria).length);
+		attacks = await this.appSensorServer!.getAttackStore()!.findAttacks(ruleCriteria);
+        assert.equal(1, attacks.length);
 
-        this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 1 * 60 * 1000));
-        this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 2 * 60 * 1000));
+        await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 1 * 60 * 1000));
+        await this.addEvent(AggregEventAnalysisEngIntegTest.detectionPoint1, new Date(time.getTime() + 2 * 60 * 1000));
 
-        assert.equal(2, this.appSensorServer!.getAttackStore()!.findAttacks(ruleCriteria).length);
+		attacks = await this.appSensorServer!.getAttackStore()!.findAttacks(ruleCriteria);
+        assert.equal(2, attacks.length);
 
 		console.log('<-- test8_DP1');
     }
@@ -784,10 +793,10 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
 		await instance.test6_DP1thenDP2thenDP1orDP2();
 
 		instance.initializeTest();
-		instance.test7_DP1andDP4orDP1andDP3thenDP1();
+		await instance.test7_DP1andDP4orDP1andDP3thenDP1();
 
 		instance.initializeTest();
-		instance.test8_DP1();
+		await instance.test8_DP1();
 	}
 
 }

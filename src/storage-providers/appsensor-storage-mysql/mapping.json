@@ -231,6 +231,6 @@
     },
 
     "cacheControl": {
-        "doNotCacheClasses": ["Attack", "Response"]
+        "doNotCacheClasses": ["Attack", "AppSensorEvent", "Response"]
     }
 }
