@@ -1764,7 +1764,7 @@ class Utils {
 
 				const val1 = propDescr1 ? propDescr1.value : undefined;
 				const val2 = propDescr2 ? propDescr2.value : undefined; 
-				console.log(`equalsOnProperties: class: ${obj1.constructor.name}, property: ${propName} '${val1}' <> '${val2}'`);
+				// console.debug(`equalsOnProperties: class: ${obj1.constructor.name}, property: ${propName} '${val1}' <> '${val2}'`);
 
 				break;
 			}
@@ -1786,7 +1786,7 @@ class Utils {
 			}
 
 			if (!equal) {
-				console.log(`equalsOnProperties: class: ${obj1.constructor.name}, property: ${propName} '${propDescr1!.value}' <> '${propDescr2!.value}'`);
+				// console.debug(`equalsOnProperties: class: ${obj1.constructor.name}, property: ${propName} '${propDescr1!.value}' <> '${propDescr2!.value}'`);
 
 				break;
 			}

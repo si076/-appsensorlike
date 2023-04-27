@@ -1,14 +1,14 @@
-create table attack (id int not null auto_increment, timestamp datetime, detection_point_id int, detection_system_id int, resource_id int, rule_id int, user_id int, metadata_uuid char(36), primary key (id));
+create table attack (id int not null auto_increment, timestamp datetime(3), detection_point_id int, detection_system_id int, resource_id int, rule_id int, user_id int, metadata_uuid char(36), primary key (id));
 create table metadata (metadata_uuid char(36) not null, key_value_pair_id int not null, primary key (metadata_uuid, key_value_pair_id));
 create table detection_point (id int not null auto_increment, category varchar(255), guid char(36), label varchar(255), threshold_id int, primary key (id));
 create table detection_system (id int not null auto_increment, detection_system_id varchar(255), ip_address int, primary key (id));
-create table appsensorevent (id int not null auto_increment, timestamp datetime, detection_point_id int, detection_system_id int, resource_id int, user_id int, metadata_uuid char(36), primary key (id));
+create table appsensorevent (id int not null auto_increment, timestamp datetime(3), detection_point_id int, detection_system_id int, resource_id int, user_id int, metadata_uuid char(36), primary key (id));
 create table geo_location (id int not null auto_increment, latitude double precision not null, longitude double precision not null, primary key (id));
 create table `interval` (id int not null auto_increment, duration int, unit varchar(255), primary key (id));
 create table ipaddress (id int not null auto_increment, address varchar(255), geo_location int, primary key (id));
 create table key_value_pair (id int not null auto_increment, `key` varchar(255), value varchar(255), primary key (id));
 create table `resource` (id int not null auto_increment, location varchar(255), method varchar(255), primary key (id));
-create table response (id int not null auto_increment, action varchar(255), active bit not null, timestamp datetime, detection_system_id int, interval_id int, user_id int, metadata_uuid char(36), primary key (id));
+create table response (id int not null auto_increment, action varchar(255), active bit, timestamp datetime(3), detection_system_id int, interval_id int, user_id int, metadata_uuid char(36), primary key (id));
 create table rule (id int not null auto_increment, guid char(36), name varchar(255), window_id int, primary key (id));
 create table threshold (id int not null auto_increment, t_count int, interval_id int, primary key (id));
 create table `user` (id int not null auto_increment, ip_address int, username varchar(255), primary key (id));

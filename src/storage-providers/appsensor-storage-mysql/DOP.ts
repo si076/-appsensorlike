@@ -132,11 +132,6 @@ class DOP {
     private static EVENT_EMITTER: EventEmitter = new EventEmitter();
 
     private static UNDEFINED_PROP: string    = "<<<undefined>>>"
-    private static UNDEFINED_PROP_ID: number = -2;
-
-    private static NULL_PROP_ID: number = -1;
-
-    
 
     // private static excludedPropertiesFromCompareMap = new Map<string, string[]>();
     // private static onlyPropertiesToCompareMap = new Map<string, string[]>();
@@ -166,7 +161,7 @@ class DOP {
         return DOP.CACHE_LOADED
     }
 
-    public static addCacheLoadedListener(func: () => void) {
+    public static addCacheLoadedListener(func: () => Promise<void>) {
         DOP.EVENT_EMITTER.on(DOP.CACHE_LOADED_EVENT, func);
     }
 
@@ -185,6 +180,12 @@ class DOP {
                     const propMap = DOP.mapping.getPropertyMap(className, propNames[p]);
                     if (propMap && propMap.class) {
                         
+                        if (propMap.class === 'Date') {
+                            //mark timestamp fields 
+                            //we have special conversion for datetime field
+                            continue;
+                        }
+
                         let referedClass = propMap.class;
                         if (referedClass === 'Array') {
                             if (!propMap.arrayElementClass) {
@@ -278,7 +279,8 @@ class DOP {
     }
 
     private static async loadCacheFromDB(connection: PoolConnection) {
-        console.log('--> loadCacheFromDB');
+        // console.debug('--> loadCacheFromDB');
+
         if (DOP.mapping) {
             for (let c = 0; c < DOP.TOPOLOGICALLY_SORTED_CLASS_NAMES.length; c++) {
                 const className = DOP.TOPOLOGICALLY_SORTED_CLASS_NAMES[c];
@@ -302,7 +304,7 @@ class DOP {
             }
         }
 
-        console.log('<-- loadCacheFromDB');
+        // console.debug('<-- loadCacheFromDB');
 
         DOP.CACHE_LOADED = true;
 
@@ -335,31 +337,38 @@ class DOP {
         
                     if (propMap) {
         
-                            const columnName = propMap.column;
+                        const columnName = propMap.column;
 
-                            const columnValue = element[columnName];
+                        const columnValue = element[columnName];
 
-                            let value = columnValue;
+                        let value = columnValue;
 
-                            if (!(columnValue === DOP.UNDEFINED_PROP ||
-                                  columnValue === DOP.UNDEFINED_PROP_ID)) {
-                                
-                                if (propMap.class) {
-                                    if (propMap.class === "Array") {
-                                        //load the values from the table for arrays
-                                        //expected 
-                                        
-                                        value = await DOP.createAndCacheArrayTable(className, key, columnValue, propMap, connection);
-                                    } else {
-                                        //look up cache for already loaded objects since we at first 
-                                        //resolve dependencies and load in topological order objects from the db
-                                        
-                                        value = DOP.getCachedObjectForId(propMap.class, columnValue);
-                                    }
+                        if (!(columnValue === DOP.UNDEFINED_PROP)) {
+                            
+                            if (propMap.class) {
+                                if (propMap.class === "Array") {
+                                    //load the values from the table for arrays
+                                    //expected 
+                                    
+                                    value = await DOP.createAndCacheArrayTable(className, key, columnValue, propMap, connection);
+
+                                } else if (propMap.class === "Date") {
+
+                                    let dateStr: string = columnValue;
+                                    dateStr += 'Z';
+                                    dateStr = dateStr.replace(' ', 'T');
+
+                                    value = new Date(dateStr);
+                                } else {
+                                    //look up cache for already loaded objects since we at first 
+                                    //resolve dependencies and load in topological order objects from the db
+                                    
+                                    value = DOP.getCachedObjectForId(propMap.class, columnValue);
                                 }
-                                
-                                propSetter(newObject)(key as U, value);
                             }
+                            
+                            propSetter(newObject)(key as U, value);
+                        }
                     }
                 }
 
@@ -386,7 +395,7 @@ class DOP {
                                                   propMap: IPropertyMap,
                                                   connection: PoolConnection) {
         const array: any[] = [];
-        if (DOP.mapping) {
+        if (DOP.mapping && uuid !== null) {
             const tableForArry = propMap.arrayTable;                                            
 
             if (!tableForArry) {
@@ -397,8 +406,6 @@ class DOP {
                 
             if (tableColumnsDef) {
                 
-                // uuid = uuidv4();
-
                 let sql = `select ${tableColumnsDef.valueColumnName} from ${tableForArry} where ${tableColumnsDef.uuidColumnName} = '${uuid}'`;
 
                 
@@ -470,6 +477,11 @@ class DOP {
         return equal;
     }
 
+    //for test purpose only
+    public static clearCache() {
+        DOP.cachedObjects.clear();
+    }
+
     private static putInCache(className: string, id: number | string, obj: Object) {
         let idObjMap = DOP.cachedObjects.get(className);
 
@@ -480,7 +492,7 @@ class DOP {
 
         idObjMap.set(id, obj);
 
-        console.log(`<-- putInCache: object of class: ${className}, with id: ${id}`);
+        // console.debug(`<-- putInCache: object of class: ${className}, with id: ${id}`);
     }
 
     private static getCachedObjectId(obj: Object, 
@@ -502,7 +514,7 @@ class DOP {
             }
         }
 
-        console.log(`<-- getCachedObjectId: class: ${className}, id: ${id}`);
+        // console.debug(`<-- getCachedObjectId: class: ${className}, id: ${id}`);
 
         return id;
     }
@@ -522,7 +534,7 @@ class DOP {
             }
         }
 
-        console.log(`<-- getCachedObjectIds: class: ${className}, result: ${result}`);
+        // console.debug(`<-- getCachedObjectIds: class: ${className}, result: ${result}`);
 
         return result;
     }
@@ -545,19 +557,13 @@ class DOP {
         }
 
         const msg = obj ? 'found' : 'not found';
-        console.log(`<-- getCachedObjectForId: class: ${className}, id: ${id}, object: ${msg}`);
+        // console.debug(`<-- getCachedObjectForId: class: ${className}, id: ${id}, object: ${msg}`);
 
         return obj;
     }
 
-    // public static async find(): number {
-    //     // timestamp datetime, detection_point_id int, detection_system_id int, resource_id int, rule_id int, user_id int
-    //     // timestamp datetime, detection_point_id int, detection_system_id int, resource_id int, user_id int
-    //     // action varchar(255), active bit not null, timestamp datetime, detection_system_id int, interval_id int, user_id int        
-    // }
-
     public static async findObjects(className: string, propFilterFuncMap: Map<string, TYPE_FILTER_FUNCTION | string>): Promise<Object[]> {
-        console.log('--> findObjects');
+        // console.debug('--> findObjects');
 
         let result: Object[] = [];
 
@@ -565,7 +571,11 @@ class DOP {
 
             const tableName = DOP.mapping.getTableName(className);
             
-            let sql = `select * from ${tableName} where `
+            let sql = `select * from ${tableName}`
+            
+            if (propFilterFuncMap.size > 0) {
+                sql += ' where '
+            }
 
             const propsToCompare = propFilterFuncMap.keys();
 
@@ -582,18 +592,22 @@ class DOP {
                 if (propMap) {
 
                     const funcOrCondition = propFilterFuncMap.get(propName);
-                    if (propMap.class) {
+                    if (propMap.class && propMap.class !== 'Date') {
 
                         if (funcOrCondition && typeof funcOrCondition === "function") {
                             const ids = DOP.getCachedObjectIds(propMap.class, funcOrCondition);
 
+                            //this acts as AND condition
+                            //If for some specified property there are no results, we discontinue search
+                            //it's like the search in base storage class isMatchingEvent method, but
+                            //expressed with sql in order not to select all attacks, events and responses and loop on them
                             if (ids.length === 0) {
                                 execSQL = false;
 
                                 break;
                             }
                             
-                            sql += propName + ' in ' + '(' + ids.join(',') + ')';
+                            sql += propMap.column + ' in ' + '(' + ids.join(',') + ')';
                         } else {
                             throw new Error(`Expected filter function for  ${className}'s property ${propName}`);
                         }
@@ -601,7 +615,7 @@ class DOP {
                     } else {
 
                         if (funcOrCondition && typeof funcOrCondition === "string") {
-                            sql += '(' + propName + funcOrCondition + ')';
+                            sql += '(' + funcOrCondition + ')';
                         } else {
                             throw new Error(`Expected condition as string for ${className}'s property ${propName}`);
                         }
@@ -635,7 +649,7 @@ class DOP {
 
         }
 
-        console.log('<-- findObjects');
+        // console.debug('<-- findObjects');
 
         return result;
     }
@@ -652,7 +666,7 @@ class DOP {
     public static async persist(obj: Object,
                                 //connetionErrorHandler: ((error: MysqlError) => void) = ConnectionManager.defaultErrorHandler
                                 ) {
-        return Utils.executeInTransaction(obj, DOP._persist);
+        return await Utils.executeInTransaction(obj, DOP._persist);
 
     }   
 
@@ -661,7 +675,7 @@ class DOP {
                                   connection: PoolConnection): Promise<number | string | null> {
         const className = obj.constructor.name;
 
-        console.log(`--> persist: obj of class '${className}'`);
+        // console.debug(`--> persist: obj of class '${className}'`);
 
         let id = DOP.getCachedObjectId(obj, DOP.compareOnMappedProps);
 
@@ -681,33 +695,44 @@ class DOP {
                 const propMap = DOP.mapping.getPropertyMap(className, key);
                 const propDescr = Object.getOwnPropertyDescriptor(obj, key);
 
-                if (propDescr) {
+                if (propMap) {
 
-                    if (propDescr.value instanceof Array) {
-                    
-                        const persistedObjID = await this.persistArray(className, 
-                                                                       key,
-                                                                       propDescr.value,
-                                                                       connection);
+                    if (propDescr) {
 
-                        keyValue.set(key, persistedObjID);
-        
-                    } else if (propDescr.value instanceof Object &&
-                               !(propDescr.value instanceof Date)) {
-        
-                        const persistedObjID = await DOP._persist(propDescr.value, connection);
+                        if (propMap.class === 'Array') {
+                        
+                            const persistedObjID = await DOP.persistArray(className, 
+                                                                        key,
+                                                                        propDescr.value,
+                                                                        connection);
 
-                        keyValue.set(key, persistedObjID);
+                            keyValue.set(key, persistedObjID);
+                                
+                        } else if (propMap.class === 'Date') {
+                            //special treatment because we want milliseconds as well to be stored
+                            //msql driver library utilized here will convert Date object to string YYYY-mm-dd HH:ii:ss
+                            //omitting milliseconds
+
+                            const dateStr = propDescr.value.toISOString().replace('T', ' ').replace('Z', '');
+
+                            keyValue.set(key, dateStr);
+
+                        } else if (propMap.class && propDescr.value) {
+            
+                            const persistedObjID = await DOP._persist(propDescr.value, connection);
+
+                            keyValue.set(key, persistedObjID);
+                        } else {
+                            keyValue.set(key, propDescr.value);
+                        }
+
                     } else {
-                        keyValue.set(key, propDescr.value);
-                    }
 
-                } else if (propMap) {
-
-                    if (propMap.class) {
-                        keyValue.set(key, DOP.UNDEFINED_PROP_ID);
-                    } else {
-                        keyValue.set(key, DOP.UNDEFINED_PROP);
+                        if (propMap.class) {
+                            keyValue.set(key, null);
+                        } else {
+                            keyValue.set(key, DOP.UNDEFINED_PROP);
+                        }
                     }
                 }
             };
@@ -753,7 +778,7 @@ class DOP {
             }
         }
 
-        console.log(`<-- persist: obj of class '${className}'`);
+        // console.debug(`<-- persist: obj of class '${className}'`);
 
         return id;
     }
@@ -767,7 +792,9 @@ class DOP {
         let uuid: string | number | null = null;     
         if (array && array.length > 0) {
             uuid = DOP.getCachedObjectId(array, DOP.compareOnMappedProps);
-        }                     
+        } else {
+            return null;
+        }                    
         
         if (uuid !== null) {
             return uuid as string;
@@ -831,4 +858,4 @@ class DOP {
 
 }
 
-export {DOP}
+export {DOP, TYPE_COMPARE_FUNCTION, TYPE_FILTER_FUNCTION}

@@ -19,7 +19,12 @@ class ConnectionManager {
             "user": "test",
             "password": "test2020",
             "database": "appsensor",
-            "dateStrings": ["DATE","DATETIME"]
+            "dateStrings": ["DATE","DATETIME"],
+            "connectTimeout": 20000,
+            "acquireTimeout": 20000,
+            "waitForConnections": false,
+            "connectionLimit": 1000,
+            "queueLimit": 0
         };
 
     }

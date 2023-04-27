@@ -2,6 +2,7 @@ import { runTests as analysis_rules_tests} from "../analysis-engines/appsensor-a
 import { runTests as core_tests} from "../core/tests/tests.js";
 import { runTests as appsensor_local_tests} from "../execution-modes/appsensor-local/tests/tests.js";
 import { runTests as config_tests } from "../configuration-modes/appsensor-configuration-json/tests/tests.js";
+import { runTests as msql_storage_tests} from "../storage-providers/appsensor-storage-mysql/tests/tests.js"
 
 import * as readline from 'readline';
 
@@ -22,6 +23,7 @@ async function runTests() {
     console.log(" 2: Configuration tests");
     console.log(" 3: Analysis rules tests");
     console.log(" 4: Appsensor local tests");
+    console.log(" 5: MySQL storage tests");
     const choice: string = await new Promise((resolve, reject) => {
         rl.question("To run all tests press 'a', to execute specific test choose a number:", (choice: string) => {
             resolve(choice);
@@ -34,7 +36,7 @@ function isValidChoice(choice: string): boolean {
     let result = true;
     if (!(choice === 'a' || choice === 'A')) {
         const number = parseInt(choice);
-        if (isNaN(number) || number < 1 || number > 4) {
+        if (isNaN(number) || number < 1 || number > 5) {
             result = false;
         }
     }
@@ -67,6 +69,13 @@ async function testChoice(choice: string, readInf: readline.Interface) {
         case "4":  
         case "a": {
             await appsensor_local_tests();
+            if (choice !== 'a') {
+                break;
+            }
+        }
+        case "5":  
+        case "a": {
+            await msql_storage_tests();
             if (choice !== 'a') {
                 break;
             }

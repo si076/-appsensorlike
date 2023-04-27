@@ -144,6 +144,7 @@
                     "column": "detection_point_id"
                 },
                 "timestamp": {
+                    "class": "Date",
                     "column": "timestamp"
                 },
                 "detectionSystem": {
@@ -178,6 +179,7 @@
                     "column": "detection_point_id"
                 },
                 "timestamp": {
+                    "class": "Date",
                     "column": "timestamp"
                 },
                 "detectionSystem": {
@@ -204,6 +206,7 @@
                     "column": "user_id"
                 },
                 "timestamp": {
+                    "class": "Date",
                     "column": "timestamp"
                 },
                 "action": {
@@ -222,9 +225,6 @@
                     "arrayElementClass": "KeyValuePair",
                     "arrayTable": "metadata",
                     "column": "metadata_uuid"
-                },
-                "active": {
-                    "column": "active"
                 }
             }
         }
