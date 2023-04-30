@@ -1,4 +1,6 @@
-import { Category, DetectionPoint, DetectionSystem, Interval, INTERVAL_UNITS, KeyValuePair, Resource, Response, Threshold, User } from "../../../core/core.js";
+import { AppSensorClient, AppSensorServer, Category, DetectionPoint, DetectionSystem, Interval, INTERVAL_UNITS, KeyValuePair, Resource, Response, Threshold, User } from "../../../core/core.js";
+import { AppSensorLocal } from "../../../execution-modes/appsensor-local/appsensor_local.js";
+import { MySQLAttackStore, MySQLEventStore, MySQLResponseStore } from "../appsensor-storage-mysql.js";
 import { DOP } from "../DOP.js";
 import { Utils } from "../utils.js";
 
@@ -27,7 +29,24 @@ class BaseTests {
 
     protected static resource = new Resource("https://test.test.org", "GET");
 
-	private static generateResponses(): Response[] {
+	protected appSensorServer: AppSensorServer;
+
+	protected appSensorClient: AppSensorClient;
+
+	private appSensorLocal: AppSensorLocal;
+
+	constructor() {
+		this.appSensorLocal = new AppSensorLocal('',
+												 new MySQLAttackStore(),
+												 new MySQLEventStore(),
+												 new MySQLResponseStore());
+
+		this.appSensorServer = this.appSensorLocal.getAppSensorServer();
+
+		this.appSensorClient = this.appSensorLocal.getAppSensorClient();
+	}
+
+	protected static generateResponses(): Response[] {
 		const minutes5 = new Interval(5, INTERVAL_UNITS.MINUTES);
 
 		const log = new Response();
@@ -57,51 +76,63 @@ class BaseTests {
 		return responses;
 	}
 
-	protected async init(func: () => Promise<void>) {
+	public async initializeTest() {
 		await this.clearTables();
 
 		DOP.clearCache();
-
-		if (!DOP.isCacheLoaded()) {
-			DOP.addCacheLoadedListener(func);
-		} else {
-			await func();
-		}
 	}
 
 	protected async clearTables() {
-		let sql = 'delete from appsensor.attack';
+		let sql = 'delete from attack';
 		await Utils.executeSQLOnDB(sql, (results: any) =>{});
 
-		sql = 'delete from appsensor.response';
+		sql = 'delete from response';
 		await Utils.executeSQLOnDB(sql, (results: any) =>{});
 
-		sql = 'delete from appsensor.appsensorevent';
+		sql = 'delete from appsensorevent';
 		await Utils.executeSQLOnDB(sql, (results: any) =>{});
 
-		sql = 'delete from appsensor.detection_point';
+		sql = 'delete from rule';
 		await Utils.executeSQLOnDB(sql, (results: any) =>{});
 
-		sql = 'delete from appsensor.detection_system';
+		sql = 'delete from detection_point';
 		await Utils.executeSQLOnDB(sql, (results: any) =>{});
 
-		sql = 'delete from appsensor.`resource`';
+		sql = 'delete from detection_system';
 		await Utils.executeSQLOnDB(sql, (results: any) =>{});
 
-		sql = 'delete from appsensor.threshold';
+		sql = 'delete from `resource`';
 		await Utils.executeSQLOnDB(sql, (results: any) =>{});
 
-		sql = 'delete from appsensor.`interval`';
+		sql = 'delete from threshold';
 		await Utils.executeSQLOnDB(sql, (results: any) =>{});
 
-		sql = 'delete from appsensor.`user`';
+		sql = 'delete from `interval`';
 		await Utils.executeSQLOnDB(sql, (results: any) =>{});
 
-		sql = 'delete from appsensor.metadata';
+		sql = 'delete from `user`';
 		await Utils.executeSQLOnDB(sql, (results: any) =>{});
 
-		sql = 'delete from appsensor.key_value_pair';
+		sql = 'delete from metadata';
 		await Utils.executeSQLOnDB(sql, (results: any) =>{});
+
+		sql = 'delete from key_value_pair';
+		await Utils.executeSQLOnDB(sql, (results: any) =>{});
+
+		sql = 'delete from ipaddress';
+		await Utils.executeSQLOnDB(sql, (results: any) =>{});
+
+		sql = 'delete from geo_location';
+		await Utils.executeSQLOnDB(sql, (results: any) =>{});
+	}
+
+	protected sleep(millis: number): Promise<null> {
+		return new Promise((resolve, reject) => {
+			setTimeout(() => {
+				resolve(null);
+			}, millis);
+		});
+
 	}
 
 }

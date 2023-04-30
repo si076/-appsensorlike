@@ -144,14 +144,14 @@ class DOP {
             DOP.resolveDependecies();
             //reload the cache on restart 
             //loads objects that don't depend on time
-            ConnectionManager.getPool().getConnection((err, connection) => {
-                if (err) {
+            // ConnectionManager.getPool().getConnection((err, connection) => {
+            //     if (err) {
                     
-                    throw err;
-                }
+            //         throw err;
+            //     }
 
-                DOP.loadCacheFromDB(connection);
-            });
+                DOP.loadCacheFromDB();
+            // });
             
         }
         
@@ -278,10 +278,12 @@ class DOP {
         return obj;
     }
 
-    private static async loadCacheFromDB(connection: PoolConnection) {
+    private static async loadCacheFromDB() {
         // console.debug('--> loadCacheFromDB');
 
         if (DOP.mapping) {
+            const connection: PoolConnection = await ConnectionManager.getConnection();
+
             for (let c = 0; c < DOP.TOPOLOGICALLY_SORTED_CLASS_NAMES.length; c++) {
                 const className = DOP.TOPOLOGICALLY_SORTED_CLASS_NAMES[c];
                 
@@ -302,6 +304,9 @@ class DOP {
                     }, 
                     connection);
             }
+
+            connection.release();
+            
         }
 
         // console.debug('<-- loadCacheFromDB');
@@ -644,6 +649,8 @@ class DOP {
                     
                     }, 
                     connection);
+
+                connection.release();
                 
             }
 

@@ -58,25 +58,11 @@ class DOPTests extends BaseTests {
     public static async runTests() {
         console.log('----- Run DOPTests -----');
 		const inst = new DOPTests();
-		await inst.init(inst.persistObjects);
+		await inst.initializeTest();
+		await inst.persistObjects();
 		
     }
 
-	public static async _runTests() {
-        const inst = new DOPTests();
-        await inst.clearTables();
-
-        DOP.clearCache();
-
-        await inst.persistObjects();
-    }
-
 }
-
-// async function runTests() {
-//     await DOPTests._runTests();
-// }
-
-// await runTests();
 
 export {DOPTests}

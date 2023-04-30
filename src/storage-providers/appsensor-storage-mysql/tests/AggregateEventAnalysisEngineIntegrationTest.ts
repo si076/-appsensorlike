@@ -1,13 +1,14 @@
-import { AggregateEventAnalysisEngine } from "../../../../analysis-engines/appsensor-analysis-rules/appsensor-analysis-rules.js";
-import { EventAnalysisEngine } from "../../../../core/analysis/analysis.js";
-import { AppSensorEvent, AppSensorServer, Category, DetectionPoint, DetectionSystem, Interval, INTERVAL_UNITS, Response, Threshold, User } from "../../../../core/core.js";
-import { SearchCriteria } from "../../../../core/criteria/criteria.js";
-import { Clause, Expression, MonitorPoint, Rule } from "../../../../core/rule/rule.js";
 
 import assert from "assert";
-import { BaseTest } from "./BaseTest.js";
+import { AggregateEventAnalysisEngine } from "../../../analysis-engines/appsensor-analysis-rules/appsensor-analysis-rules.js";
+import { EventAnalysisEngine } from "../../../core/analysis/analysis.js";
+import { AppSensorEvent, AppSensorServer, Category, DetectionPoint, DetectionSystem, Interval, INTERVAL_UNITS, Response, Threshold, User } from "../../../core/core.js";
+import { SearchCriteria } from "../../../core/criteria/criteria.js";
+import { Clause, Expression, MonitorPoint, Rule } from "../../../core/rule/rule.js";
+import { DOP } from "../DOP.js";
+import { BaseTests } from "./BaseTests.js";
 
-class AggregEventAnalysisEngIntegTest extends BaseTest {
+class AggregEventAnalysisEngIntegTest extends BaseTests {
 
 	private static bob = new User("bob");
 
@@ -32,36 +33,6 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
 	private static rules: Rule[] = [];
 
 	protected sleepAmount: number = 10;
-
-	private static generateResponses(): Response[] {
-		const minutes5 = new Interval(5, INTERVAL_UNITS.MINUTES);
-
-		const log = new Response();
-		log.setAction("log");
-
-		const logout = new Response();
-		logout.setAction("logout");
-
-		const disableUser = new Response();
-		disableUser.setAction("disableUser");
-
-		const disableComponentForSpecificUser5 = new Response();
-		disableComponentForSpecificUser5.setAction("disableComponentForSpecificUser");
-		disableComponentForSpecificUser5.setInterval(minutes5);
-
-		const disableComponentForAllUsers5 = new Response();
-		disableComponentForAllUsers5.setAction("disableComponentForAllUsers");
-		disableComponentForAllUsers5.setInterval(minutes5);
-
-		const responses: Response[] = [];
-		responses.push(log);
-		responses.push(logout);
-		responses.push(disableUser);
-		responses.push(disableComponentForSpecificUser5);
-		responses.push(disableComponentForAllUsers5);
-
-		return responses;
-	}
 
 	private static generateRules(): Rule[] {
 		const configuredRules: Rule[] = [];
@@ -287,10 +258,11 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
 		this.appSensorServer!.getConfiguration()!.setRules(rules);
 	}
 
-	public override initializeTest(): void {
+	public async initializeTest() {
 		if (AggregEventAnalysisEngIntegTest.myEngine === null) {
-			super.initializeTest();
 
+			super.initializeTest();
+			
 			this.appSensorServer.getConfiguration()!.
 				setDetectionPoints(AggregEventAnalysisEngIntegTest.loadMockedDetectionPoints());
 	
@@ -303,7 +275,9 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
 			}
 		}
 
-		this.clearStores();
+		await this.clearTables();
+
+		DOP.clearCache();
 
 		// clear rules
 		const emptyRules: Rule[] = [];
@@ -623,7 +597,9 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
 		await this.assertEventsAndAttacks(9, 3, AggregEventAnalysisEngIntegTest.criteria.get("dp1")!);
 		await this.assertEventsAndAttacks(0, 1, AggregEventAnalysisEngIntegTest.criteria.get("rule6")!);
 
-		this.clearStores();
+		await this.clearTables();
+
+		DOP.clearCache();
 
 		//DP2 - no attack
 		await this.generateEvents(this.sleepAmount*12, AggregEventAnalysisEngIntegTest.detectionPoint2, 12, "rule6");
@@ -774,28 +750,28 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
 		console.log('----- Run AggregateEventAnalysisEngineIntegrationTest -----');
 		const instance = new AggregEventAnalysisEngIntegTest();
 
-		instance.initializeTest();
+		await instance.initializeTest();
 		await instance.test1_DP1();
 
-		instance.initializeTest();
+		await instance.initializeTest();
 		await instance.test2_DP1andDP2();
 
-		instance.initializeTest();
+		await instance.initializeTest();
 		await instance.test3_DP1orDP2();
 
-		instance.initializeTest();
+		await instance.initializeTest();
 		await instance.test4_DP1orDP2andDP3();
 
-		instance.initializeTest();
+		await instance.initializeTest();
 		await instance.test5_DP1thenDP2();
 
-		instance.initializeTest();
+		await instance.initializeTest();
 		await instance.test6_DP1thenDP2thenDP1orDP2();
 
-		instance.initializeTest();
+		await instance.initializeTest();
 		await instance.test7_DP1andDP4orDP1andDP3thenDP1();
 
-		instance.initializeTest();
+		await instance.initializeTest();
 		await instance.test8_DP1();
 	}
 

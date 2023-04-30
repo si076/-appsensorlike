@@ -45,15 +45,17 @@ class MySQLAttackStore extends AttackStore {
         }
 
         if (detectionPoint !== null) {
+
             propFilterFuncMap.set("detectionPoint", (obj: Object) => {
                 return detectionPoint.typeAndThresholdMatches(obj as DetectionPoint);
             });
-        }
 
-        if (rule !== null) {
+        } else if (rule !== null) {
+
             propFilterFuncMap.set("rule", (obj: Object) => {
                 return rule.guidMatches(obj as Rule);
             });
+            
         }
 
         if (earliest !== null) {
@@ -112,15 +114,17 @@ class MySQLEventStore extends EventStore {
         }
 
         if (detectionPoint !== null) {
+
             propFilterFuncMap.set("detectionPoint", (obj: Object) => {
                 return detectionPoint.typeAndThresholdMatches(obj as DetectionPoint);
             });
-        }
 
-        if (rule !== null) {
+        } else if (rule !== null) {
+
             propFilterFuncMap.set("detectionPoint", (obj: Object) => {
                 return rule.typeAndThresholdContainsDetectionPoint(obj as DetectionPoint);
             });
+
         }
 
         if (earliest !== null) {

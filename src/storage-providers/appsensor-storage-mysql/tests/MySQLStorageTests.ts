@@ -10,8 +10,6 @@ import { ServerConfiguration } from "../../../core/configuration/server/server_c
 import { DOP } from "../DOP.js";
 
 
-class ServerConfig extends ServerConfiguration {};
-
 class MySQLStorageTests extends BaseTests {
 
     private async storeObjects() {
@@ -43,52 +41,21 @@ class MySQLStorageTests extends BaseTests {
         const event5 = new AppSensorEvent(BaseTests.user, BaseTests.point1, BaseTests.detectionSystem, new Date());
         event5.setResource(BaseTests.resource);
         event5.setMetadata(BaseTests.metadata);
+
         
-        //minimum test setup
-        const serverConfig = new ServerConfig();
-        serverConfig.setDetectionPoints([BaseTests.point1, BaseTests.point2, BaseTests.point3]);
-
-        const appSensorServer  = new AppSensorServer();
-        appSensorServer.setConfiguration(serverConfig);
-
-        const mySQLAttackStorage = new MySQLAttackStore();
-        const mySQLEventStorage = new MySQLEventStore();
-        const mySQLResponseStorage = new MySQLResponseStore();
-
-        appSensorServer.setAttackStore(mySQLAttackStorage);
-        appSensorServer.setEventStore(mySQLEventStorage);
-        appSensorServer.setResponseStore(mySQLResponseStorage);
-
-        const refAttackEngine = new ReferenceAttackAnalysisEngine();
-        const aggrAttackEngine = new AggregateAttackAnalysisEngine();
-    
-        mySQLAttackStorage.registerListener(refAttackEngine);
-        mySQLAttackStorage.registerListener(aggrAttackEngine);
-
-        const refEventEngine = new ReferenceEventAnalysisEngine();
-        const aggrEventEngine = new AggregateEventAnalysisEngine();
-    
-        mySQLEventStorage.registerListener(refEventEngine);
-        mySQLEventStorage.registerListener(aggrEventEngine);
-
-		refAttackEngine.setAppSensorServer(appSensorServer);
-		aggrAttackEngine.setAppSensorServer(appSensorServer);
-
-        refEventEngine.setAppSensorServer(appSensorServer);
-        aggrEventEngine.setAppSensorServer(appSensorServer);
-
+        this.appSensorServer.getConfiguration()!.setDetectionPoints([BaseTests.point1, BaseTests.point2, BaseTests.point3]);
 
         //feed event storage 
-        await mySQLEventStorage.addEvent(event1);
-        await mySQLEventStorage.addEvent(event2);
-        await mySQLEventStorage.addEvent(event3);
-        await mySQLEventStorage.addEvent(event4);
-        await mySQLEventStorage.addEvent(event5);
+        await this.appSensorServer.getEventStore()!.addEvent(event1);
+        await this.appSensorServer.getEventStore()!.addEvent(event2);
+        await this.appSensorServer.getEventStore()!.addEvent(event3);
+        await this.appSensorServer.getEventStore()!.addEvent(event4);
+        await this.appSensorServer.getEventStore()!.addEvent(event5);
         
 
         const criteria = new SearchCriteria();
 
-        const foundEvents = await mySQLEventStorage.findEvents(criteria);
+        const foundEvents = await this.appSensorServer.getEventStore()!.findEvents(criteria);
         assert.equal(foundEvents.length, 5);
 
         criteria.setUser(BaseTests.user);
@@ -96,7 +63,7 @@ class MySQLStorageTests extends BaseTests {
         criteria.setDetectionPoint(BaseTests.point1);
         criteria.setEarliest(earliest);
 
-        const foundAttacks = await mySQLAttackStorage.findAttacks(criteria);
+        const foundAttacks = await this.appSensorServer.getAttackStore()!.findAttacks(criteria);
 		assert.equal(foundAttacks.length, 1);
 
         console.log('<-- storeObjects');
@@ -105,23 +72,10 @@ class MySQLStorageTests extends BaseTests {
     public static async runTests() {
         console.log('----- Run MySQLStorageTests -----');
 		const inst = new MySQLStorageTests();
-		await inst.init(inst.storeObjects);
+        await inst.initializeTest();
+		await inst.storeObjects();
     }
 
-    public static async _runTests() {
-        const inst = new MySQLStorageTests();
-        await inst.clearTables();
-
-        DOP.clearCache();
-
-        await inst.storeObjects();
-    }
 }
-
-// async function runTests() {
-//     await MySQLStorageTests._runTests();
-// }
-
-// await runTests();
 
 export {MySQLStorageTests}

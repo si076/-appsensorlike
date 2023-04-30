@@ -27,7 +27,7 @@ interface ResponseStoreListener {
 
 abstract class AttackStore {
 
-	private static listeners: AttackListener[] = [];
+	private listeners: AttackListener[] = [];
 
 	/**
 	 * Add an attack to the AttackStore
@@ -50,10 +50,10 @@ abstract class AttackStore {
 	 * @param listener the {@link AttackListener} to register
 	 */
 	public registerListener(listener: AttackListener): void {
-		if (AttackStore.listeners.indexOf(listener) === -1) {
+		if (this.listeners.indexOf(listener) === -1) {
 			let unique: boolean = true;
 
-			for (const existing of AttackStore.listeners) {
+			for (const existing of this.listeners) {
 				if (existing.constructor.name === listener.constructor.name) {
 					unique = false;
 					break;
@@ -61,7 +61,7 @@ abstract class AttackStore {
 			}
 
 			if (unique) {
-				AttackStore.listeners.push(listener);
+				this.listeners.push(listener);
 			}
 		}
 	}
@@ -72,7 +72,7 @@ abstract class AttackStore {
 	 * @param response the {@link Attack} to notify each {@link AttackListener} about
 	 */
 	public async notifyListeners(attack: Attack) {
-		for (const listener of AttackStore.listeners) {
+		for (const listener of this.listeners) {
 			await listener.onAdd(attack);
 		}
 	}
@@ -86,12 +86,12 @@ abstract class AttackStore {
 	 */
 	// @Inject @AttackStoreListener
 	public setListeners(listeners: AttackListener[]): void {
-		if (listeners.length === 0) {
-			//clear already added listeners since this field is static and registerListeners
-			//check for class uniqueness
-			//this is essential when executing analysis tests en mass
-			AttackStore.listeners = [];
-		}
+		// if (listeners.length === 0) {
+		// 	//clear already added listeners since this field is static and registerListeners
+		// 	//check for class uniqueness
+		// 	//this is essential when executing analysis tests en mass
+		// 	AttackStore.listeners = [];
+		// }
 
 		for (const listener of listeners) {
 			this.registerListener(listener);
@@ -185,7 +185,7 @@ abstract class AttackStore {
 
 abstract class EventStore {
 
-	private static listeners: EventListener[] = [];
+	private listeners: EventListener[] = [];
 
 	/**
 	 * Add an {@link org.owasp.appsensor.core.Event} to the EventStore
@@ -208,10 +208,10 @@ abstract class EventStore {
 	 * @param listener the {@link EventListener} to register
 	 */
 	public registerListener(listener: EventListener): void {
-		if (EventStore.listeners.indexOf(listener) === -1) {
+		if (this.listeners.indexOf(listener) === -1) {
 			let unique: boolean = true;
 
-			for (const existing of EventStore.listeners) {
+			for (const existing of this.listeners) {
 				if (existing.constructor.name === listener.constructor.name) {
 					unique = false;
 					break;
@@ -219,7 +219,7 @@ abstract class EventStore {
 			}
 
 			if (unique) {
-				EventStore.listeners.push(listener);
+				this.listeners.push(listener);
 			}
 		}
 	}
@@ -230,7 +230,7 @@ abstract class EventStore {
 	 * @param response the {@link Event} to notify each {@link EventListener} about
 	 */
 	public async notifyListeners(event: AppSensorEvent) {
-		for (const listener of EventStore.listeners) {
+		for (const listener of this.listeners) {
 			await listener.onAdd(event);
 		}
 	}
@@ -244,12 +244,12 @@ abstract class EventStore {
 	 */
 	// @Inject @EventStoreListener
 	public setListeners(listeners: EventListener[]) {
-		if (listeners.length === 0) {
-			//clear already added listeners since this field is static and registerListeners
-			//check for class uniqueness
-			//this is essential when executing analysis tests en mass
-			EventStore.listeners = [];
-		}
+		// if (listeners.length === 0) {
+		// 	//clear already added listeners since this field is static and registerListeners
+		// 	//check for class uniqueness
+		// 	//this is essential when executing analysis tests en mass
+		// 	EventStore.listeners = [];
+		// }
 
 		for (const listener of listeners) {
 			this.registerListener(listener);
@@ -341,7 +341,7 @@ abstract class EventStore {
 
 abstract class ResponseStore {
 	
-	private static listeners: ResponseListener[] = [];
+	private listeners: ResponseListener[] = [];
 	
 	/**
 	 * Add a response to the ResponseStore
@@ -413,10 +413,10 @@ abstract class ResponseStore {
 	 * @param listener the {@link ResponseListener} to register
 	 */
 	public registerListener(listener: ResponseListener) {
-		if (ResponseStore.listeners.indexOf(listener) === -1) {
+		if (this.listeners.indexOf(listener) === -1) {
 			let unique: boolean = true;
 			
-			for (const existing of ResponseStore.listeners) {
+			for (const existing of this.listeners) {
 				if (existing.constructor.name === listener.constructor.name) {
 					unique = false;
 					break;
@@ -424,7 +424,7 @@ abstract class ResponseStore {
 			}
 			
 			if (unique) {
-				ResponseStore.listeners.push(listener);
+				this.listeners.push(listener);
 			}
 		}
 	}
@@ -435,7 +435,7 @@ abstract class ResponseStore {
 	 * @param response the {@link Response} to notify each {@link ResponseListener} about
 	 */
 	public async notifyListeners(response: Response) {
-		for (const listener of ResponseStore.listeners) {
+		for (const listener of this.listeners) {
 			await listener.onAdd(response);
 		}
 	}
@@ -449,12 +449,13 @@ abstract class ResponseStore {
 	 */
 	// @Inject @ResponseStoreListener
 	public setListeners(listeners: ResponseListener[]): void {
-		if (listeners.length === 0) {
-			//clear already added listeners since this field is static and registerListeners
-			//check for class uniqueness
-			//this is essential when executing analysis tests en mass
-			ResponseStore.listeners = [];
-		}
+		// if (listeners.length === 0) {
+		// 	//clear already added listeners since this field is static and registerListeners
+		// 	//check for class uniqueness
+		// 	//this is essential when executing analysis tests en mass
+		// 	ResponseStore.listeners = [];
+		// }
+		
 		for (const listener of listeners) {
 			this.registerListener(listener);	
 		}
