@@ -10,7 +10,7 @@ interface ReportingEngine extends SystemListener {
 	 * @return Collection of {@link Event}s from starting time
 	 * @throws NotAuthorizedException thrown if {@link ClientApplication} is not authorized for reporting
 	 */
-	findEvents(earliest: string): AppSensorEvent[];
+	findEvents(earliest: string): Promise<AppSensorEvent[]>;
 	
 	/**
 	 * Find {@link Attack}s starting from specified time (unix timestamp)
@@ -19,7 +19,7 @@ interface ReportingEngine extends SystemListener {
 	 * @return Collection of {@link Attack}s from starting time
 	 * @throws NotAuthorizedException thrown if {@link ClientApplication} is not authorized for reporting
 	 */
-	findAttacks(earliest: string): Attack[];
+	findAttacks(earliest: string): Promise<Attack[]>;
 	
 	/**
 	 * Find {@link Response}s starting from specified time (unix timestamp)
@@ -28,7 +28,7 @@ interface ReportingEngine extends SystemListener {
 	 * @return Collection of {@link Response}s from starting time
 	 * @throws NotAuthorizedException thrown if {@link ClientApplication} is not authorized for reporting
 	 */
-	findResponses(earliest: string): Response[];
+	findResponses(earliest: string): Promise<Response[]>;
 	
 	/**
 	 * Find {@link Event}s starting from specified time (unix timestamp)
@@ -37,7 +37,7 @@ interface ReportingEngine extends SystemListener {
 	 * @return count of Collection of {@link Event}s from starting time
 	 * @throws NotAuthorizedException thrown if {@link ClientApplication} is not authorized for reporting
 	 */
-	countEvents(earliest: string): number;
+	countEvents(earliest: string): Promise<number>;
 	
 	/**
 	 * Find {@link Attack}s starting from specified time (unix timestamp)
@@ -46,7 +46,7 @@ interface ReportingEngine extends SystemListener {
 	 * @return count of Collection of {@link Attack}s from starting time
 	 * @throws NotAuthorizedException thrown if {@link ClientApplication} is not authorized for reporting
 	 */
-	countAttacks(earliest: string): number;
+	countAttacks(earliest: string): Promise<number>;
 	
 	/**
 	 * Find {@link Response}s starting from specified time (unix timestamp)
@@ -55,7 +55,7 @@ interface ReportingEngine extends SystemListener {
 	 * @return count of Collection of {@link Response}s from starting time
 	 * @throws NotAuthorizedException thrown if {@link ClientApplication} is not authorized for reporting
 	 */
-	countResponses(earliest: string): number;
+	countResponses(earliest: string): Promise<number>;
 	
 	/**
 	 * Find {@link Event}s starting from specified time (unix timestamp) matching label
@@ -65,7 +65,7 @@ interface ReportingEngine extends SystemListener {
 	 * @return count of Collection of {@link Event}s from starting time matching label
 	 * @throws NotAuthorizedException thrown if {@link ClientApplication} is not authorized for reporting
 	 */
-	countEventsByLabel(earliest: string, label: string): number;
+	countEventsByLabel(earliest: string, label: string): Promise<number>;
 	
 	/**
 	 * Find {@link Attack}s starting from specified time (unix timestamp) matching label
@@ -75,7 +75,7 @@ interface ReportingEngine extends SystemListener {
 	 * @return count of Collection of {@link Event}s from starting time matching label
 	 * @throws NotAuthorizedException thrown if {@link ClientApplication} is not authorized for reporting
 	 */
-	countAttacksByLabel(earliest: string, label: string): number;
+	countAttacksByLabel(earliest: string, label: string): Promise<number>;
 	
 	/**
 	 * Find {@link Response}s starting from specified time (unix timestamp) matching label
@@ -85,7 +85,7 @@ interface ReportingEngine extends SystemListener {
 	 * @return count of Collection of {@link Event}s from starting time matching label
 	 * @throws NotAuthorizedException thrown if {@link ClientApplication} is not authorized for reporting
 	 */
-	countResponsesByLabel(earliest: string, label: string): number;
+	countResponsesByLabel(earliest: string, label: string): Promise<number>;
 	
 	/**
 	 * Find {@link Event}s starting from specified time (unix timestamp) matching user
@@ -95,7 +95,7 @@ interface ReportingEngine extends SystemListener {
 	 * @return count of Collection of {@link Event}s from starting time matching user
 	 * @throws NotAuthorizedException thrown if {@link ClientApplication} is not authorized for reporting
 	 */
-	countEventsByUser(earliest: string, user: string): number;
+	countEventsByUser(earliest: string, user: string): Promise<number>;
 	
 	/**
 	 * Find {@link Attack}s starting from specified time (unix timestamp) matching user
@@ -105,7 +105,7 @@ interface ReportingEngine extends SystemListener {
 	 * @return count of Collection of {@link Event}s from starting time matching user
 	 * @throws NotAuthorizedException thrown if {@link ClientApplication} is not authorized for reporting
 	 */
-	countAttacksByUser(earliest: string, user: string): number;
+	countAttacksByUser(earliest: string, user: string): Promise<number>;
 	
 	/**
 	 * Find {@link Response}s starting from specified time (unix timestamp) matching user
@@ -115,7 +115,7 @@ interface ReportingEngine extends SystemListener {
 	 * @return count of Collection of {@link Event}s from starting time matching user
 	 * @throws NotAuthorizedException thrown if {@link ClientApplication} is not authorized for reporting
 	 */
-	countResponsesByUser(earliest: string, user: string): number;
+	countResponsesByUser(earliest: string, user: string): Promise<number>;
 	
 	/**
 	 * Return the {@link ServerConfiguration} as JSON
@@ -123,7 +123,7 @@ interface ReportingEngine extends SystemListener {
 	 * @return the {@link ServerConfiguration} as JSON
 	 * @throws NotAuthorizedException thrown if {@link ClientApplication} is not authorized for reporting
 	 */
-	getServerConfigurationAsJson(): string;
+	getServerConfigurationAsJson(): Promise<string>;
 	
 	/**
 	 * Return a base-64 encoded version of the appsensor-server-config.xml
@@ -134,3 +134,5 @@ interface ReportingEngine extends SystemListener {
 	getBase64EncodedServerConfigurationFileContent(): KeyValuePair;
 	
 }
+
+export {ReportingEngine};

@@ -20,7 +20,7 @@ class LocalResponseAnalysisEngine extends ResponseAnalysisEngine {
 	 */
 	// @Override
 	public override async analyze(response: Response): Promise<void> {
-		if(response == null) {
+		if(response === null) {
 			return;
 		}
 
@@ -28,12 +28,14 @@ class LocalResponseAnalysisEngine extends ResponseAnalysisEngine {
         
 		if (RESPONSES.LOG === response.getAction()) {
 			console.info(`Handling <log> response for user ${userName}`);
-		} else {
+		} 
+		// else {
 
+			//in all cases allow configured response handler to handle the response
 			console.info(`Delegating response for user ${userName} to configured response handler ` + this.responseHandler.constructor.name);
 
 			this.responseHandler.handle(response);
-		}
+		// }
 		
 	}
 	

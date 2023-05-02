@@ -2,9 +2,10 @@ import { ReferenceAttackAnalysisEngine, ReferenceEventAnalysisEngine } from "../
 import { AggregateAttackAnalysisEngine, AggregateEventAnalysisEngine } from "../../analysis-engines/appsensor-analysis-rules/appsensor-analysis-rules.js";
 import { JSONServerConfiguration, JSONServerConfigurationReader } from "../../configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
 import { AppSensorClient, AppSensorServer } from "../../core/core.js";
-import { NoopUserManager } from "../../core/response/response.js";
+import { NoopUserManager, ResponseHandler, UserManager } from "../../core/response/response.js";
 import { AttackStore, EventStore, ResponseStore } from "../../core/storage/storage.js";
 import { InMemoryAttackStore, InMemoryEventStore, InMemoryResponseStore } from "../../storage-providers/appsensor-storage-in-memory/appsensor-storage-in-memory.js";
+import { LocalResponseAnalysisEngine } from "./analysis/analysis.js";
 import { LocalEventManager } from "./event/event.js";
 import { LocalRequestHandler } from "./handler/handler.js";
 import { LocalResponseHandler } from "./response/response.js";
@@ -25,10 +26,14 @@ class AppSensorLocal {
     private eventStore: EventStore = new InMemoryEventStore();
     private responseStore: ResponseStore = new InMemoryResponseStore();
 
+    private userManager: UserManager = new NoopUserManager();
+    private responseHandler: ResponseHandler = new LocalResponseHandler(this.userManager);
+
     constructor(configFile: string = '',
                 attackStore?: AttackStore,
                 eventStore?: EventStore,
-                responseStore?: ResponseStore) {
+                responseStore?: ResponseStore,
+                responseHandler?: ResponseHandler) {
         if (attackStore) {
             this.attackStore = attackStore;
         }
@@ -39,6 +44,10 @@ class AppSensorLocal {
 
         if (responseStore) {
             this.responseStore = responseStore;
+        }
+
+        if (responseHandler) {
+            this.responseHandler = responseHandler;
         }
 
         this.appSensorServer.setConfiguration(new JSONServerConfiguration());
@@ -69,15 +78,21 @@ class AppSensorLocal {
 		this.refAttackEngine.setAppSensorServer(this.appSensorServer);
         this.refEventEngine.setAppSensorServer(this.appSensorServer);
 
+        const localResponseHandler = new LocalResponseAnalysisEngine(this.responseHandler);
+
+        const responseAnalysisEngines = [localResponseHandler];
+        this.appSensorServer.setResponseAnalysisEngines(responseAnalysisEngines);
+        for (let i = 0; i < responseAnalysisEngines.length; i++) {
+            this.responseStore.registerListener(responseAnalysisEngines[i]);
+        }
+
         const requestHandler = new LocalRequestHandler(this.appSensorServer);
         const eventManager = new LocalEventManager(requestHandler);
-        const userManager = new NoopUserManager();
-        const responseHandler = new LocalResponseHandler(userManager);
 
         this.appSensorClient = new AppSensorClient();
         this.appSensorClient.setEventManager(eventManager);
-        this.appSensorClient.setResponseHandler(responseHandler);
-        this.appSensorClient.setUserManager(userManager);
+        this.appSensorClient.setResponseHandler(this.responseHandler);
+        this.appSensorClient.setUserManager(this.userManager);
     }
 
     getAppSensorServer() {
