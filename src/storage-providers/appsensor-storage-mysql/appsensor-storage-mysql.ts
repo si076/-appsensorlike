@@ -19,6 +19,24 @@ class MySQLAttackStore extends AttackStore {
     }
     
     public override async findAttacks(criteria: SearchCriteria): Promise<Attack[]> {
+
+        const propFilterFuncMap = this.prepareFilterFuncMap(criteria);
+
+		const foundAttacks = await DOP.findObjects("Attack", propFilterFuncMap);
+
+        return foundAttacks as Attack[];
+    }
+
+    public override async countAttacks(criteria: SearchCriteria): Promise<number> {
+
+        const propFilterFuncMap = this.prepareFilterFuncMap(criteria);
+
+		const attackCount = await DOP.countObjects("Attack", propFilterFuncMap);
+        
+        return attackCount;
+    }
+
+    private prepareFilterFuncMap(criteria: SearchCriteria): Map<string, TYPE_FILTER_FUNCTION | string> {
 		const user: User | null = criteria.getUser();
 		const detectionPoint: DetectionPoint | null = criteria.getDetectionPoint();
 		const detectionSystemIds: string[] = criteria.getDetectionSystemIds();
@@ -64,9 +82,7 @@ class MySQLAttackStore extends AttackStore {
             propFilterFuncMap.set("timestamp", expre);
         }
 
-		const foundEvents = await DOP.findObjects("Attack", propFilterFuncMap);
-
-        return foundEvents as Attack[];
+        return propFilterFuncMap;
     }
 
 }
@@ -88,6 +104,24 @@ class MySQLEventStore extends EventStore {
     }
 
     public override async findEvents(criteria: SearchCriteria): Promise<AppSensorEvent[]> {
+
+        const propFilterFuncMap = this.prepareFilterFuncMap(criteria);
+
+		const foundEvents = await DOP.findObjects("AppSensorEvent", propFilterFuncMap);
+
+        return foundEvents as AppSensorEvent[];
+    }
+
+    public override async countEvents(criteria: SearchCriteria): Promise<number> {
+        
+        const propFilterFuncMap = this.prepareFilterFuncMap(criteria);
+
+		const eventCount = await DOP.countObjects("AppSensorEvent", propFilterFuncMap);
+
+        return eventCount;
+    }
+
+    private prepareFilterFuncMap(criteria: SearchCriteria): Map<string, TYPE_FILTER_FUNCTION | string> {
 		const user: User | null = criteria.getUser();
 		const detectionPoint: DetectionPoint | null = criteria.getDetectionPoint();
 		const detectionSystemIds: string[] = criteria.getDetectionSystemIds();
@@ -133,11 +167,8 @@ class MySQLEventStore extends EventStore {
             propFilterFuncMap.set("timestamp", expre);
         }
 
-		const foundEvents = await DOP.findObjects("AppSensorEvent", propFilterFuncMap);
-
-        return foundEvents as AppSensorEvent[];
+        return propFilterFuncMap;
     }
-
 }
 
 class MySQLResponseStore extends ResponseStore {
@@ -154,6 +185,24 @@ class MySQLResponseStore extends ResponseStore {
     }
 
     public override async findResponses(criteria: SearchCriteria): Promise<Response[]> {
+
+        const propFilterFuncMap = this.prepareFilterFuncMap(criteria);
+
+		const foundResponses = await DOP.findObjects("Response", propFilterFuncMap);
+
+        return foundResponses as Response[];
+    }
+
+    public override async countResponses(criteria: SearchCriteria): Promise<number> {
+
+        const propFilterFuncMap = this.prepareFilterFuncMap(criteria);
+
+		const responseCount = await DOP.countObjects("Response", propFilterFuncMap);
+
+        return responseCount;
+    }
+
+    private prepareFilterFuncMap(criteria: SearchCriteria): Map<string, TYPE_FILTER_FUNCTION | string> {
 		const user: User | null = criteria.getUser();
 		const detectionSystemIds: string[] = criteria.getDetectionSystemIds();
 		const earliest: Date | null = criteria.getEarliest();
@@ -183,12 +232,8 @@ class MySQLResponseStore extends ResponseStore {
             propFilterFuncMap.set("timestamp", expre);
         }
 
-		const foundEvents = await DOP.findObjects("Response", propFilterFuncMap);
-
-        return foundEvents as Response[];
-
+        return propFilterFuncMap;
     }
-
 }
 
 

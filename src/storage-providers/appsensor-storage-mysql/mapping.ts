@@ -43,7 +43,17 @@ class Mapping implements IMapping {
     classesToTablesMap: { [className: string]: IClassToTableMap; } = {};
     cacheControl: {doNotCacheClasses: string[]} = {doNotCacheClasses: []};
     
+    public isClassMapped(className: string): boolean {
+        let mapped = false;
 
+        const propDescr = Object.getOwnPropertyDescriptor(this.classesToTablesMap, className);
+        if (propDescr) {
+            mapped = true;
+        }
+
+        return mapped;
+    }
+ 
     public getTableName(className: string): string {
         return this.classesToTablesMap[className].table
     }
@@ -176,50 +186,6 @@ class Mapping implements IMapping {
         return arrayTableDef;
     }
 
-    // isTransientProp(className: string, propertyName: string) {
-    //     let result = false;
-
-    //     const propMap = this.getPropertyMap(className, propertyName);
-    //     if (propMap && propMap.transient) {
-    //         result =  propMap.transient;
-    //     }
-
-    //     return result;
-    // }
-
-    // getClassTransientProperties(className: string): string[] {
-    //     const transientProperties: string[] = [];
-
-    //     const entries: [string, IPropertyMap][] = Object.entries(this.classesToTablesMap[className].properties);
-
-    //     for (const entry of entries) {
-    //         if (entry[1].transient !== undefined && entry[1].transient) {
-    //             transientProperties.push(entry[0]);
-    //         }
-    //     }
-
-    //     return transientProperties;
-    // }
-
-    // getTransientPropertiesMap() {
-    //     if (!Mapping.transientPropsMap) {
-    //         Mapping.transientPropsMap = new Map<string, string[]>();
-
-    //         const classNames = Object.getOwnPropertyNames(this.classesToTablesMap);
-
-    //         for (let i = 0; i < classNames.length; i++) {
-    //             const className = classNames[i];
-
-    //             const transientProperties = this.getClassTransientProperties(className);
-    //             if (transientProperties.length > 0) {
-    //                 Mapping.transientPropsMap.set(className, transientProperties);
-    //             }
-    //         }
-    //     }
-
-    //     return Mapping.transientPropsMap;
-    // }
-
 }
 
 class MappingReader extends JSONConfigReadValidate {
@@ -228,7 +194,7 @@ class MappingReader extends JSONConfigReadValidate {
     private mappingSchemaFile = "./storage-providers/appsensor-storage-mysql/mapping_schema.json";
 
     public override read(mappingLocation: string = '', validatorLocation: string | null = '', reload: boolean = false): Mapping | null {
-        console.log("Working directory:" + process.cwd());
+        // console.log("Working directory:" + process.cwd());
         let mapping : Mapping | null = null;
 
         if (mappingLocation === '') {

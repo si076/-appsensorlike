@@ -1,0 +1,975 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "definitions": {
+        "AbortSignal": {
+            "additionalProperties": false,
+            "description": "A signal object that allows you to communicate with a DOM request (such as a Fetch) and abort it if required via an AbortController object.",
+            "properties": {
+                "aborted": {
+                    "description": "Returns true if this AbortSignal's AbortController has signaled to abort, and false otherwise.",
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "aborted"
+            ],
+            "type": "object"
+        },
+        "Agent": {
+            "additionalProperties": false,
+            "description": "An `Agent` is responsible for managing connection persistence\nand reuse for HTTP clients. It maintains a queue of pending requests\nfor a given host and port, reusing a single socket connection for each\nuntil the queue is empty, at which time the socket is either destroyed\nor put into a pool where it is kept to be used again for requests to the\nsame host and port. Whether it is destroyed or pooled depends on the`keepAlive` `option`.\n\nPooled connections have TCP Keep-Alive enabled for them, but servers may\nstill close idle connections, in which case they will be removed from the\npool and a new connection will be made when a new HTTP request is made for\nthat host and port. Servers may also refuse to allow multiple requests\nover the same connection, in which case the connection will have to be\nremade for every request and cannot be pooled. The `Agent` will still make\nthe requests to that server, but each one will occur over a new connection.\n\nWhen a connection is closed by the client or the server, it is removed\nfrom the pool. Any unused sockets in the pool will be unrefed so as not\nto keep the Node.js process running when there are no outstanding requests.\n(see `socket.unref()`).\n\nIt is good practice, to `destroy()` an `Agent` instance when it is no\nlonger in use, because unused sockets consume OS resources.\n\nSockets are removed from an agent when the socket emits either\na `'close'` event or an `'agentRemove'` event. When intending to keep one\nHTTP request open for a long time without keeping it in the agent, something\nlike the following may be done:\n\n```js\nhttp.get(options, (res) => {\n  // Do stuff\n}).on('socket', (socket) => {\n  socket.emit('agentRemove');\n});\n```\n\nAn agent may also be used for an individual request. By providing`{agent: false}` as an option to the `http.get()` or `http.request()`functions, a one-time use `Agent` with default options\nwill be used\nfor the client connection.\n\n`agent:false`:\n\n```js\nhttp.get({\n  hostname: 'localhost',\n  port: 80,\n  path: '/',\n  agent: false  // Create a new agent just for this one request\n}, (res) => {\n  // Do stuff with response\n});\n```",
+            "properties": {
+                "freeSockets": {
+                    "$ref": "#/definitions/NodeJS.ReadOnlyDict<Socket[]>",
+                    "description": "An object which contains arrays of sockets currently awaiting use by\nthe agent when `keepAlive` is enabled. Do not modify.\n\nSockets in the `freeSockets` list will be automatically destroyed and\nremoved from the array on `'timeout'`."
+                },
+                "maxFreeSockets": {
+                    "description": "By default set to 256\\. For agents with `keepAlive` enabled, this\nsets the maximum number of sockets that will be left open in the free\nstate.",
+                    "type": "number"
+                },
+                "maxSockets": {
+                    "description": "By default set to `Infinity`. Determines how many concurrent sockets the agent\ncan have open per origin. Origin is the returned value of `agent.getName()`.",
+                    "type": "number"
+                },
+                "maxTotalSockets": {
+                    "description": "By default set to `Infinity`. Determines how many concurrent sockets the agent\ncan have open. Unlike `maxSockets`, this parameter applies across all origins.",
+                    "type": "number"
+                },
+                "requests": {
+                    "$ref": "#/definitions/NodeJS.ReadOnlyDict<IncomingMessage[]>",
+                    "description": "An object which contains queues of requests that have not yet been assigned to\nsockets. Do not modify."
+                },
+                "sockets": {
+                    "$ref": "#/definitions/NodeJS.ReadOnlyDict<Socket[]>",
+                    "description": "An object which contains arrays of sockets currently in use by the\nagent. Do not modify."
+                }
+            },
+            "required": [
+                "freeSockets",
+                "maxFreeSockets",
+                "maxSockets",
+                "maxTotalSockets",
+                "requests",
+                "sockets"
+            ],
+            "type": "object"
+        },
+        "ArrayBuffer": {
+            "additionalProperties": false,
+            "properties": {
+                "__@toStringTag@460": {
+                    "type": "string"
+                },
+                "byteLength": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "__@toStringTag@460",
+                "byteLength"
+            ],
+            "type": "object"
+        },
+        "ClientOptions": {
+            "additionalProperties": false,
+            "properties": {
+                "agent": {
+                    "$ref": "#/definitions/Agent"
+                },
+                "ca": {
+                    "anyOf": [
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "items": {
+                                "anyOf": [
+                                    {
+                                        "additionalProperties": false,
+                                        "patternProperties": {
+                                            "^[0-9]+$": {
+                                                "type": "number"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    {
+                                        "type": "string"
+                                    }
+                                ]
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "Optionally override the trusted CA certificates. Default is to trust\nthe well-known CAs curated by Mozilla. Mozilla's CAs are completely\nreplaced when CAs are explicitly specified using this option."
+                },
+                "cert": {
+                    "anyOf": [
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "items": {
+                                "anyOf": [
+                                    {
+                                        "additionalProperties": false,
+                                        "patternProperties": {
+                                            "^[0-9]+$": {
+                                                "type": "number"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    {
+                                        "type": "string"
+                                    }
+                                ]
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "Cert chains in PEM format. One cert chain should be provided per\nprivate key. Each cert chain should consist of the PEM formatted\ncertificate for a provided private key, followed by the PEM\nformatted intermediate certificates (if any), in order, and not\nincluding the root CA (the root CA must be pre-known to the peer,\nsee ca). When providing multiple cert chains, they do not have to\nbe in the same order as their private keys in key. If the\nintermediate certificates are not provided, the peer will not be\nable to validate the certificate, and the handshake will fail."
+                },
+                "ciphers": {
+                    "description": "Cipher suite specification, replacing the default. For more\ninformation, see modifying the default cipher suite. Permitted\nciphers can be obtained via tls.getCiphers(). Cipher names must be\nuppercased in order for OpenSSL to accept them.",
+                    "type": "string"
+                },
+                "clientCertEngine": {
+                    "description": "Name of an OpenSSL engine which can provide the client certificate.",
+                    "type": "string"
+                },
+                "crl": {
+                    "anyOf": [
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "items": {
+                                "anyOf": [
+                                    {
+                                        "additionalProperties": false,
+                                        "patternProperties": {
+                                            "^[0-9]+$": {
+                                                "type": "number"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    {
+                                        "type": "string"
+                                    }
+                                ]
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "PEM formatted CRLs (Certificate Revocation Lists)."
+                },
+                "dhparam": {
+                    "anyOf": [
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "Diffie Hellman parameters, required for Perfect Forward Secrecy. Use\nopenssl dhparam to create the parameters. The key length must be\ngreater than or equal to 1024 bits or else an error will be thrown.\nAlthough 1024 bits is permissible, use 2048 bits or larger for\nstronger security. If omitted or invalid, the parameters are\nsilently discarded and DHE ciphers will not be available."
+                },
+                "ecdhCurve": {
+                    "description": "A string describing a named curve or a colon separated list of curve\nNIDs or names, for example P-521:P-384:P-256, to use for ECDH key\nagreement. Set to auto to select the curve automatically. Use\ncrypto.getCurves() to obtain a list of available curve names. On\nrecent releases, openssl ecparam -list_curves will also display the\nname and description of each available elliptic curve. Default:\ntls.DEFAULT_ECDH_CURVE.",
+                    "type": "string"
+                },
+                "family": {
+                    "type": "number"
+                },
+                "followRedirects": {
+                    "type": "boolean"
+                },
+                "handshakeTimeout": {
+                    "type": "number"
+                },
+                "headers": {
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "type": "object"
+                },
+                "honorCipherOrder": {
+                    "description": "Attempt to use the server's cipher suite preferences instead of the\nclient's. When true, causes SSL_OP_CIPHER_SERVER_PREFERENCE to be\nset in secureOptions",
+                    "type": "boolean"
+                },
+                "host": {
+                    "type": "string"
+                },
+                "key": {
+                    "anyOf": [
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "items": {
+                                "anyOf": [
+                                    {
+                                        "additionalProperties": false,
+                                        "patternProperties": {
+                                            "^[0-9]+$": {
+                                                "type": "number"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    {
+                                        "$ref": "#/definitions/KeyObject"
+                                    },
+                                    {
+                                        "type": "string"
+                                    }
+                                ]
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "Private keys in PEM format. PEM allows the option of private keys\nbeing encrypted. Encrypted keys will be decrypted with\noptions.passphrase. Multiple keys using different algorithms can be\nprovided either as an array of unencrypted key strings or buffers,\nor an array of objects in the form {pem: <string|buffer>[,\npassphrase: <string>]}. The object form can only occur in an array.\nobject.passphrase is optional. Encrypted keys will be decrypted with\nobject.passphrase if provided, or options.passphrase if it is not."
+                },
+                "localAddress": {
+                    "type": "string"
+                },
+                "maxPayload": {
+                    "type": "number"
+                },
+                "maxRedirects": {
+                    "type": "number"
+                },
+                "maxVersion": {
+                    "description": "Optionally set the maximum TLS version to allow. One\nof `'TLSv1.3'`, `'TLSv1.2'`, `'TLSv1.1'`, or `'TLSv1'`. Cannot be specified along with the\n`secureProtocol` option, use one or the other.\n**Default:** `'TLSv1.3'`, unless changed using CLI options. Using\n`--tls-max-v1.2` sets the default to `'TLSv1.2'`. Using `--tls-max-v1.3` sets the default to\n`'TLSv1.3'`. If multiple of the options are provided, the highest maximum is used.",
+                    "enum": [
+                        "TLSv1",
+                        "TLSv1.1",
+                        "TLSv1.2",
+                        "TLSv1.3"
+                    ],
+                    "type": "string"
+                },
+                "minVersion": {
+                    "description": "Optionally set the minimum TLS version to allow. One\nof `'TLSv1.3'`, `'TLSv1.2'`, `'TLSv1.1'`, or `'TLSv1'`. Cannot be specified along with the\n`secureProtocol` option, use one or the other.  It is not recommended to use\nless than TLSv1.2, but it may be required for interoperability.\n**Default:** `'TLSv1.2'`, unless changed using CLI options. Using\n`--tls-v1.0` sets the default to `'TLSv1'`. Using `--tls-v1.1` sets the default to\n`'TLSv1.1'`. Using `--tls-min-v1.3` sets the default to\n'TLSv1.3'. If multiple of the options are provided, the lowest minimum is used.",
+                    "enum": [
+                        "TLSv1",
+                        "TLSv1.1",
+                        "TLSv1.2",
+                        "TLSv1.3"
+                    ],
+                    "type": "string"
+                },
+                "origin": {
+                    "type": "string"
+                },
+                "passphrase": {
+                    "description": "Shared passphrase used for a single private key and/or a PFX.",
+                    "type": "string"
+                },
+                "perMessageDeflate": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/PerMessageDeflateOptions"
+                        },
+                        {
+                            "type": "boolean"
+                        }
+                    ]
+                },
+                "pfx": {
+                    "anyOf": [
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "items": {
+                                "anyOf": [
+                                    {
+                                        "additionalProperties": false,
+                                        "patternProperties": {
+                                            "^[0-9]+$": {
+                                                "type": "number"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    {
+                                        "$ref": "#/definitions/PxfObject"
+                                    },
+                                    {
+                                        "type": "string"
+                                    }
+                                ]
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "PFX or PKCS12 encoded private key and certificate chain. pfx is an\nalternative to providing key and cert individually. PFX is usually\nencrypted, if it is, passphrase will be used to decrypt it. Multiple\nPFX can be provided either as an array of unencrypted PFX buffers,\nor an array of objects in the form {buf: <string|buffer>[,\npassphrase: <string>]}. The object form can only occur in an array.\nobject.passphrase is optional. Encrypted PFX will be decrypted with\nobject.passphrase if provided, or options.passphrase if it is not."
+                },
+                "privateKeyEngine": {
+                    "description": "Name of an OpenSSL engine to get private key from. Should be used\ntogether with privateKeyIdentifier.",
+                    "type": "string"
+                },
+                "privateKeyIdentifier": {
+                    "description": "Identifier of a private key managed by an OpenSSL engine. Should be\nused together with privateKeyEngine. Should not be set together with\nkey, because both options define a private key in different ways.",
+                    "type": "string"
+                },
+                "protocol": {
+                    "type": "string"
+                },
+                "protocolVersion": {
+                    "type": "number"
+                },
+                "rejectUnauthorized": {
+                    "type": "boolean"
+                },
+                "secureOptions": {
+                    "description": "Optionally affect the OpenSSL protocol behavior, which is not\nusually necessary. This should be used carefully if at all! Value is\na numeric bitmask of the SSL_OP_* options from OpenSSL Options",
+                    "type": "number"
+                },
+                "secureProtocol": {
+                    "description": "Legacy mechanism to select the TLS protocol version to use, it does\nnot support independent control of the minimum and maximum version,\nand does not support limiting the protocol to TLSv1.3. Use\nminVersion and maxVersion instead. The possible values are listed as\nSSL_METHODS, use the function names as strings. For example, use\n'TLSv1_1_method' to force TLS version 1.1, or 'TLS_method' to allow\nany TLS protocol version up to TLSv1.3. It is not recommended to use\nTLS versions less than 1.2, but it may be required for\ninteroperability. Default: none, see minVersion.",
+                    "type": "string"
+                },
+                "sessionIdContext": {
+                    "description": "Opaque identifier used by servers to ensure session state is not\nshared between applications. Unused by clients.",
+                    "type": "string"
+                },
+                "sessionTimeout": {
+                    "description": "The number of seconds after which a TLS session created by the\nserver will no longer be resumable. See Session Resumption for more\ninformation. Default: 300.",
+                    "type": "number"
+                },
+                "sigalgs": {
+                    "description": "Colon-separated list of supported signature algorithms. The list\ncan contain digest algorithms (SHA256, MD5 etc.), public key\nalgorithms (RSA-PSS, ECDSA etc.), combination of both (e.g\n'RSA+SHA384') or TLS v1.3 scheme names (e.g. rsa_pss_pss_sha512).",
+                    "type": "string"
+                },
+                "skipUTF8Validation": {
+                    "type": "boolean"
+                },
+                "ticketKeys": {
+                    "additionalProperties": false,
+                    "description": "48-bytes of cryptographically strong pseudo-random data.\nSee Session Resumption for more information.",
+                    "patternProperties": {
+                        "^[0-9]+$": {
+                            "type": "number"
+                        }
+                    },
+                    "type": "object"
+                }
+            },
+            "type": "object"
+        },
+        "ClientRequestArgs": {
+            "additionalProperties": false,
+            "properties": {
+                "_defaultAgent": {
+                    "$ref": "#/definitions/Agent"
+                },
+                "agent": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/Agent"
+                        },
+                        {
+                            "type": "boolean"
+                        }
+                    ]
+                },
+                "auth": {
+                    "type": [
+                        "null",
+                        "string"
+                    ]
+                },
+                "createConnection": {
+                    "additionalProperties": false,
+                    "type": "object"
+                },
+                "defaultPort": {
+                    "type": [
+                        "string",
+                        "number"
+                    ]
+                },
+                "family": {
+                    "type": "number"
+                },
+                "headers": {
+                    "$ref": "#/definitions/OutgoingHttpHeaders"
+                },
+                "hints": {
+                    "type": "number"
+                },
+                "host": {
+                    "type": [
+                        "null",
+                        "string"
+                    ]
+                },
+                "hostname": {
+                    "type": [
+                        "null",
+                        "string"
+                    ]
+                },
+                "insecureHTTPParser": {
+                    "type": "boolean"
+                },
+                "localAddress": {
+                    "type": "string"
+                },
+                "localPort": {
+                    "type": "number"
+                },
+                "lookup": {
+                    "additionalProperties": false,
+                    "type": "object"
+                },
+                "maxHeaderSize": {
+                    "default": 16384,
+                    "type": "number"
+                },
+                "method": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": [
+                        "null",
+                        "string"
+                    ]
+                },
+                "port": {
+                    "type": [
+                        "null",
+                        "string",
+                        "number"
+                    ]
+                },
+                "protocol": {
+                    "type": [
+                        "null",
+                        "string"
+                    ]
+                },
+                "setHost": {
+                    "type": "boolean"
+                },
+                "signal": {
+                    "$ref": "#/definitions/AbortSignal"
+                },
+                "socketPath": {
+                    "type": "string"
+                },
+                "timeout": {
+                    "type": "number"
+                },
+                "uniqueHeaders": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
+        "DataView": {
+            "additionalProperties": false,
+            "properties": {
+                "__@toStringTag@460": {
+                    "type": "string"
+                },
+                "buffer": {
+                    "$ref": "#/definitions/ArrayBuffer"
+                },
+                "byteLength": {
+                    "type": "number"
+                },
+                "byteOffset": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "__@toStringTag@460",
+                "buffer",
+                "byteLength",
+                "byteOffset"
+            ],
+            "type": "object"
+        },
+        "KeyObject": {
+            "additionalProperties": false,
+            "properties": {
+                "passphrase": {
+                    "description": "Optional passphrase.",
+                    "type": "string"
+                },
+                "pem": {
+                    "anyOf": [
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "Private keys in PEM format."
+                }
+            },
+            "required": [
+                "pem"
+            ],
+            "type": "object"
+        },
+        "NodeJS.ReadOnlyDict<IncomingMessage[]>": {
+            "additionalProperties": {
+                "$ref": "#/definitions/T"
+            },
+            "type": "object"
+        },
+        "NodeJS.ReadOnlyDict<Socket[]>": {
+            "additionalProperties": {
+                "$ref": "#/definitions/T"
+            },
+            "type": "object"
+        },
+        "OutgoingHttpHeaders": {
+            "additionalProperties": false,
+            "type": "object"
+        },
+        "PerMessageDeflateOptions": {
+            "additionalProperties": false,
+            "properties": {
+                "clientMaxWindowBits": {
+                    "type": "number"
+                },
+                "clientNoContextTakeover": {
+                    "type": "boolean"
+                },
+                "concurrencyLimit": {
+                    "type": "number"
+                },
+                "serverMaxWindowBits": {
+                    "type": "number"
+                },
+                "serverNoContextTakeover": {
+                    "type": "boolean"
+                },
+                "threshold": {
+                    "type": "number"
+                },
+                "zlibDeflateOptions": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "chunkSize": {
+                            "type": "number"
+                        },
+                        "dictionary": {
+                            "anyOf": [
+                                {
+                                    "additionalProperties": false,
+                                    "patternProperties": {
+                                        "^[0-9]+$": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "type": "object"
+                                },
+                                {
+                                    "items": {
+                                        "additionalProperties": false,
+                                        "patternProperties": {
+                                            "^[0-9]+$": {
+                                                "type": "number"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "type": "array"
+                                },
+                                {
+                                    "$ref": "#/definitions/DataView"
+                                }
+                            ]
+                        },
+                        "finishFlush": {
+                            "type": "number"
+                        },
+                        "flush": {
+                            "type": "number"
+                        },
+                        "info": {
+                            "type": "boolean"
+                        },
+                        "level": {
+                            "type": "number"
+                        },
+                        "memLevel": {
+                            "type": "number"
+                        },
+                        "strategy": {
+                            "type": "number"
+                        },
+                        "windowBits": {
+                            "type": "number"
+                        }
+                    },
+                    "type": "object"
+                },
+                "zlibInflateOptions": {
+                    "$ref": "#/definitions/ZlibOptions"
+                }
+            },
+            "type": "object"
+        },
+        "PxfObject": {
+            "additionalProperties": false,
+            "properties": {
+                "buf": {
+                    "anyOf": [
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "PFX or PKCS12 encoded private key and certificate chain."
+                },
+                "passphrase": {
+                    "description": "Optional passphrase.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "buf"
+            ],
+            "type": "object"
+        },
+        "T": {
+            "additionalProperties": false,
+            "type": "object"
+        },
+        "URL": {
+            "additionalProperties": false,
+            "description": "`URL` class is a global reference for `require('url').URL`\nhttps://nodejs.org/api/url.html#the-whatwg-url-api",
+            "properties": {
+                "hash": {
+                    "description": "Gets and sets the fragment portion of the URL.\n\n```js\nconst myURL = new URL('https://example.org/foo#bar');\nconsole.log(myURL.hash);\n// Prints #bar\n\nmyURL.hash = 'baz';\nconsole.log(myURL.href);\n// Prints https://example.org/foo#baz\n```\n\nInvalid URL characters included in the value assigned to the `hash` property\nare `percent-encoded`. The selection of which characters to\npercent-encode may vary somewhat from what the {@link parse} and {@link format} methods would produce.",
+                    "type": "string"
+                },
+                "host": {
+                    "description": "Gets and sets the host portion of the URL.\n\n```js\nconst myURL = new URL('https://example.org:81/foo');\nconsole.log(myURL.host);\n// Prints example.org:81\n\nmyURL.host = 'example.com:82';\nconsole.log(myURL.href);\n// Prints https://example.com:82/foo\n```\n\nInvalid host values assigned to the `host` property are ignored.",
+                    "type": "string"
+                },
+                "hostname": {
+                    "description": "Gets and sets the host name portion of the URL. The key difference between`url.host` and `url.hostname` is that `url.hostname` does _not_ include the\nport.\n\n```js\nconst myURL = new URL('https://example.org:81/foo');\nconsole.log(myURL.hostname);\n// Prints example.org\n\n// Setting the hostname does not change the port\nmyURL.hostname = 'example.com:82';\nconsole.log(myURL.href);\n// Prints https://example.com:81/foo\n\n// Use myURL.host to change the hostname and port\nmyURL.host = 'example.org:82';\nconsole.log(myURL.href);\n// Prints https://example.org:82/foo\n```\n\nInvalid host name values assigned to the `hostname` property are ignored.",
+                    "type": "string"
+                },
+                "href": {
+                    "description": "Gets and sets the serialized URL.\n\n```js\nconst myURL = new URL('https://example.org/foo');\nconsole.log(myURL.href);\n// Prints https://example.org/foo\n\nmyURL.href = 'https://example.com/bar';\nconsole.log(myURL.href);\n// Prints https://example.com/bar\n```\n\nGetting the value of the `href` property is equivalent to calling {@link toString}.\n\nSetting the value of this property to a new value is equivalent to creating a\nnew `URL` object using `new URL(value)`. Each of the `URL`object's properties will be modified.\n\nIf the value assigned to the `href` property is not a valid URL, a `TypeError`will be thrown.",
+                    "type": "string"
+                },
+                "origin": {
+                    "description": "Gets the read-only serialization of the URL's origin.\n\n```js\nconst myURL = new URL('https://example.org/foo/bar?baz');\nconsole.log(myURL.origin);\n// Prints https://example.org\n```\n\n```js\nconst idnURL = new URL('https://測試');\nconsole.log(idnURL.origin);\n// Prints https://xn--g6w251d\n\nconsole.log(idnURL.hostname);\n// Prints xn--g6w251d\n```",
+                    "type": "string"
+                },
+                "password": {
+                    "description": "Gets and sets the password portion of the URL.\n\n```js\nconst myURL = new URL('https://abc:xyz@example.com');\nconsole.log(myURL.password);\n// Prints xyz\n\nmyURL.password = '123';\nconsole.log(myURL.href);\n// Prints https://abc:123@example.com\n```\n\nInvalid URL characters included in the value assigned to the `password` property\nare `percent-encoded`. The selection of which characters to\npercent-encode may vary somewhat from what the {@link parse} and {@link format} methods would produce.",
+                    "type": "string"
+                },
+                "pathname": {
+                    "description": "Gets and sets the path portion of the URL.\n\n```js\nconst myURL = new URL('https://example.org/abc/xyz?123');\nconsole.log(myURL.pathname);\n// Prints /abc/xyz\n\nmyURL.pathname = '/abcdef';\nconsole.log(myURL.href);\n// Prints https://example.org/abcdef?123\n```\n\nInvalid URL characters included in the value assigned to the `pathname`property are `percent-encoded`. The selection of which characters\nto percent-encode may vary somewhat from what the {@link parse} and {@link format} methods would produce.",
+                    "type": "string"
+                },
+                "port": {
+                    "description": "Gets and sets the port portion of the URL.\n\nThe port value may be a number or a string containing a number in the range`0` to `65535` (inclusive). Setting the value to the default port of the`URL` objects given `protocol` will\nresult in the `port` value becoming\nthe empty string (`''`).\n\nThe port value can be an empty string in which case the port depends on\nthe protocol/scheme:\n\n<omitted>\n\nUpon assigning a value to the port, the value will first be converted to a\nstring using `.toString()`.\n\nIf that string is invalid but it begins with a number, the leading number is\nassigned to `port`.\nIf the number lies outside the range denoted above, it is ignored.\n\n```js\nconst myURL = new URL('https://example.org:8888');\nconsole.log(myURL.port);\n// Prints 8888\n\n// Default ports are automatically transformed to the empty string\n// (HTTPS protocol's default port is 443)\nmyURL.port = '443';\nconsole.log(myURL.port);\n// Prints the empty string\nconsole.log(myURL.href);\n// Prints https://example.org/\n\nmyURL.port = 1234;\nconsole.log(myURL.port);\n// Prints 1234\nconsole.log(myURL.href);\n// Prints https://example.org:1234/\n\n// Completely invalid port strings are ignored\nmyURL.port = 'abcd';\nconsole.log(myURL.port);\n// Prints 1234\n\n// Leading numbers are treated as a port number\nmyURL.port = '5678abcd';\nconsole.log(myURL.port);\n// Prints 5678\n\n// Non-integers are truncated\nmyURL.port = 1234.5678;\nconsole.log(myURL.port);\n// Prints 1234\n\n// Out-of-range numbers which are not represented in scientific notation\n// will be ignored.\nmyURL.port = 1e10; // 10000000000, will be range-checked as described below\nconsole.log(myURL.port);\n// Prints 1234\n```\n\nNumbers which contain a decimal point,\nsuch as floating-point numbers or numbers in scientific notation,\nare not an exception to this rule.\nLeading numbers up to the decimal point will be set as the URL's port,\nassuming they are valid:\n\n```js\nmyURL.port = 4.567e21;\nconsole.log(myURL.port);\n// Prints 4 (because it is the leading number in the string '4.567e21')\n```",
+                    "type": "string"
+                },
+                "protocol": {
+                    "description": "Gets and sets the protocol portion of the URL.\n\n```js\nconst myURL = new URL('https://example.org');\nconsole.log(myURL.protocol);\n// Prints https:\n\nmyURL.protocol = 'ftp';\nconsole.log(myURL.href);\n// Prints ftp://example.org/\n```\n\nInvalid URL protocol values assigned to the `protocol` property are ignored.",
+                    "type": "string"
+                },
+                "search": {
+                    "description": "Gets and sets the serialized query portion of the URL.\n\n```js\nconst myURL = new URL('https://example.org/abc?123');\nconsole.log(myURL.search);\n// Prints ?123\n\nmyURL.search = 'abc=xyz';\nconsole.log(myURL.href);\n// Prints https://example.org/abc?abc=xyz\n```\n\nAny invalid URL characters appearing in the value assigned the `search`property will be `percent-encoded`. The selection of which\ncharacters to percent-encode may vary somewhat from what the {@link parse} and {@link format} methods would produce.",
+                    "type": "string"
+                },
+                "searchParams": {
+                    "$ref": "#/definitions/URLSearchParams",
+                    "description": "Gets the `URLSearchParams` object representing the query parameters of the\nURL. This property is read-only but the `URLSearchParams` object it provides\ncan be used to mutate the URL instance; to replace the entirety of query\nparameters of the URL, use the {@link search} setter. See `URLSearchParams` documentation for details.\n\nUse care when using `.searchParams` to modify the `URL` because,\nper the WHATWG specification, the `URLSearchParams` object uses\ndifferent rules to determine which characters to percent-encode. For\ninstance, the `URL` object will not percent encode the ASCII tilde (`~`)\ncharacter, while `URLSearchParams` will always encode it:\n\n```js\nconst myUrl = new URL('https://example.org/abc?foo=~bar');\n\nconsole.log(myUrl.search);  // prints ?foo=~bar\n\n// Modify the URL via searchParams...\nmyUrl.searchParams.sort();\n\nconsole.log(myUrl.search);  // prints ?foo=%7Ebar\n```"
+                },
+                "username": {
+                    "description": "Gets and sets the username portion of the URL.\n\n```js\nconst myURL = new URL('https://abc:xyz@example.com');\nconsole.log(myURL.username);\n// Prints abc\n\nmyURL.username = '123';\nconsole.log(myURL.href);\n// Prints https://123:xyz@example.com/\n```\n\nAny invalid URL characters appearing in the value assigned the `username`property will be `percent-encoded`. The selection of which\ncharacters to percent-encode may vary somewhat from what the {@link parse} and {@link format} methods would produce.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "hash",
+                "host",
+                "hostname",
+                "href",
+                "origin",
+                "password",
+                "pathname",
+                "port",
+                "protocol",
+                "search",
+                "searchParams",
+                "username"
+            ],
+            "type": "object"
+        },
+        "URLSearchParams": {
+            "additionalProperties": false,
+            "description": "The `URLSearchParams` API provides read and write access to the query of a`URL`. The `URLSearchParams` class can also be used standalone with one of the\nfour following constructors.\nThe `URLSearchParams` class is also available on the global object.\n\nThe WHATWG `URLSearchParams` interface and the `querystring` module have\nsimilar purpose, but the purpose of the `querystring` module is more\ngeneral, as it allows the customization of delimiter characters (`&#x26;` and `=`).\nOn the other hand, this API is designed purely for URL query strings.\n\n```js\nconst myURL = new URL('https://example.org/?abc=123');\nconsole.log(myURL.searchParams.get('abc'));\n// Prints 123\n\nmyURL.searchParams.append('abc', 'xyz');\nconsole.log(myURL.href);\n// Prints https://example.org/?abc=123&#x26;abc=xyz\n\nmyURL.searchParams.delete('abc');\nmyURL.searchParams.set('a', 'b');\nconsole.log(myURL.href);\n// Prints https://example.org/?a=b\n\nconst newSearchParams = new URLSearchParams(myURL.searchParams);\n// The above is equivalent to\n// const newSearchParams = new URLSearchParams(myURL.search);\n\nnewSearchParams.append('a', 'c');\nconsole.log(myURL.href);\n// Prints https://example.org/?a=b\nconsole.log(newSearchParams.toString());\n// Prints a=b&#x26;a=c\n\n// newSearchParams.toString() is implicitly called\nmyURL.search = newSearchParams;\nconsole.log(myURL.href);\n// Prints https://example.org/?a=b&#x26;a=c\nnewSearchParams.delete('a');\nconsole.log(myURL.href);\n// Prints https://example.org/?a=b&#x26;a=c\n```",
+            "type": "object"
+        },
+        "ZlibOptions": {
+            "additionalProperties": false,
+            "properties": {
+                "chunkSize": {
+                    "default": "16*1024",
+                    "type": "number"
+                },
+                "dictionary": {
+                    "anyOf": [
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "$ref": "#/definitions/ArrayBuffer"
+                        },
+                        {
+                            "$ref": "#/definitions/DataView"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    ]
+                },
+                "finishFlush": {
+                    "default": "constants.Z_FINISH",
+                    "type": "number"
+                },
+                "flush": {
+                    "default": "constants.Z_NO_FLUSH",
+                    "type": "number"
+                },
+                "info": {
+                    "type": "boolean"
+                },
+                "level": {
+                    "type": "number"
+                },
+                "maxOutputLength": {
+                    "type": "number"
+                },
+                "memLevel": {
+                    "type": "number"
+                },
+                "strategy": {
+                    "type": "number"
+                },
+                "windowBits": {
+                    "type": "number"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "properties": {
+        "address": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/URL"
+                },
+                {
+                    "type": "string"
+                }
+            ]
+        },
+        "options": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/ClientOptions"
+                },
+                {
+                    "$ref": "#/definitions/ClientRequestArgs"
+                }
+            ]
+        }
+    },
+    "required": [
+        "address"
+    ],
+    "type": "object"
+}
+

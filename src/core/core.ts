@@ -728,12 +728,7 @@ class IPAddress extends AppsensorEntity {
 
 	private address: string = '';
 	
-	// @JsonProperty("geoLocation")
 	private geoLocation: GeoLocation  | null = null;
-
-	// @Autowired(required = false)
-	// private transient GeoLocator geoLocator;
-	// private geoLocator: GeoLocator  | null = null;
 
 	public constructor(address: string = '', 
 	                   geoLocation: GeoLocation  | null = null) {
@@ -742,19 +737,15 @@ class IPAddress extends AppsensorEntity {
 		this.geoLocation = geoLocation;
 	}
 	
-	// public async fromString(ipString: string): Promise<IPAddress> {
-	// 	if (!ipaddrlib.isValid(ipString)) { //InetAddresses.isInetAddress(ipString)) {
-	// 		throw new Error("IP Address string is invalid: " + ipString);
-	// 	}
+	public static async fromString(ipString: string, geoLocator: GeoLocator): Promise<IPAddress> {
+		if (!ipaddrlib.isValid(ipString)) {
+			throw new Error("IP Address string is invalid: " + ipString);
+		}
 
-	// 	let localGeo: GeoLocation | null = null;
-		
-	// 	if(this.geoLocator != null) {
-	// 		localGeo = await this.geoLocator.readLocation(ipString);
-	// 	}
+		let localGeo: GeoLocation | null = await geoLocator.readLocation(ipString);
 
-	// 	return new IPAddress(ipString, localGeo);
-	// }
+		return new IPAddress(ipString, localGeo);
+	}
 	
 	public setAddress(address: string): IPAddress {
 		this.address = address;

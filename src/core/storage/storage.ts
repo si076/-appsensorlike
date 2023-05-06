@@ -1,27 +1,14 @@
-// @Qualifier
-// @Retention(RUNTIME)
-// @Target({TYPE, METHOD, FIELD, PARAMETER})
-
 import { AppSensorEvent, Attack, DetectionPoint, Response, User } from "../core.js";
 import { SearchCriteria } from "../criteria/criteria.js";
 import { AttackListener, EventListener, ResponseListener } from "../listener/listener.js";
 import { Rule } from "../rule/rule.js";
 
-// @Inherited
 interface AttackStoreListener {
 }
 
-// @Qualifier
-// @Retention(RUNTIME)
-// @Target({TYPE, METHOD, FIELD, PARAMETER})
-// @Inherited
 interface EventStoreListener {
 }
 
-// @Qualifier
-// @Retention(RUNTIME)
-// @Target({TYPE, METHOD, FIELD, PARAMETER})
-// @Inherited
 interface ResponseStoreListener {
 }
 
@@ -44,12 +31,15 @@ abstract class AttackStore {
 	 */
 	public abstract findAttacks(criteria: SearchCriteria): Promise<Attack[]>;
 
+
+	public abstract countAttacks(criteria: SearchCriteria): Promise<number>;
+
 	/**
 	 * Register an {@link AttackListener} to notify when {@link Attack}s are added
 	 *
 	 * @param listener the {@link AttackListener} to register
 	 */
-	public registerListener(listener: AttackListener): void {
+	public registerListener(listener: AttackListener, atBeginning: boolean = false): void {
 		if (this.listeners.indexOf(listener) === -1) {
 			let unique: boolean = true;
 
@@ -61,7 +51,11 @@ abstract class AttackStore {
 			}
 
 			if (unique) {
-				this.listeners.push(listener);
+				if (atBeginning) {
+					this.listeners.splice(0, 0, listener);
+				} else {
+					this.listeners.push(listener);
+				}
 			}
 		}
 	}
@@ -84,17 +78,9 @@ abstract class AttackStore {
 	 * @param collection of {@link AttackListener}s that are injected to be
 	 * 			listeners on the {@link @AttackStore}
 	 */
-	// @Inject @AttackStoreListener
-	public setListeners(listeners: AttackListener[]): void {
-		// if (listeners.length === 0) {
-		// 	//clear already added listeners since this field is static and registerListeners
-		// 	//check for class uniqueness
-		// 	//this is essential when executing analysis tests en mass
-		// 	AttackStore.listeners = [];
-		// }
-
+	public setListeners(listeners: AttackListener[], atBeginning: boolean = false): void {
 		for (const listener of listeners) {
-			this.registerListener(listener);
+			this.registerListener(listener, atBeginning);
 		}
 	}
 
@@ -110,7 +96,6 @@ abstract class AttackStore {
 			throw new Error("criteria must be non-null");
 		}
 
-		// Collection<Attack> matches = new HashSet<Attack>();
 		const matches: Attack[] = [];
 
 		for (const attack of attacks) {
@@ -122,6 +107,24 @@ abstract class AttackStore {
 
 		return matches;
 	}
+
+	protected _countAttacks(criteria: SearchCriteria, attacks: Attack[]): number {
+		if (criteria == null) {
+			throw new Error("criteria must be non-null");
+		}
+
+		let counter = 0;
+
+		for (const attack of attacks) {
+
+			if (this.isMatchingAttack(criteria, attack)) {
+				counter++;
+			}
+		}
+
+		return counter;
+	}
+
 
 	/**
 	 * Finder for attacks in the AttackStore.
@@ -202,12 +205,15 @@ abstract class EventStore {
 	 */
 	public abstract findEvents(criteria: SearchCriteria): Promise<AppSensorEvent[]>;
 
+
+	public abstract countEvents(criteria: SearchCriteria): Promise<number>;
+
 	/**
 	 * Register an {@link EventListener} to notify when {@link Event}s are added
 	 *
 	 * @param listener the {@link EventListener} to register
 	 */
-	public registerListener(listener: EventListener): void {
+	public registerListener(listener: EventListener, atBeginning: boolean = false): void {
 		if (this.listeners.indexOf(listener) === -1) {
 			let unique: boolean = true;
 
@@ -219,7 +225,11 @@ abstract class EventStore {
 			}
 
 			if (unique) {
-				this.listeners.push(listener);
+				if (atBeginning) {
+					this.listeners.splice(0, 0, listener);
+				} else {
+					this.listeners.push(listener);
+				}
 			}
 		}
 	}
@@ -242,17 +252,9 @@ abstract class EventStore {
 	 * @param collection of {@link EventListener}s that are injected to be
 	 * 			listeners on the {@link @EventStore}
 	 */
-	// @Inject @EventStoreListener
-	public setListeners(listeners: EventListener[]) {
-		// if (listeners.length === 0) {
-		// 	//clear already added listeners since this field is static and registerListeners
-		// 	//check for class uniqueness
-		// 	//this is essential when executing analysis tests en mass
-		// 	EventStore.listeners = [];
-		// }
-
+	public setListeners(listeners: EventListener[], atBeginning: boolean = false) {
 		for (const listener of listeners) {
-			this.registerListener(listener);
+			this.registerListener(listener, atBeginning);
 		}
 	}
 
@@ -277,6 +279,22 @@ abstract class EventStore {
 		}
 
 		return matches;
+	}
+
+	public _countEvents(criteria: SearchCriteria, events: AppSensorEvent[]): number {
+		if (criteria == null) {
+			throw new Error("criteria must be non-null");
+		}
+
+		let counter = 0;
+
+		for (const event of events) {
+			if (this.isMatchingEvent(criteria, event)) {
+				counter++;
+			}
+		}
+
+		return counter;
 	}
 
 	/**
@@ -359,6 +377,9 @@ abstract class ResponseStore {
 	 */
 	public abstract findResponses(criteria: SearchCriteria): Promise<Response[]>;
 	
+
+	public abstract countResponses(criteria: SearchCriteria): Promise<number>;
+
 	/**
 	 * Finder for responses in the ResponseStore
 	 * 
@@ -372,34 +393,8 @@ abstract class ResponseStore {
 		
 		const matches: Response[] = [];
 		
-		const user: User | null = criteria.getUser();
-		const detectionSystemIds: string[] = criteria.getDetectionSystemIds();
-		const earliest: Date | null = criteria.getEarliest();
-		
 		for (const response of responses) {
-			// check user match if user specified
-			const userMatch: boolean = (user != null) ? user.equals(response.getUser()) : true;
-
-			//check detection system match if detection systems specified
-			let detectionSystemMatch: boolean = true;
-			const respDetSystemId = response.getDetectionSystem();
-			if (detectionSystemIds && detectionSystemIds.length > 0 && 
-				respDetSystemId) {
-				detectionSystemMatch = detectionSystemIds.indexOf(respDetSystemId.getDetectionSystemId()) > -1 ;
-			}
-			
-			const responseTimestamp = response.getTimestamp();
-
-			let earliestMatch: boolean = true; 
-			if (earliest !== null && responseTimestamp instanceof Date) {
-
-				const responseTimestampMillis = responseTimestamp.getTime();
-				const earliestMillis = earliest.getTime();
-
-				earliestMatch =	(earliestMillis < responseTimestampMillis || earliestMillis === responseTimestampMillis)
-			}
-				
-			if (userMatch && detectionSystemMatch && earliestMatch) {
+			if (this.isMatchingResponse(criteria, response)) {
 				matches.push(response);
 			}
 		}
@@ -407,12 +402,28 @@ abstract class ResponseStore {
 		return matches;
 	}
 
+	public _countResponses(criteria: SearchCriteria, responses: Response[]): number {
+		if (criteria == null) {
+			throw new Error("criteria must be non-null");
+		}
+		
+		let counter = 0;
+		
+		for (const response of responses) {
+			if (this.isMatchingResponse(criteria, response)) {
+				counter++;
+			}
+		}
+		
+		return counter;
+	}
+
 	/**
 	 * Register an {@link ResponseListener} to notify when {@link Response}s are added
 	 * 
 	 * @param listener the {@link ResponseListener} to register
 	 */
-	public registerListener(listener: ResponseListener) {
+	public registerListener(listener: ResponseListener, atBeginning: boolean = false) {
 		if (this.listeners.indexOf(listener) === -1) {
 			let unique: boolean = true;
 			
@@ -424,7 +435,11 @@ abstract class ResponseStore {
 			}
 			
 			if (unique) {
-				this.listeners.push(listener);
+				if (atBeginning) {
+					this.listeners.splice(0, 0, listener);
+				} else {
+					this.listeners.push(listener);
+				}
 			}
 		}
 	}
@@ -447,18 +462,46 @@ abstract class ResponseStore {
 	 * @param collection of {@link ResponseListener}s that are injected to be 
 	 * 			listeners on the {@link ResponseStore}
 	 */
-	// @Inject @ResponseStoreListener
-	public setListeners(listeners: ResponseListener[]): void {
-		// if (listeners.length === 0) {
-		// 	//clear already added listeners since this field is static and registerListeners
-		// 	//check for class uniqueness
-		// 	//this is essential when executing analysis tests en mass
-		// 	ResponseStore.listeners = [];
-		// }
-		
+	public setListeners(listeners: ResponseListener[], atBeginning: boolean = false): void {
 		for (const listener of listeners) {
-			this.registerListener(listener);	
+			this.registerListener(listener, atBeginning);	
 		}
+	}
+
+	protected isMatchingResponse(criteria: SearchCriteria, response: Response): boolean {
+		let match: boolean = false;
+
+		const user: User | null = criteria.getUser();
+		const detectionSystemIds: string[] = criteria.getDetectionSystemIds();
+		const earliest: Date | null = criteria.getEarliest();
+
+		// check user match if user specified
+		const userMatch: boolean = (user != null) ? user.equals(response.getUser()) : true;
+
+		//check detection system match if detection systems specified
+		let detectionSystemMatch: boolean = true;
+		const respDetSystemId = response.getDetectionSystem();
+		if (detectionSystemIds && detectionSystemIds.length > 0 && 
+			respDetSystemId) {
+			detectionSystemMatch = detectionSystemIds.indexOf(respDetSystemId.getDetectionSystemId()) > -1 ;
+		}
+		
+		const responseTimestamp = response.getTimestamp();
+
+		let earliestMatch: boolean = true; 
+		if (earliest !== null && responseTimestamp instanceof Date) {
+
+			const responseTimestampMillis = responseTimestamp.getTime();
+			const earliestMillis = earliest.getTime();
+
+			earliestMatch =	(earliestMillis < responseTimestampMillis || earliestMillis === responseTimestampMillis)
+		}
+			
+		if (userMatch && detectionSystemMatch && earliestMatch) {
+			match = true;
+		}
+
+		return match;
 	}
 
 }

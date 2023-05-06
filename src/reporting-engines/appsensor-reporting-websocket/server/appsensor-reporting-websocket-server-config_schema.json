@@ -1,0 +1,323 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "definitions": {
+        "ArrayBuffer": {
+            "additionalProperties": false,
+            "properties": {
+                "__@toStringTag@460": {
+                    "type": "string"
+                },
+                "byteLength": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "__@toStringTag@460",
+                "byteLength"
+            ],
+            "type": "object"
+        },
+        "DataView": {
+            "additionalProperties": false,
+            "properties": {
+                "__@toStringTag@460": {
+                    "type": "string"
+                },
+                "buffer": {
+                    "$ref": "#/definitions/ArrayBuffer"
+                },
+                "byteLength": {
+                    "type": "number"
+                },
+                "byteOffset": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "__@toStringTag@460",
+                "buffer",
+                "byteLength",
+                "byteOffset"
+            ],
+            "type": "object"
+        },
+        "PerMessageDeflateOptions": {
+            "additionalProperties": false,
+            "properties": {
+                "clientMaxWindowBits": {
+                    "type": "number"
+                },
+                "clientNoContextTakeover": {
+                    "type": "boolean"
+                },
+                "concurrencyLimit": {
+                    "type": "number"
+                },
+                "serverMaxWindowBits": {
+                    "type": "number"
+                },
+                "serverNoContextTakeover": {
+                    "type": "boolean"
+                },
+                "threshold": {
+                    "type": "number"
+                },
+                "zlibDeflateOptions": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "chunkSize": {
+                            "type": "number"
+                        },
+                        "dictionary": {
+                            "anyOf": [
+                                {
+                                    "additionalProperties": false,
+                                    "patternProperties": {
+                                        "^[0-9]+$": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "type": "object"
+                                },
+                                {
+                                    "items": {
+                                        "additionalProperties": false,
+                                        "patternProperties": {
+                                            "^[0-9]+$": {
+                                                "type": "number"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "type": "array"
+                                },
+                                {
+                                    "$ref": "#/definitions/DataView"
+                                }
+                            ]
+                        },
+                        "finishFlush": {
+                            "type": "number"
+                        },
+                        "flush": {
+                            "type": "number"
+                        },
+                        "info": {
+                            "type": "boolean"
+                        },
+                        "level": {
+                            "type": "number"
+                        },
+                        "memLevel": {
+                            "type": "number"
+                        },
+                        "strategy": {
+                            "type": "number"
+                        },
+                        "windowBits": {
+                            "type": "number"
+                        }
+                    },
+                    "type": "object"
+                },
+                "zlibInflateOptions": {
+                    "$ref": "#/definitions/ZlibOptions"
+                }
+            },
+            "type": "object"
+        },
+        "ZlibOptions": {
+            "additionalProperties": false,
+            "properties": {
+                "chunkSize": {
+                    "default": "16*1024",
+                    "type": "number"
+                },
+                "dictionary": {
+                    "anyOf": [
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "$ref": "#/definitions/ArrayBuffer"
+                        },
+                        {
+                            "$ref": "#/definitions/DataView"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    ]
+                },
+                "finishFlush": {
+                    "default": "constants.Z_FINISH",
+                    "type": "number"
+                },
+                "flush": {
+                    "default": "constants.Z_NO_FLUSH",
+                    "type": "number"
+                },
+                "info": {
+                    "type": "boolean"
+                },
+                "level": {
+                    "type": "number"
+                },
+                "maxOutputLength": {
+                    "type": "number"
+                },
+                "memLevel": {
+                    "type": "number"
+                },
+                "strategy": {
+                    "type": "number"
+                },
+                "windowBits": {
+                    "type": "number"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "properties": {
+        "options": {
+            "additionalProperties": false,
+            "properties": {
+                "backlog": {
+                    "type": "number"
+                },
+                "clientTracking": {
+                    "type": "boolean"
+                },
+                "host": {
+                    "type": "string"
+                },
+                "maxPayload": {
+                    "type": "number"
+                },
+                "noServer": {
+                    "type": "boolean"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "perMessageDeflate": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/PerMessageDeflateOptions"
+                        },
+                        {
+                            "type": "boolean"
+                        }
+                    ]
+                },
+                "port": {
+                    "type": "number"
+                },
+                "skipUTF8Validation": {
+                    "type": "boolean"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "required": [
+        "options"
+    ],
+    "type": "object"
+}
+

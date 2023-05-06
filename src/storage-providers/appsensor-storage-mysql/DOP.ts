@@ -133,26 +133,14 @@ class DOP {
 
     private static UNDEFINED_PROP: string    = "<<<undefined>>>"
 
-    // private static excludedPropertiesFromCompareMap = new Map<string, string[]>();
-    // private static onlyPropertiesToCompareMap = new Map<string, string[]>();
-
     static { 
         DOP.mapping = new MappingReader().read();
 
         if (DOP.mapping) {
 
             DOP.resolveDependecies();
-            //reload the cache on restart 
-            //loads objects that don't depend on time
-            // ConnectionManager.getPool().getConnection((err, connection) => {
-            //     if (err) {
-                    
-            //         throw err;
-            //     }
 
-                DOP.loadCacheFromDB();
-            // });
-            
+            DOP.loadCacheFromDB();
         }
         
     }
@@ -661,6 +649,107 @@ class DOP {
         return result;
     }
 
+    public static async countObjects(className: string, propFilterFuncMap: Map<string, TYPE_FILTER_FUNCTION | string>): Promise<number> {
+        // console.debug('--> countObjects');
+
+        let count = 0;
+
+        if (DOP.mapping) {
+
+            const tableName = DOP.mapping.getTableName(className);
+            
+            let sql = `select count(*) as count from ${tableName}`
+            
+            if (propFilterFuncMap.size > 0) {
+                sql += ' where '
+            }
+
+            const propsToCompare = propFilterFuncMap.keys();
+
+            let execSQL = true;
+            let i = -1;
+            for (const propName of propsToCompare) {
+                i++;
+
+                if (i > 0) {
+                    sql += ' AND '; 
+                }
+
+                const propMap = DOP.mapping.getPropertyMap(className, propName);
+                if (propMap) {
+
+                    const funcOrCondition = propFilterFuncMap.get(propName);
+                    if (propMap.class && propMap.class !== 'Date') {
+
+                        if (funcOrCondition && typeof funcOrCondition === "function") {
+                            const ids = DOP.getCachedObjectIds(propMap.class, funcOrCondition);
+
+                            //this acts as AND condition
+                            //If for some specified property there are no results, we discontinue search
+                            //it's like the search in base storage class isMatchingEvent method, but
+                            //expressed with sql in order not to select all attacks, events and responses and loop on them
+                            if (ids.length === 0) {
+                                execSQL = false;
+
+                                break;
+                            }
+                            
+                            sql += propMap.column + ' in ' + '(' + ids.join(',') + ')';
+                        } else {
+                            throw new Error(`Expected filter function for  ${className}'s property ${propName}`);
+                        }
+
+                    } else {
+
+                        if (funcOrCondition && typeof funcOrCondition === "string") {
+                            sql += '(' + funcOrCondition + ')';
+                        } else {
+                            throw new Error(`Expected condition as string for ${className}'s property ${propName}`);
+                        }
+
+                    }
+
+                } else {
+                    throw new Error(`A mapping is not specified for ${className}'s property ${propName}`);
+                }
+            }
+
+            if (execSQL) {
+                const obj = DOP.createObjectOfClass(className);
+        
+                const connection: PoolConnection = await ConnectionManager.getConnection();
+
+                count = await Utils.executeSQLOnDB(sql, 
+                    (results: any) => {
+                        return results[0].count;
+                    }, 
+                    connection);
+
+                connection.release();
+                
+            }
+
+        }
+
+        // console.debug('<-- countObjects');
+
+        return count;
+    }
+
+    private static getMappedClassName(obj: Object | null, mapping: Mapping): string | null {
+        if (!obj) {
+            return null;
+        }
+
+        let className: string | null = obj.constructor.name;
+
+        if (!mapping.isClassMapped(className)) {
+            className = DOP.getMappedClassName(Object.getPrototypeOf(obj), mapping);
+        }
+
+        return className;
+    }
+
     public static async persistMany(objs: _core.IEquals[], 
                                     //connetionErrorHandler: ((error: MysqlError) => void) = ConnectionManager.defaultErrorHandler
                                     ) {
@@ -680,7 +769,7 @@ class DOP {
     private static async _persist(obj: Object, 
                                   //connetionErrorHandler: ((error: MysqlError) => void) = ConnectionManager.defaultErrorHandler, 
                                   connection: PoolConnection): Promise<number | string | null> {
-        const className = obj.constructor.name;
+        let className: string | null = obj.constructor.name;
 
         // console.debug(`--> persist: obj of class '${className}'`);
 
@@ -692,6 +781,14 @@ class DOP {
 
         if (DOP.mapping) {
             
+            //look up the prototype chain of obj to find
+            //class, which we know how to persist
+            className = DOP.getMappedClassName(obj, DOP.mapping);
+
+            if (!className) {
+                throw new Error(`Cannot persist object of class ${obj.constructor.name} because there is no mapping of it or some of its ancestors!`);
+            }
+
             const keyValue = new Map<string, any>();
 
             const keys: string[] = DOP.mapping.getMappedClassPropertyNames(className);

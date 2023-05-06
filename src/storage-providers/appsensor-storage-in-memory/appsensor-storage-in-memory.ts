@@ -30,11 +30,13 @@ class InMemoryAttackStore extends AttackStore {
 	/**
 	 * {@inheritDoc}
 	 */
-	// @Override
 	public override findAttacks(criteria: SearchCriteria): Promise<Attack[]> {
 		return Promise.resolve(super._findAttacks(criteria, InMemoryAttackStore.attacks));
 	}
 
+	public override countAttacks(criteria: SearchCriteria): Promise<number> {
+		return Promise.resolve(super._countAttacks(criteria, InMemoryAttackStore.attacks));
+	}
 }
 
 class InMemoryEventStore extends EventStore {
@@ -47,7 +49,6 @@ class InMemoryEventStore extends EventStore {
 	/**
 	 * {@inheritDoc}
 	 */
-	// @Override
 	public override async addEvent(event: AppSensorEvent): Promise<void> {
         const detPointLabel = Utils.getDetectionPointLabel(event.getDetectionPoint());
 
@@ -67,11 +68,13 @@ class InMemoryEventStore extends EventStore {
 	/**
 	 * {@inheritDoc}
 	 */
-	// @Override
-	public findEvents(criteria: SearchCriteria): Promise<AppSensorEvent[]> {
+	public override findEvents(criteria: SearchCriteria): Promise<AppSensorEvent[]> {
 		return Promise.resolve(super._findEvents(criteria, InMemoryEventStore.events));
 	}
 	
+	public override countEvents(criteria: SearchCriteria): Promise<number> {
+		return Promise.resolve(super._countEvents(criteria, InMemoryEventStore.events));
+	}
 }
 
 class InMemoryResponseStore extends ResponseStore {
@@ -84,7 +87,6 @@ class InMemoryResponseStore extends ResponseStore {
 	/**
 	 * {@inheritDoc}
 	 */
-	// @Override
 	public override async addResponse(response: Response): Promise<void> {
         let userName = Utils.getUserName(response.getUser());
 
@@ -102,11 +104,13 @@ class InMemoryResponseStore extends ResponseStore {
 	/**
 	 * {@inheritDoc}
 	 */
-	// @Override
-	public findResponses(criteria: SearchCriteria): Promise<Response[]> {
+	public override findResponses(criteria: SearchCriteria): Promise<Response[]> {
 		return Promise.resolve(super._findResponses(criteria, InMemoryResponseStore.responses));
 	}
 	
+	public override countResponses(criteria: SearchCriteria): Promise<number> {
+		return Promise.resolve(super._countResponses(criteria, InMemoryResponseStore.responses));
+	}
 }
 
 export {InMemoryAttackStore, InMemoryEventStore, InMemoryResponseStore};
