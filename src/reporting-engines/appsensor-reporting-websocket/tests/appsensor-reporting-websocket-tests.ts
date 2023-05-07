@@ -1,14 +1,96 @@
-import { AppSensorClient, AppSensorEvent, AppSensorServer, Category, DetectionPoint, DetectionSystem, Interval, INTERVAL_UNITS, IPAddress, Response, Threshold, User } from "../../../core/core.js";
+import { AppSensorClient, AppSensorEvent, AppSensorServer, Attack, Category, DetectionPoint, DetectionSystem, Interval, INTERVAL_UNITS, IPAddress, Response, Threshold, User } from "../../../core/core.js";
 import { ServerConfiguration } from "../../../core/configuration/server/server_configuration.js";
 import { AppSensorLocal } from "../../../execution-modes/appsensor-local/appsensor_local.js";
 import { FastGeoIPLocator } from "../../../geolocators/fast-geoip/fast-geoip.js";
 import { AppSensorReportingWebSocketClient } from "../client/appsensor-reporting-websocket-client.js";
 import { AppSensorReportingWebSocketServer } from "../server/appsensor-reporting-websocket-server.js";
-import { Utils } from "../../../storage-providers/appsensor-storage-mysql/utils.js";
+import { Utils as MySQLStorageUtils} from "../../../storage-providers/appsensor-storage-mysql/utils.js";
 import { DOP } from "../../../storage-providers/appsensor-storage-mysql/DOP.js";
 import { MySQLAttackStore, MySQLEventStore, MySQLResponseStore } from "../../../storage-providers/appsensor-storage-mysql/appsensor-storage-mysql.js";
 
 import assert from "assert";
+import { Utils } from "../../../utils/Utils.js";
+
+class AppSensorReportingWebsocketClientTest {
+
+    private wsClient: AppSensorReportingWebSocketClient;
+
+	private earliest: string;
+
+	constructor(earliest: string) {
+        this.wsClient = new AppSensorReportingWebSocketClient();
+
+		this.earliest = earliest;
+	}
+
+    public async test() {
+        const events = await this.wsClient.findEvents(this.earliest);
+
+        assert.equal(events.length, 14);
+
+		let attackCount = 0;
+		let responseCount = 0;
+
+        let res = await this.getStatForUser(this.earliest, "user1");
+		attackCount += res.attackCount;
+		responseCount += res.responseCount;
+
+        res = await this.getStatForUser(this.earliest, "user2");
+		attackCount += res.attackCount;
+		responseCount += res.responseCount;
+
+        res = await this.getStatForUser(this.earliest, "user3");
+		attackCount += res.attackCount;
+		responseCount += res.responseCount;
+
+        res = await this.getStatForUser(this.earliest, "user4");
+		attackCount += res.attackCount;
+		responseCount += res.responseCount;
+
+		const eventCountByCategoryLabel = await this.wsClient.countEventsByCategoryLabel(this.earliest, Category.INPUT_VALIDATION, "IE1");
+		assert.equal(eventCountByCategoryLabel, 14);
+
+		const attackCountByCategoryLabel = await this.wsClient.countAttacksByCategoryLabel(this.earliest, Category.INPUT_VALIDATION, "IE1");
+		assert.equal(attackCountByCategoryLabel, attackCount);
+
+		const responseCountByCategoryLabel = await this.wsClient.countResponsesByCategoryLabel(this.earliest, Category.INPUT_VALIDATION, "IE1");
+		assert.equal(responseCountByCategoryLabel, responseCount);
+
+		const configStr = await this.wsClient.getServerConfigurationAsJson();
+
+		const config = JSON.parse(configStr);
+
+		Object.setPrototypeOf(config, ServerConfiguration.prototype);
+
+		console.log(config);
+    }
+
+    private async getStatForUser(earliest: string, userName: string): Promise<{eventCount: number, attackCount: number, responseCount: number}> {
+        const eventCount = await this.wsClient.countEventsByUser(earliest, userName);
+        const attackCount = await this.wsClient.countAttacksByUser(earliest, userName);
+        const responseCount = await this.wsClient.countResponsesByUser(earliest, userName);
+        console.log(`Stats for user: ${userName} since: ${earliest}`);
+        console.log(`Event count: ${eventCount}`);
+        console.log(`Attack count: ${attackCount}`);
+        console.log(`Response count: ${responseCount}`);
+
+		return {eventCount: eventCount, attackCount: attackCount, responseCount: responseCount};
+    }
+}
+
+class AppSensorReportingWebsocketClientExt extends AppSensorReportingWebSocketClient {
+
+	constructor() {
+		super();
+	}
+
+	onAdd(event: AppSensorEvent | Attack | Response): Promise<void> {
+		console.log(event);
+
+		return Promise.resolve();
+	}
+}
+
 
 class AppSensorReportingWebsocketTests {
 
@@ -19,11 +101,10 @@ class AppSensorReportingWebsocketTests {
     private geoLocator = new FastGeoIPLocator();
 
     private wsServer: AppSensorReportingWebSocketServer;
-    private wsClient: AppSensorReportingWebSocketClient;
 
     private earliest: string;
 
-    constructor() {
+    constructor(earliest: string) {
         this.appSensorLocal = new AppSensorLocal('', 
                                                  new MySQLAttackStore(),
                                                  new MySQLEventStore(),
@@ -34,9 +115,7 @@ class AppSensorReportingWebsocketTests {
 
         this.wsServer = new AppSensorReportingWebSocketServer(this.appSensorServer);
 
-        this.wsClient = new AppSensorReportingWebSocketClient();
-
-        this.earliest = new Date().toISOString();
+        this.earliest = earliest;
     }
 
     public async populateData() {
@@ -65,118 +144,69 @@ class AppSensorReportingWebsocketTests {
 		
 		this.appSensorServer.getConfiguration()!.setDetectionPoints(this.loadMockedDetectionPoints());
 		
-		await this.sleep();
+		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
                     .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
 
-		await this.sleep();
+		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
                     .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
 
-		await this.sleep();
+		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
                     .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
 
-		await this.sleep();
+		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
                     .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
 
-		await this.sleep();
+		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
                     .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
 
-		await this.sleep();
+		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
                     .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
 
-		await this.sleep();
+		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
                     .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
 
-		await this.sleep();
+		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
                     .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
 
-		await this.sleep();
+		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
                     .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
 
-		await this.sleep();
+		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
                     .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
 
-		await this.sleep();
+		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
                     .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
 
-		await this.sleep();
+		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
                     .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
 
-		await this.sleep();
+		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
                     .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
 
-		await this.sleep();
+		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
                     .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
 
-		await this.sleep();
-
-
+		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 	}
-
-    public async test() {
-        const events = await this.wsClient.findEvents(this.earliest);
-
-        assert.equal(events.length, 14);
-
-        await this.getStatForUser(this.earliest, "user1");
-        await this.getStatForUser(this.earliest, "user2");
-        await this.getStatForUser(this.earliest, "user3");
-        await this.getStatForUser(this.earliest, "user4");
-
-		const eventCountByCategoryLabel = await this.wsClient.countEventsByCategoryLabel(this.earliest, Category.INPUT_VALIDATION, "IE1");
-		assert.equal(eventCountByCategoryLabel, 14);
-
-		const attackCountByCategoryLabel = await this.wsClient.countAttacksByCategoryLabel(this.earliest, Category.INPUT_VALIDATION, "IE1");
-		assert.equal(attackCountByCategoryLabel, 2);
-
-		const responseCountByCategoryLabel = await this.wsClient.countResponsesByCategoryLabel(this.earliest, Category.INPUT_VALIDATION, "IE1");
-		assert.equal(responseCountByCategoryLabel, 2);
-
-		const configStr = await this.wsClient.getServerConfigurationAsJson();
-
-		const config = JSON.parse(configStr);
-
-		Object.setPrototypeOf(config, ServerConfiguration.prototype);
-
-		console.log(config);
-    }
-
-    private async getStatForUser(earliest: string, userName: string) {
-        const eventCount = await this.wsClient.countEventsByUser(earliest, userName);
-        const attackCount = await this.wsClient.countAttacksByUser(earliest, userName);
-        const responseCount = await this.wsClient.countResponsesByUser(earliest, userName);
-        console.log(`Stats for user: ${userName} since: ${earliest}`);
-        console.log(`Event count: ${eventCount}`);
-        console.log(`Attack count: ${attackCount}`);
-        console.log(`Response count: ${responseCount}`);
-    }
     
     private getRandomInt(max: number) {
         return Math.floor(Math.random() * max);
       }
 	
-	private sleep(): Promise<null> {
-		return new Promise((resolve, reject) => {
-            const delay = Math.floor(Math.random() * 2000)  + 500;
-			setTimeout(() => {
-				resolve(null);
-			}, delay);
-		});
-
-	}
 
 	private loadMockedDetectionPoints(): DetectionPoint[] {
 		const configuredDetectionPoints: DetectionPoint[] = [];
@@ -313,56 +343,79 @@ class AppSensorReportingWebsocketTests {
 
 	protected async clearMySQLStorageTables() {
 		let sql = 'delete from attack';
-		await Utils.executeSQLOnDB(sql, (results: any) =>{});
+		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
 
 		sql = 'delete from response';
-		await Utils.executeSQLOnDB(sql, (results: any) =>{});
+		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
 
 		sql = 'delete from appsensorevent';
-		await Utils.executeSQLOnDB(sql, (results: any) =>{});
+		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
 
 		sql = 'delete from rule';
-		await Utils.executeSQLOnDB(sql, (results: any) =>{});
+		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
 
 		sql = 'delete from detection_point';
-		await Utils.executeSQLOnDB(sql, (results: any) =>{});
+		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
 
 		sql = 'delete from detection_system';
-		await Utils.executeSQLOnDB(sql, (results: any) =>{});
+		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
 
 		sql = 'delete from `resource`';
-		await Utils.executeSQLOnDB(sql, (results: any) =>{});
+		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
 
 		sql = 'delete from threshold';
-		await Utils.executeSQLOnDB(sql, (results: any) =>{});
+		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
 
 		sql = 'delete from `interval`';
-		await Utils.executeSQLOnDB(sql, (results: any) =>{});
+		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
 
 		sql = 'delete from `user`';
-		await Utils.executeSQLOnDB(sql, (results: any) =>{});
+		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
 
 		sql = 'delete from metadata';
-		await Utils.executeSQLOnDB(sql, (results: any) =>{});
+		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
 
 		sql = 'delete from key_value_pair';
-		await Utils.executeSQLOnDB(sql, (results: any) =>{});
+		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
 
 		sql = 'delete from ipaddress';
-		await Utils.executeSQLOnDB(sql, (results: any) =>{});
+		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
 
 		sql = 'delete from geo_location';
-		await Utils.executeSQLOnDB(sql, (results: any) =>{});
+		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
+	}
+
+	public justSomeMethod() {
+		console.log('--> justSomeMethod');
 	}
 
 }
 
 async function runTests() {
     console.log('----- Run AppSensorReportingWebsocketTests -----');
-    const inst = new AppSensorReportingWebsocketTests();
+	const earliest = new Date().toISOString();
+    const inst = new AppSensorReportingWebsocketTests(earliest);
     await inst.initializeMySQLStorage();
     await inst.populateData();
-    await inst.test();
+	const client = new AppSensorReportingWebsocketClientTest(earliest);
+    await client.test();
+
+	inst.justSomeMethod();
 }
 
-runTests();
+async function runServerSeparately() {
+	const earliest = new Date().toISOString();
+    const inst = new AppSensorReportingWebsocketTests(earliest);
+    await inst.initializeMySQLStorage();
+    await inst.populateData();
+}
+
+async function runClientSeparately() {
+	await new AppSensorReportingWebsocketClientTest('1970-01-01T00:00:00.000Z').test();
+}
+
+async function runClientSeparatelyReportEvents() {
+	new AppSensorReportingWebsocketClientExt();
+}
+
+export {runTests, runServerSeparately, runClientSeparately, runClientSeparatelyReportEvents};

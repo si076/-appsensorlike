@@ -6,7 +6,7 @@ import { ClientRequestArgs } from "http";
 import { EventEmitter } from "events";
 import WebSocket from "ws";
 import { v4 as uuidv4 } from 'uuid';
-import { JSONConfigReadValidate } from "../../../utils/Utils.js";
+import { JSONConfigReadValidate, Utils } from "../../../utils/Utils.js";
 
 interface IReportingWebSocketClientConfig {
     address: string | URL;
@@ -69,15 +69,24 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
 
         this.socket = new WebSocket(_address, _options);
 
+        this.socket.on('open', function () {
+            // console.log('WebSocket: ->open<- event!');
+        });
+        this.socket.on('error', console.error);
+
         const onServerResponseThunk = this.onServerResponse(this);
 
         this.socket.on('message', onServerResponseThunk);
+
+        this.socket.on('close', function close() {
+            // console.log('WebSocket: ->close<- event!');
+        });
     }
 
     onServerResponse(me: AppSensorReportingWebSocketClient) {
 
         return function onServerResponse(data: WebSocket.RawData, isBinary: boolean) {
-            // console.log('received:');
+            // console.log('WebSocket: ->message<- event!');
 
             const response: ReportingMethodResponse = JSON.parse(data.toString());
             Object.setPrototypeOf(response, ReportingMethodResponse.prototype);
@@ -115,6 +124,36 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
         return new ReportingMethodRequest(uuid, methodName, parameters);
     }
 
+    private async sendRequest(request: ReportingMethodRequest, parentRejectFunc: (reason?: any) => void) {
+        let waited = 0;
+        const timeout = 500;
+        while (this.socket.readyState === WebSocket.CONNECTING && waited < 5000) {
+            await Utils.sleep(timeout);
+            waited += timeout;
+        }
+
+        if (this.socket.readyState === WebSocket.CONNECTING) {
+            parentRejectFunc(new Error('WebSocket in CONNECTING state for too long!'));
+
+            return;
+
+        } else if (this.socket.readyState === WebSocket.CLOSING) {
+            parentRejectFunc(new Error('WebSocket in CLOSING state!'));
+
+            return;
+            
+        } else if (this.socket.readyState === WebSocket.CLOSED) {
+            parentRejectFunc(new Error('WebSocket has already been closed!'));
+
+            return;
+            
+        } else if (this.socket.readyState === WebSocket.OPEN) {
+
+            this.socket.send(JSON.stringify(request));
+
+        }
+    }
+
     findEvents(earliest: string): Promise<AppSensorEvent[]> {
         return new Promise((resolve, reject) => {
 
@@ -137,7 +176,8 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.socket.send(JSON.stringify(request));
+
+            this.sendRequest(request, reject);
         });
     }
 
@@ -163,7 +203,7 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.socket.send(JSON.stringify(request));
+            this.sendRequest(request, reject);
         });
     }
 
@@ -189,7 +229,7 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.socket.send(JSON.stringify(request));
+            this.sendRequest(request, reject);
         });
     }
 
@@ -209,7 +249,7 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.socket.send(JSON.stringify(request));
+            this.sendRequest(request, reject);
         });
     }
 
@@ -229,7 +269,7 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.socket.send(JSON.stringify(request));
+            this.sendRequest(request, reject);
         });
     }
 
@@ -249,7 +289,7 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.socket.send(JSON.stringify(request));
+            this.sendRequest(request, reject);
         });
     }
 
@@ -284,7 +324,7 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.socket.send(JSON.stringify(request));
+            this.sendRequest(request, reject);
         });
     }
 
@@ -307,7 +347,7 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.socket.send(JSON.stringify(request));
+            this.sendRequest(request, reject);
         });
     }
 
@@ -330,7 +370,7 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.socket.send(JSON.stringify(request));
+            this.sendRequest(request, reject);
         });
     }
 
@@ -350,7 +390,7 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.socket.send(JSON.stringify(request));
+            this.sendRequest(request, reject);
         });
     }
 
@@ -370,7 +410,7 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.socket.send(JSON.stringify(request));
+            this.sendRequest(request, reject);
         });
     }
 
@@ -390,7 +430,7 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.socket.send(JSON.stringify(request));
+            this.sendRequest(request, reject);
         });
     }
 
@@ -410,7 +450,7 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.socket.send(JSON.stringify(request));
+            this.sendRequest(request, reject);
         });
     }
 

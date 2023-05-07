@@ -103,17 +103,23 @@ class AppSensorReportingWebSocketServer implements ReportingEngineExt {
         const onClientRequestThunk = this.onClientRequest(this);
 
         this.server.on('connection', function(ws: typeof WebSockedExt) {
+            // console.log('WebSocketServer: ->connection<- event!');
+
             ws.isAlive = true;
             ws.on('error', console.error);
 
             ws.on('message', onClientRequestThunk);
             
             ws.on('pong', function(this: typeof WebSockedExt) {
+                // console.log('WebSocketServer: ->pong<- event!');
+
                 this.isAlive = true;
             });
         });
 
         this.server.on('close', function close() {
+            // console.log('WebSocketServer: ->close<- event!');
+
             clearInterval(interval);
         });
     }
@@ -133,6 +139,7 @@ class AppSensorReportingWebSocketServer implements ReportingEngineExt {
     onClientRequest(me: AppSensorReportingWebSocketServer) {
 
         return function onClientRequest(this: typeof WebSockedExt, data: WebSocket.RawData, isBinary: boolean) {
+            // console.log('WebSocketServer: ->message<- event!');
             // console.log('received:');
             // console.log(data);
 

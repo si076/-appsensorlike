@@ -141,4 +141,17 @@ class JSONConfigReadValidate {
 
 }
 
-export {JSONConfigReadValidate};
+class Utils {
+    
+	public static sleep(timeOutInMilis: number): Promise<null> {
+		return new Promise((resolve, reject) => {
+			setTimeout(() => {
+				resolve(null);
+			}, timeOutInMilis);
+		});
+
+	}
+
+}
+
+export {JSONConfigReadValidate, Utils};

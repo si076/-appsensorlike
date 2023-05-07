@@ -6,7 +6,6 @@ class LocalRequestHandler implements RequestHandler {
 	// @SuppressWarnings("unused")
 	// private Logger logger;
 	
-	// @Inject
 	private appSensorServer: AppSensorServer;
 	
 	private static detectionSystemId: string | null = null;	//start with blank
@@ -14,10 +13,10 @@ class LocalRequestHandler implements RequestHandler {
     constructor(appSensorServer: AppSensorServer) {
         this.appSensorServer = appSensorServer;
     }
+
 	/**
 	 * {@inheritDoc}
 	 */
-	// @Override
 	public async addEvent(event: AppSensorEvent) {
         const detSystem = event.getDetectionSystem();
 		if (LocalRequestHandler.detectionSystemId === null && detSystem !== null) {
@@ -34,7 +33,6 @@ class LocalRequestHandler implements RequestHandler {
 	/**
 	 * {@inheritDoc}
 	 */
-	// @Override
 	public async addAttack(attack: Attack) {
         const detSystem = attack.getDetectionSystem();
 		if (LocalRequestHandler.detectionSystemId == null && detSystem !== null) {
@@ -51,7 +49,6 @@ class LocalRequestHandler implements RequestHandler {
 	/**
 	 * {@inheritDoc}
 	 */
-	// @Override
 	public async getResponses(earliest: Date): Promise<Response[]> {
         const detSystem = LocalRequestHandler.detectionSystemId !== null ? LocalRequestHandler.detectionSystemId : "";
 		const criteria: SearchCriteria = new SearchCriteria().
