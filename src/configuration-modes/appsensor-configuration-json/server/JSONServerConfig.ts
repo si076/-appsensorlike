@@ -13,9 +13,6 @@ class JSONServerConfiguration extends ServerConfiguration {
 
 class JSONServerConfigurationReader extends JSONConfigReadValidate implements ServerConfigurationReader {
 
-    private configFile: string = 'appsensor-server-config.json';
-    private configSchemaFile: string = 'appsensor-server-config_schema.json'; 
-
     private static configPrototypesSample: JSONServerConfiguration;
 
     static {
@@ -73,17 +70,12 @@ class JSONServerConfigurationReader extends JSONConfigReadValidate implements Se
         JSONServerConfigurationReader.configPrototypesSample.clientApplications = [clientAppl];
     }
 
+    constructor() {
+        super('appsensor-server-config.json', 'appsensor-server-config_schema.json');
+    }
+
     public override read(configurationLocation: string = '', validatorLocation: string | null = '', reload: boolean = false): ServerConfiguration | null {
         let config: ServerConfiguration | null = null;
-
-
-        if (configurationLocation === '') {
-            configurationLocation = this.configFile;
-        };
-
-        if (validatorLocation === '') {
-            validatorLocation = this.configSchemaFile;
-        };
 
         config = super.read(configurationLocation, validatorLocation, reload);
 

@@ -15,45 +15,41 @@ class AppSensorReportingWebsocketClientTest {
 
     private wsClient: AppSensorReportingWebSocketClient;
 
-	private earliest: string;
-
-	constructor(earliest: string) {
+	constructor() {
         this.wsClient = new AppSensorReportingWebSocketClient();
-
-		this.earliest = earliest;
 	}
 
-    public async test() {
-        const events = await this.wsClient.findEvents(this.earliest);
+    public async test(earliest: string) {
+        const events = await this.wsClient.findEvents(earliest);
 
         assert.equal(events.length, 14);
 
 		let attackCount = 0;
 		let responseCount = 0;
 
-        let res = await this.getStatForUser(this.earliest, "user1");
+        let res = await this.getStatForUser(earliest, "user1");
 		attackCount += res.attackCount;
 		responseCount += res.responseCount;
 
-        res = await this.getStatForUser(this.earliest, "user2");
+        res = await this.getStatForUser(earliest, "user2");
 		attackCount += res.attackCount;
 		responseCount += res.responseCount;
 
-        res = await this.getStatForUser(this.earliest, "user3");
+        res = await this.getStatForUser(earliest, "user3");
 		attackCount += res.attackCount;
 		responseCount += res.responseCount;
 
-        res = await this.getStatForUser(this.earliest, "user4");
+        res = await this.getStatForUser(earliest, "user4");
 		attackCount += res.attackCount;
 		responseCount += res.responseCount;
 
-		const eventCountByCategoryLabel = await this.wsClient.countEventsByCategoryLabel(this.earliest, Category.INPUT_VALIDATION, "IE1");
+		const eventCountByCategoryLabel = await this.wsClient.countEventsByCategoryLabel(earliest, Category.INPUT_VALIDATION, "IE1");
 		assert.equal(eventCountByCategoryLabel, 14);
 
-		const attackCountByCategoryLabel = await this.wsClient.countAttacksByCategoryLabel(this.earliest, Category.INPUT_VALIDATION, "IE1");
+		const attackCountByCategoryLabel = await this.wsClient.countAttacksByCategoryLabel(earliest, Category.INPUT_VALIDATION, "IE1");
 		assert.equal(attackCountByCategoryLabel, attackCount);
 
-		const responseCountByCategoryLabel = await this.wsClient.countResponsesByCategoryLabel(this.earliest, Category.INPUT_VALIDATION, "IE1");
+		const responseCountByCategoryLabel = await this.wsClient.countResponsesByCategoryLabel(earliest, Category.INPUT_VALIDATION, "IE1");
 		assert.equal(responseCountByCategoryLabel, responseCount);
 
 		const configStr = await this.wsClient.getServerConfigurationAsJson();
@@ -102,9 +98,7 @@ class AppSensorReportingWebsocketTests {
 
     private wsServer: AppSensorReportingWebSocketServer;
 
-    private earliest: string;
-
-    constructor(earliest: string) {
+    constructor() {
         this.appSensorLocal = new AppSensorLocal('', 
                                                  new MySQLAttackStore(),
                                                  new MySQLEventStore(),
@@ -114,8 +108,6 @@ class AppSensorReportingWebsocketTests {
         this.appSensorServer = this.appSensorLocal.getAppSensorServer();
 
         this.wsServer = new AppSensorReportingWebSocketServer(this.appSensorServer);
-
-        this.earliest = earliest;
     }
 
     public async populateData() {
@@ -394,24 +386,23 @@ class AppSensorReportingWebsocketTests {
 async function runTests() {
     console.log('----- Run AppSensorReportingWebsocketTests -----');
 	const earliest = new Date().toISOString();
-    const inst = new AppSensorReportingWebsocketTests(earliest);
+    const inst = new AppSensorReportingWebsocketTests();
     await inst.initializeMySQLStorage();
     await inst.populateData();
-	const client = new AppSensorReportingWebsocketClientTest(earliest);
-    await client.test();
+	const client = new AppSensorReportingWebsocketClientTest();
+    await client.test(earliest);
 
 	inst.justSomeMethod();
 }
 
 async function runServerSeparately() {
-	const earliest = new Date().toISOString();
-    const inst = new AppSensorReportingWebsocketTests(earliest);
+    const inst = new AppSensorReportingWebsocketTests();
     await inst.initializeMySQLStorage();
     await inst.populateData();
 }
 
 async function runClientSeparately() {
-	await new AppSensorReportingWebsocketClientTest('1970-01-01T00:00:00.000Z').test();
+	await new AppSensorReportingWebsocketClientTest().test('1970-01-01T00:00:00.000Z');
 }
 
 async function runClientSeparatelyReportEvents() {

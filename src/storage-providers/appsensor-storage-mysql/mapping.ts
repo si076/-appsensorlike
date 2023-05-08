@@ -190,26 +190,10 @@ class Mapping implements IMapping {
 
 class MappingReader extends JSONConfigReadValidate {
 
-    private mappingFile = "./storage-providers/appsensor-storage-mysql/mapping.json";
-    private mappingSchemaFile = "./storage-providers/appsensor-storage-mysql/mapping_schema.json";
-
-    public override read(mappingLocation: string = '', validatorLocation: string | null = '', reload: boolean = false): Mapping | null {
-        // console.log("Working directory:" + process.cwd());
-        let mapping : Mapping | null = null;
-
-        if (mappingLocation === '') {
-            mappingLocation = this.mappingFile;
-        };
-
-        if (validatorLocation === '') {
-            validatorLocation = this.mappingSchemaFile;
-        };
-
-        mapping = super.read(mappingLocation, validatorLocation, reload);
-
-        Object.setPrototypeOf(mapping, Mapping.prototype);
-
-        return mapping;
+    constructor() {
+        super("./storage-providers/appsensor-storage-mysql/mapping.json",
+              "./storage-providers/appsensor-storage-mysql/mapping_schema.json",
+              Mapping.prototype);
     }
 }
 

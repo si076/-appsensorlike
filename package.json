@@ -9,8 +9,8 @@
     "gen_server_config_schema": "\"C:/Program Files/nodejs_12/npx\" typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-server-config_schema.json IServerConfiguration",
     "gen_client_config_schema": "\"C:/Program Files/nodejs_12/npx\" typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-client-config_schema.json ClientConfiguration",
     "gen_mysql_mapping_schema": "\"C:/Program Files/nodejs_12/npx\" typescript-json-schema tsconfig.json --noExtraProps true --required true -o mapping_schema.json IMapping",
-    "gen_reporting_websocket_server_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-reporting-websocket-server-config_schema.json IReportingWebSocketServerConfig",
-    "gen_reporting_websocket_client_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-reporting-websocket-client-config_schema.json IReportingWebSocketClientConfig"
+    "gen_reporting_websocket_server_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-websocket-server-config_schema.json IWebSocketServerConfig",
+    "gen_reporting_websocket_client_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-websocket-client-config_schema.json IWebSocketClientConfig"
   },
   "repository": {
     "type": "git",

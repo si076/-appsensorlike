@@ -1,155 +1,58 @@
 import { AppSensorEvent, Attack, Response, KeyValuePair } from "../../../core/core.js";
-import { ReportingEngine } from "../../../core/reporting/reporting.js";
-import { ReportingEngineExt, ReportingMethodRequest, ReportingMethodResponse } from "../appsensor-reporting-websocket.js";
+import { JSONConfigReadValidate } from "../../../utils/Utils.js";
+import { MethodResponse } from "../../../websocket/appsensor-websocket.js";
+import { ReportingEngineExt } from "../appsensor-reporting-websocket.js";
+import { AppSensorWebSocketClient, WebSocketClientConfig } from "../../../websocket/client/appsensor-websocket-client.js";
 
 import { ClientRequestArgs } from "http";
 import { EventEmitter } from "events";
 import WebSocket from "ws";
-import { v4 as uuidv4 } from 'uuid';
-import { JSONConfigReadValidate, Utils } from "../../../utils/Utils.js";
-
-interface IReportingWebSocketClientConfig {
-    address: string | URL;
-    options?: WebSocket.ClientOptions | ClientRequestArgs;
-}
-
-class ReportingWebSocketClientConfig implements IReportingWebSocketClientConfig {
-    address: string | URL = '';
-    options?: WebSocket.ClientOptions | ClientRequestArgs | undefined;
-
-}
 
 class ReportingWebSocketClientConfigReader  extends JSONConfigReadValidate {
 
-    private configFile = './reporting-engines/appsensor-reporting-websocket/client/appsensor-reporting-websocket-client-config.json';
-    private configSchemaFile = './reporting-engines/appsensor-reporting-websocket/client/appsensor-reporting-websocket-client-config_schema.json';
-
-    public override read(configLocation: string = '', validatorLocation: string | null = '', reload: boolean = false): ReportingWebSocketClientConfig | null {
-        let config : ReportingWebSocketClientConfig | null = null;
-
-        if (configLocation === '') {
-            configLocation = this.configFile;
-        };
-
-        if (validatorLocation === '') {
-            validatorLocation = this.configSchemaFile;
-        };
-
-        config = super.read(configLocation, validatorLocation, reload);
-
-        Object.setPrototypeOf(config, ReportingWebSocketClientConfig.prototype);
-
-        return config;
-
+    constructor() {
+        super('./reporting-engines/appsensor-reporting-websocket/client/appsensor-reporting-websocket-client-config.json',
+              './websocket/client/appsensor-websocket-client-config_schema.json',
+              WebSocketClientConfig.prototype);
     }
 }
 
-
-class AppSensorReportingWebSocketClient implements ReportingEngineExt {
+class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient implements ReportingEngineExt {
 
     private static eventEmmiter: EventEmitter = new EventEmitter();
 
-    private socket;
-
     constructor(address: string | URL = '', 
-                options?: WebSocket.ClientOptions | ClientRequestArgs,
-                configLocation: string = '') {
-        
-        const config = new ReportingWebSocketClientConfigReader().read(configLocation);
-
-        let _address = address;
-        if (!_address && config) {
-            _address = config.address;
-        }
-
-        let _options = options;
-        if (!_options && config) {
-            _options = config.options;
-        }
-
-        this.socket = new WebSocket(_address, _options);
-
-        this.socket.on('open', function () {
-            // console.log('WebSocket: ->open<- event!');
-        });
-        this.socket.on('error', console.error);
-
-        const onServerResponseThunk = this.onServerResponse(this);
-
-        this.socket.on('message', onServerResponseThunk);
-
-        this.socket.on('close', function close() {
-            // console.log('WebSocket: ->close<- event!');
-        });
+                configLocation: string = '',
+                options?: WebSocket.ClientOptions | ClientRequestArgs) {
+        super(address, new ReportingWebSocketClientConfigReader().read(configLocation), options);
     }
 
-    onServerResponse(me: AppSensorReportingWebSocketClient) {
+    protected override onServerResponse(data: WebSocket.RawData, isBinary: boolean) {
+        const response: MethodResponse = JSON.parse(data.toString());
+        Object.setPrototypeOf(response, MethodResponse.prototype);
 
-        return function onServerResponse(data: WebSocket.RawData, isBinary: boolean) {
-            // console.log('WebSocket: ->message<- event!');
+        if (response.methodName === 'onAdd') {
 
-            const response: ReportingMethodResponse = JSON.parse(data.toString());
-            Object.setPrototypeOf(response, ReportingMethodResponse.prototype);
-
-            if (response.reportingMethodName === 'onAdd') {
-
-                switch (response.resultElementClass) {
-                    case 'AppSensorEvent': {
-                        Object.setPrototypeOf(response.result, AppSensorEvent.prototype);
-                        break;
-                    }
-                    case 'Attack': {
-                        Object.setPrototypeOf(response.result, Attack.prototype);
-                        break;
-                    }
-                    case 'Response': {
-                        Object.setPrototypeOf(response.result, Response.prototype);
-                        break;
-                    }
+            switch (response.resultElementClass) {
+                case 'AppSensorEvent': {
+                    Object.setPrototypeOf(response.result, AppSensorEvent.prototype);
+                    break;
                 }
-
-                me.onAdd(response.result as (AppSensorEvent | Attack | Response));
-
-            } else {
-
-                AppSensorReportingWebSocketClient.eventEmmiter.emit(response.id, response);
-
+                case 'Attack': {
+                    Object.setPrototypeOf(response.result, Attack.prototype);
+                    break;
+                }
+                case 'Response': {
+                    Object.setPrototypeOf(response.result, Response.prototype);
+                    break;
+                }
             }
-        }
-    }
 
-    private static createRequest(methodName: string, parameters?: { [propertyName: string]: string; }): ReportingMethodRequest {
-        const uuid = uuidv4();
+            this.onAdd(response.result as (AppSensorEvent | Attack | Response));
 
-        return new ReportingMethodRequest(uuid, methodName, parameters);
-    }
+        } else {
 
-    private async sendRequest(request: ReportingMethodRequest, parentRejectFunc: (reason?: any) => void) {
-        let waited = 0;
-        const timeout = 500;
-        while (this.socket.readyState === WebSocket.CONNECTING && waited < 5000) {
-            await Utils.sleep(timeout);
-            waited += timeout;
-        }
-
-        if (this.socket.readyState === WebSocket.CONNECTING) {
-            parentRejectFunc(new Error('WebSocket in CONNECTING state for too long!'));
-
-            return;
-
-        } else if (this.socket.readyState === WebSocket.CLOSING) {
-            parentRejectFunc(new Error('WebSocket in CLOSING state!'));
-
-            return;
-            
-        } else if (this.socket.readyState === WebSocket.CLOSED) {
-            parentRejectFunc(new Error('WebSocket has already been closed!'));
-
-            return;
-            
-        } else if (this.socket.readyState === WebSocket.OPEN) {
-
-            this.socket.send(JSON.stringify(request));
+            AppSensorReportingWebSocketClient.eventEmmiter.emit(response.id, response);
 
         }
     }
@@ -157,9 +60,9 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
     findEvents(earliest: string): Promise<AppSensorEvent[]> {
         return new Promise((resolve, reject) => {
 
-            const request = AppSensorReportingWebSocketClient.createRequest("findEvents", {earliest: earliest});
+            const request = AppSensorWebSocketClient.createRequest("findEvents", {earliest: earliest});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ReportingMethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -176,17 +79,20 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-
-            this.sendRequest(request, reject);
+            try {
+                this.sendRequest(request);
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 
     findAttacks(earliest: string): Promise<Attack[]> {
         return new Promise((resolve, reject) => {
 
-            const request = AppSensorReportingWebSocketClient.createRequest("findAttacks", {earliest: earliest});
+            const request = AppSensorWebSocketClient.createRequest("findAttacks", {earliest: earliest});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ReportingMethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -203,16 +109,20 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.sendRequest(request, reject);
+            try {
+                this.sendRequest(request);
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 
     findResponses(earliest: string): Promise<Response[]> {
         return new Promise((resolve, reject) => {
 
-            const request = AppSensorReportingWebSocketClient.createRequest("findResponses", {earliest: earliest});
+            const request = AppSensorWebSocketClient.createRequest("findResponses", {earliest: earliest});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ReportingMethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -229,16 +139,20 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.sendRequest(request, reject);
+            try {
+                this.sendRequest(request);
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 
     countEvents(earliest: string): Promise<number> {
         return new Promise((resolve, reject) => {
 
-            const request = AppSensorReportingWebSocketClient.createRequest("countEvents", {earliest: earliest});
+            const request = AppSensorWebSocketClient.createRequest("countEvents", {earliest: earliest});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ReportingMethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -249,16 +163,20 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.sendRequest(request, reject);
+            try {
+                this.sendRequest(request);
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 
     countAttacks(earliest: string): Promise<number> {
         return new Promise((resolve, reject) => {
 
-            const request = AppSensorReportingWebSocketClient.createRequest("countAttacks", {earliest: earliest});
+            const request = AppSensorWebSocketClient.createRequest("countAttacks", {earliest: earliest});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ReportingMethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -269,16 +187,20 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.sendRequest(request, reject);
+            try {
+                this.sendRequest(request);
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 
     countResponses(earliest: string): Promise<number> {
         return new Promise((resolve, reject) => {
 
-            const request = AppSensorReportingWebSocketClient.createRequest("countResponses", {earliest: earliest});
+            const request = AppSensorWebSocketClient.createRequest("countResponses", {earliest: earliest});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ReportingMethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -289,7 +211,11 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.sendRequest(request, reject);
+            try {
+                this.sendRequest(request);
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 
@@ -308,12 +234,12 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
     countEventsByCategoryLabel(earliest: string, category: string, label: string): Promise<number> {
         return new Promise((resolve, reject) => {
 
-            const request = AppSensorReportingWebSocketClient.createRequest("countEventsByCategoryLabel", 
+            const request = AppSensorWebSocketClient.createRequest("countEventsByCategoryLabel", 
                                                                             {earliest: earliest,
                                                                              category: category,
                                                                              label: label});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ReportingMethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -324,19 +250,23 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.sendRequest(request, reject);
+            try {
+                this.sendRequest(request);
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 
     countAttacksByCategoryLabel(earliest: string, category: string, label: string): Promise<number> {
         return new Promise((resolve, reject) => {
 
-            const request = AppSensorReportingWebSocketClient.createRequest("countAttacksByCategoryLabel", 
+            const request = AppSensorWebSocketClient.createRequest("countAttacksByCategoryLabel", 
                                                                             {earliest: earliest,
                                                                              category: category,
                                                                              label: label});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ReportingMethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -347,19 +277,23 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.sendRequest(request, reject);
+            try {
+                this.sendRequest(request);
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 
     countResponsesByCategoryLabel(earliest: string, category: string, label: string): Promise<number> {
         return new Promise((resolve, reject) => {
 
-            const request = AppSensorReportingWebSocketClient.createRequest("countResponsesByCategoryLabel", 
+            const request = AppSensorWebSocketClient.createRequest("countResponsesByCategoryLabel", 
                                                                             {earliest: earliest,
                                                                              category: category,
                                                                              label: label});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ReportingMethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -370,16 +304,20 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.sendRequest(request, reject);
+            try {
+                this.sendRequest(request);
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 
     countEventsByUser(earliest: string, user: string): Promise<number> {
         return new Promise((resolve, reject) => {
 
-            const request = AppSensorReportingWebSocketClient.createRequest("countEventsByUser", {earliest: earliest, user: user});
+            const request = AppSensorWebSocketClient.createRequest("countEventsByUser", {earliest: earliest, user: user});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ReportingMethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -390,16 +328,20 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.sendRequest(request, reject);
+            try {
+                this.sendRequest(request);
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 
     countAttacksByUser(earliest: string, user: string): Promise<number> {
         return new Promise((resolve, reject) => {
 
-            const request = AppSensorReportingWebSocketClient.createRequest("countAttacksByUser", {earliest: earliest, user: user});
+            const request = AppSensorWebSocketClient.createRequest("countAttacksByUser", {earliest: earliest, user: user});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ReportingMethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -410,16 +352,20 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.sendRequest(request, reject);
+            try {
+                this.sendRequest(request);
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 
     countResponsesByUser(earliest: string, user: string): Promise<number> {
         return new Promise((resolve, reject) => {
 
-            const request = AppSensorReportingWebSocketClient.createRequest("countResponsesByUser", {earliest: earliest, user: user});
+            const request = AppSensorWebSocketClient.createRequest("countResponsesByUser", {earliest: earliest, user: user});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ReportingMethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -430,16 +376,20 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.sendRequest(request, reject);
+            try {
+                this.sendRequest(request);
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 
     getServerConfigurationAsJson(): Promise<string> {
         return new Promise((resolve, reject) => {
 
-            const request = AppSensorReportingWebSocketClient.createRequest("getServerConfigurationAsJson");
+            const request = AppSensorWebSocketClient.createRequest("getServerConfigurationAsJson");
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ReportingMethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -450,7 +400,11 @@ class AppSensorReportingWebSocketClient implements ReportingEngineExt {
                 }
             });
 
-            this.sendRequest(request, reject);
+            try {
+                this.sendRequest(request);
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 

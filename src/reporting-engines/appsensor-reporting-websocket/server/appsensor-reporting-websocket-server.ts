@@ -1,65 +1,24 @@
 import { AppSensorEvent, Attack, Response, KeyValuePair, AppSensorServer, User, DetectionPoint } from "../../../core/core.js";
 import { SearchCriteria } from "../../../core/criteria/criteria.js";
-import { ReportingEngine } from "../../../core/reporting/reporting.js";
 import { AttackStore, EventStore, ResponseStore } from "../../../core/storage/storage.js";
-import { ReportingEngineExt, ReportingMethodRequest, ReportingMethodResponse } from "../appsensor-reporting-websocket.js";
+import { ReportingEngineExt } from "../appsensor-reporting-websocket.js";
 import { JSONServerConfigurationReader } from "../../../configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
 
-import WebSocket, { PerMessageDeflateOptions, WebSocketServer } from "ws";
+import WebSocket, {  } from "ws";
 import { JSONConfigReadValidate } from "../../../utils/Utils.js";
-
-interface IReportingWebSocketServerConfig {
-    options: {
-        host?: string | undefined;
-        port?: number | undefined;
-        backlog?: number | undefined;
-        path?: string | undefined;
-        noServer?: boolean | undefined;
-        clientTracking?: boolean | undefined;
-        perMessageDeflate?: boolean | PerMessageDeflateOptions | undefined;
-        maxPayload?: number | undefined;
-        skipUTF8Validation?: boolean | undefined;
-    }
-}
-
-class ReportingWebSocketServerConfig implements IReportingWebSocketServerConfig {
-    options = {};
-}
+import { AppSensorWebSocketServer, WebSockedExt, WebSocketServerConfig } from "../../../websocket/server/appsensor-websocket-server.js";
+import { MethodRequest } from "../../../websocket/appsensor-websocket.js";
 
 class ReportingWebSocketServerConfigReader  extends JSONConfigReadValidate {
 
-    private configFile = './reporting-engines/appsensor-reporting-websocket/server/appsensor-reporting-websocket-server-config.json';
-    private configSchemaFile = './reporting-engines/appsensor-reporting-websocket/server/appsensor-reporting-websocket-server-config_schema.json';
-
-    public override read(configLocation: string = '', validatorLocation: string | null = '', reload: boolean = false): ReportingWebSocketServerConfig | null {
-        let config : ReportingWebSocketServerConfig | null = null;
-
-        if (configLocation === '') {
-            configLocation = this.configFile;
-        };
-
-        if (validatorLocation === '') {
-            validatorLocation = this.configSchemaFile;
-        };
-
-        config = super.read(configLocation, validatorLocation, reload);
-
-        Object.setPrototypeOf(config, ReportingWebSocketServerConfig.prototype);
-
-        return config;
-
+    constructor() {
+        super('./reporting-engines/appsensor-reporting-websocket/server/appsensor-reporting-websocket-server-config.json',
+              './websocket/server/appsensor-websocket-server-config_schema.json',
+              WebSocketServerConfig.prototype);
     }
 }
 
-interface WebSocketAdditionalProperties {
-    isAlive?: boolean;
-}
-
-declare const WebSockedExt: WebSocket.WebSocket & WebSocketAdditionalProperties;
-
-class AppSensorReportingWebSocketServer implements ReportingEngineExt {
-
-    private static DEFAULT_PORT = 3000;
+class AppSensorReportingWebSocketServer extends AppSensorWebSocketServer implements ReportingEngineExt {
 
     private appSensorServer: AppSensorServer;
 
@@ -67,11 +26,11 @@ class AppSensorReportingWebSocketServer implements ReportingEngineExt {
     private eventStore: EventStore;
     private responseStore: ResponseStore;
 
-    private server: WebSocketServer;
-
     constructor(appSensorServer: AppSensorServer,
                 configLocation: string = '',
                 serverOptions? :WebSocket.ServerOptions) {
+        super(new ReportingWebSocketServerConfigReader().read(configLocation), serverOptions);
+
         this.appSensorServer = appSensorServer;
 
         this.attackStore = this.appSensorServer.getAttackStore()!;
@@ -81,407 +40,296 @@ class AppSensorReportingWebSocketServer implements ReportingEngineExt {
         this.attackStore.registerListener(this, true);
         this.eventStore.registerListener(this, true);
         this.responseStore.registerListener(this, true);
-
-
-        let servOptions = serverOptions;
-        if (!servOptions) {
-            const config = new ReportingWebSocketServerConfigReader().read(configLocation);
-
-            if (config) {
-                servOptions = config.options;
-            } else {
-                servOptions = {port: AppSensorReportingWebSocketServer.DEFAULT_PORT};
-            }
-        }
-
-        this.server = new WebSocketServer(servOptions);
-
-        const pingThunk = this.ping(this);
-
-        const interval = setInterval(pingThunk, 30000);
-
-        const onClientRequestThunk = this.onClientRequest(this);
-
-        this.server.on('connection', function(ws: typeof WebSockedExt) {
-            // console.log('WebSocketServer: ->connection<- event!');
-
-            ws.isAlive = true;
-            ws.on('error', console.error);
-
-            ws.on('message', onClientRequestThunk);
-            
-            ws.on('pong', function(this: typeof WebSockedExt) {
-                // console.log('WebSocketServer: ->pong<- event!');
-
-                this.isAlive = true;
-            });
-        });
-
-        this.server.on('close', function close() {
-            // console.log('WebSocketServer: ->close<- event!');
-
-            clearInterval(interval);
-        });
     }
 
-    ping(me: AppSensorReportingWebSocketServer) {
+    protected override onClientRequest(ws: WebSockedExt, data: WebSocket.RawData, isBinary: boolean) {
+        const request: MethodRequest = JSON.parse(data.toString());
+        Object.setPrototypeOf(request, MethodRequest.prototype);
 
-        return function ping() {
-            me.server.clients.forEach(function each(ws: typeof WebSockedExt) {
-              if (ws.isAlive === false) return ws.terminate();
-          
-              ws.isAlive = false;
-              ws.ping();
-            });
-        }
-    }
+        switch (request.methodName) {
+            case "findEvents": {
+                const earliest = AppSensorWebSocketServer.getParameter(request, "earliest");
 
-    onClientRequest(me: AppSensorReportingWebSocketServer) {
+                if (!earliest) {
 
-        return function onClientRequest(this: typeof WebSockedExt, data: WebSocket.RawData, isBinary: boolean) {
-            // console.log('WebSocketServer: ->message<- event!');
-            // console.log('received:');
-            // console.log(data);
+                    AppSensorWebSocketServer.reportMissingParameter(ws, request, "earliest");
 
-            const request: ReportingMethodRequest = JSON.parse(data.toString());
-            Object.setPrototypeOf(request, ReportingMethodRequest.prototype);
+                } else {
 
-            switch (request.reportingMethodName) {
-                case "findEvents": {
-                    const earliest: string | null = AppSensorReportingWebSocketServer.getParameter(request, "earliest");
-
-                    if (!earliest) {
-
-                        AppSensorReportingWebSocketServer.reportMissingParameter(this, request, "earliest");
-
-                    } else {
-
-                        me.findEvents(earliest)
-                        .then((result) => {
-                            AppSensorReportingWebSocketServer.sendResult(this, request, result, 'AppSensorEvent');                                            
-                        })
-                        .catch((error) => {
-                            AppSensorReportingWebSocketServer.reportError(this, request, error);                                          
-                        });
-                    }
-
-                    break;
-                }
-                case "findAttacks": {
-                    const earliest: string | null = AppSensorReportingWebSocketServer.getParameter(request, "earliest");
-
-                    if (!earliest) {
-
-                        AppSensorReportingWebSocketServer.reportMissingParameter(this, request, "earliest");
-
-                    } else {
-
-                        me.findAttacks(earliest)
-                        .then((result) => {
-                            AppSensorReportingWebSocketServer.sendResult(this, request, result, 'Attack');                                            
-                        })
-                        .catch((error) => {
-                            AppSensorReportingWebSocketServer.reportError(this, request, error);                                          
-                        });
-                    }
-
-                    break;
-                }
-                case "findResponses": {
-                    const earliest: string | null = AppSensorReportingWebSocketServer.getParameter(request, "earliest");
-
-                    if (!earliest) {
-
-                        AppSensorReportingWebSocketServer.reportMissingParameter(this, request, "earliest");
-
-                    } else {
-
-                        me.findResponses(earliest)
-                        .then((result) => {
-                            AppSensorReportingWebSocketServer.sendResult(this, request, result, 'Response');                                            
-                        })
-                        .catch((error) => {
-                            AppSensorReportingWebSocketServer.reportError(this, request, error);                                          
-                        });
-                    }
-
-                    break;
-                }
-                case "countEvents": {
-                    const earliest: string | null = AppSensorReportingWebSocketServer.getParameter(request, "earliest");
-
-                    if (!earliest) {
-
-                        AppSensorReportingWebSocketServer.reportMissingParameter(this, request, "earliest");
-
-                    } else {
-
-                        me.countEvents(earliest)
-                        .then((result) => {
-                            AppSensorReportingWebSocketServer.sendResult(this, request, result, null);                                            
-                        })
-                        .catch((error) => {
-                            AppSensorReportingWebSocketServer.reportError(this, request, error);                                          
-                        });
-                    }
-
-                    break;
-                }
-                case "countAttacks": {
-                    const earliest: string | null = AppSensorReportingWebSocketServer.getParameter(request, "earliest");
-
-                    if (!earliest) {
-
-                        AppSensorReportingWebSocketServer.reportMissingParameter(this, request, "earliest");
-
-                    } else {
-
-                        me.countAttacks(earliest)
-                        .then((result) => {
-                            AppSensorReportingWebSocketServer.sendResult(this, request, result, null);                                            
-                        })
-                        .catch((error) => {
-                            AppSensorReportingWebSocketServer.reportError(this, request, error);                                          
-                        });
-                    }
-
-                    break;
-                }
-                case "countResponses": {
-                    const earliest: string | null = AppSensorReportingWebSocketServer.getParameter(request, "earliest");
-
-                    if (!earliest) {
-
-                        AppSensorReportingWebSocketServer.reportMissingParameter(this, request, "earliest");
-
-                    } else {
-
-                        me.countResponses(earliest)
-                        .then((result) => {
-                            AppSensorReportingWebSocketServer.sendResult(this, request, result, null);                                            
-                        })
-                        .catch((error) => {
-                            AppSensorReportingWebSocketServer.reportError(this, request, error);                                          
-                        });
-                    }
-
-                    break;
-                }
-                case "countEventsByLabel": {
-                    break;
-                }
-                case "countAttacksByLabel": {
-                    break;
-                }
-                case "countResponsesByLabel": {
-                    break;
-                }
-                case "countEventsByCategoryLabel": {
-                    const earliest: string | null = AppSensorReportingWebSocketServer.getParameter(request, "earliest");
-                    const category: string | null = AppSensorReportingWebSocketServer.getParameter(request, "category");
-                    const label: string | null = AppSensorReportingWebSocketServer.getParameter(request, "label"); 
-
-                    if (!earliest) {
-                        AppSensorReportingWebSocketServer.reportMissingParameter(this, request, "earliest");
-                    } else if (!category) {
-                        AppSensorReportingWebSocketServer.reportMissingParameter(this, request, "category");
-                    } else if (!label) {
-                        AppSensorReportingWebSocketServer.reportMissingParameter(this, request, "label");
-                    } else {
-
-                        me.countEventsByCategoryLabel(earliest, category, label)
-                        .then((result) => {
-                            AppSensorReportingWebSocketServer.sendResult(this, request, result, null);                                            
-                        })
-                        .catch((error) => {
-                            AppSensorReportingWebSocketServer.reportError(this, request, error);                                          
-                        });
-                    }
-                    break;
-                }
-                case "countAttacksByCategoryLabel": {
-                    const earliest: string | null = AppSensorReportingWebSocketServer.getParameter(request, "earliest");
-                    const category: string | null = AppSensorReportingWebSocketServer.getParameter(request, "category");
-                    const label: string | null = AppSensorReportingWebSocketServer.getParameter(request, "label"); 
-
-                    if (!earliest) {
-                        AppSensorReportingWebSocketServer.reportMissingParameter(this, request, "earliest");
-                    } else if (!category) {
-                        AppSensorReportingWebSocketServer.reportMissingParameter(this, request, "category");
-                    } else if (!label) {
-                        AppSensorReportingWebSocketServer.reportMissingParameter(this, request, "label");
-                    } else {
-
-                        me.countAttacksByCategoryLabel(earliest, category, label)
-                        .then((result) => {
-                            AppSensorReportingWebSocketServer.sendResult(this, request, result, null);                                            
-                        })
-                        .catch((error) => {
-                            AppSensorReportingWebSocketServer.reportError(this, request, error);                                          
-                        });
-                    }
-                    break;
-                }
-                case "countResponsesByCategoryLabel": {
-                    const earliest: string | null = AppSensorReportingWebSocketServer.getParameter(request, "earliest");
-                    const category: string | null = AppSensorReportingWebSocketServer.getParameter(request, "category");
-                    const label: string | null = AppSensorReportingWebSocketServer.getParameter(request, "label"); 
-
-                    if (!earliest) {
-                        AppSensorReportingWebSocketServer.reportMissingParameter(this, request, "earliest");
-                    } else if (!category) {
-                        AppSensorReportingWebSocketServer.reportMissingParameter(this, request, "category");
-                    } else if (!label) {
-                        AppSensorReportingWebSocketServer.reportMissingParameter(this, request, "label");
-                    } else {
-
-                        me.countResponsesByCategoryLabel(earliest, category, label)
-                        .then((result) => {
-                            AppSensorReportingWebSocketServer.sendResult(this, request, result, null);                                            
-                        })
-                        .catch((error) => {
-                            AppSensorReportingWebSocketServer.reportError(this, request, error);                                          
-                        });
-                    }
-                    break;
-                }
-                case "countEventsByUser": {
-                    const earliest: string | null = AppSensorReportingWebSocketServer.getParameter(request, "earliest");
-                    const user: string | null = AppSensorReportingWebSocketServer.getParameter(request, "user"); 
-
-                    if (!earliest) {
-                        AppSensorReportingWebSocketServer.reportMissingParameter(this, request, "earliest");
-                    } else if (!user) {
-                        AppSensorReportingWebSocketServer.reportMissingParameter(this, request, "user");
-                    } else {
-
-                        me.countEventsByUser(earliest, user)
-                        .then((result) => {
-                            AppSensorReportingWebSocketServer.sendResult(this, request, result, null);                                            
-                        })
-                        .catch((error) => {
-                            AppSensorReportingWebSocketServer.reportError(this, request, error);                                          
-                        });
-                    }
-
-                    break;
-                }
-                case "countAttacksByUser": {
-                    const earliest: string | null = AppSensorReportingWebSocketServer.getParameter(request, "earliest");
-                    const user: string | null = AppSensorReportingWebSocketServer.getParameter(request, "user"); 
-
-                    if (!earliest) {
-                        AppSensorReportingWebSocketServer.reportMissingParameter(this, request, "earliest");
-                    } else if (!user) {
-                        AppSensorReportingWebSocketServer.reportMissingParameter(this, request, "user");
-                    } else {
-
-                        me.countAttacksByUser(earliest, user)
-                        .then((result) => {
-                            AppSensorReportingWebSocketServer.sendResult(this, request, result, null);                                            
-                        })
-                        .catch((error) => {
-                            AppSensorReportingWebSocketServer.reportError(this, request, error);                                          
-                        });
-                    }
-
-                    break;
-                }
-                case "countResponsesByUser": {
-                    const earliest: string | null = AppSensorReportingWebSocketServer.getParameter(request, "earliest");
-                    const user: string | null = AppSensorReportingWebSocketServer.getParameter(request, "user"); 
-
-                    if (!earliest) {
-                        AppSensorReportingWebSocketServer.reportMissingParameter(this, request, "earliest");
-                    } else if (!user) {
-                        AppSensorReportingWebSocketServer.reportMissingParameter(this, request, "user");
-                    } else {
-
-                        me.countResponsesByUser(earliest, user)
-                        .then((result) => {
-                            AppSensorReportingWebSocketServer.sendResult(this, request, result, null);                                            
-                        })
-                        .catch((error) => {
-                            AppSensorReportingWebSocketServer.reportError(this, request, error);                                          
-                        });
-                    }
-
-                    break;
-                }
-                case "getServerConfigurationAsJson": {
-                    
-                    me.getServerConfigurationAsJson()
+                    this.findEvents(earliest)
                     .then((result) => {
-                        AppSensorReportingWebSocketServer.sendResult(this, request, result, null);                                            
+                        AppSensorWebSocketServer.sendResult(ws, request, result, 'AppSensorEvent');                                            
                     })
                     .catch((error) => {
-                        AppSensorReportingWebSocketServer.reportError(this, request, error);                                          
+                        AppSensorWebSocketServer.reportError(ws, request, error);                                          
                     });
+                }
 
-                    break;
+                break;
+            }
+            case "findAttacks": {
+                const earliest = AppSensorWebSocketServer.getParameter(request, "earliest");
+
+                if (!earliest) {
+
+                    AppSensorWebSocketServer.reportMissingParameter(ws, request, "earliest");
+
+                } else {
+
+                    this.findAttacks(earliest)
+                    .then((result) => {
+                        AppSensorWebSocketServer.sendResult(ws, request, result, 'Attack');                                            
+                    })
+                    .catch((error) => {
+                        AppSensorWebSocketServer.reportError(ws, request, error);                                          
+                    });
                 }
-                case "": {
-                    break;
+
+                break;
+            }
+            case "findResponses": {
+                const earliest = AppSensorWebSocketServer.getParameter(request, "earliest");
+
+                if (!earliest) {
+
+                    AppSensorWebSocketServer.reportMissingParameter(ws, request, "earliest");
+
+                } else {
+
+                    this.findResponses(earliest)
+                    .then((result) => {
+                        AppSensorWebSocketServer.sendResult(ws, request, result, 'Response');                                            
+                    })
+                    .catch((error) => {
+                        AppSensorWebSocketServer.reportError(ws, request, error);                                          
+                    });
                 }
+
+                break;
+            }
+            case "countEvents": {
+                const earliest = AppSensorWebSocketServer.getParameter(request, "earliest");
+
+                if (!earliest) {
+
+                    AppSensorWebSocketServer.reportMissingParameter(ws, request, "earliest");
+
+                } else {
+
+                    this.countEvents(earliest)
+                    .then((result) => {
+                        AppSensorWebSocketServer.sendResult(ws, request, result, null);                                            
+                    })
+                    .catch((error) => {
+                        AppSensorWebSocketServer.reportError(ws, request, error);                                          
+                    });
+                }
+
+                break;
+            }
+            case "countAttacks": {
+                const earliest = AppSensorWebSocketServer.getParameter(request, "earliest");
+
+                if (!earliest) {
+
+                    AppSensorWebSocketServer.reportMissingParameter(ws, request, "earliest");
+
+                } else {
+
+                    this.countAttacks(earliest)
+                    .then((result) => {
+                        AppSensorWebSocketServer.sendResult(ws, request, result, null);                                            
+                    })
+                    .catch((error) => {
+                        AppSensorWebSocketServer.reportError(ws, request, error);                                          
+                    });
+                }
+
+                break;
+            }
+            case "countResponses": {
+                const earliest = AppSensorWebSocketServer.getParameter(request, "earliest");
+
+                if (!earliest) {
+
+                    AppSensorWebSocketServer.reportMissingParameter(ws, request, "earliest");
+
+                } else {
+
+                    this.countResponses(earliest)
+                    .then((result) => {
+                        AppSensorWebSocketServer.sendResult(ws, request, result, null);                                            
+                    })
+                    .catch((error) => {
+                        AppSensorWebSocketServer.reportError(ws, request, error);                                          
+                    });
+                }
+
+                break;
+            }
+            case "countEventsByLabel": {
+                break;
+            }
+            case "countAttacksByLabel": {
+                break;
+            }
+            case "countResponsesByLabel": {
+                break;
+            }
+            case "countEventsByCategoryLabel": {
+                const earliest = AppSensorWebSocketServer.getParameter(request, "earliest");
+                const category = AppSensorWebSocketServer.getParameter(request, "category");
+                const label = AppSensorWebSocketServer.getParameter(request, "label"); 
+
+                if (!earliest) {
+                    AppSensorWebSocketServer.reportMissingParameter(ws, request, "earliest");
+                } else if (!category) {
+                    AppSensorWebSocketServer.reportMissingParameter(ws, request, "category");
+                } else if (!label) {
+                    AppSensorWebSocketServer.reportMissingParameter(ws, request, "label");
+                } else {
+
+                    this.countEventsByCategoryLabel(earliest, category, label)
+                    .then((result) => {
+                        AppSensorWebSocketServer.sendResult(ws, request, result, null);                                            
+                    })
+                    .catch((error) => {
+                        AppSensorWebSocketServer.reportError(ws, request, error);                                          
+                    });
+                }
+                break;
+            }
+            case "countAttacksByCategoryLabel": {
+                const earliest = AppSensorWebSocketServer.getParameter(request, "earliest");
+                const category = AppSensorWebSocketServer.getParameter(request, "category");
+                const label = AppSensorWebSocketServer.getParameter(request, "label"); 
+
+                if (!earliest) {
+                    AppSensorWebSocketServer.reportMissingParameter(ws, request, "earliest");
+                } else if (!category) {
+                    AppSensorWebSocketServer.reportMissingParameter(ws, request, "category");
+                } else if (!label) {
+                    AppSensorWebSocketServer.reportMissingParameter(ws, request, "label");
+                } else {
+
+                    this.countAttacksByCategoryLabel(earliest, category, label)
+                    .then((result) => {
+                        AppSensorWebSocketServer.sendResult(ws, request, result, null);                                            
+                    })
+                    .catch((error) => {
+                        AppSensorWebSocketServer.reportError(ws, request, error);                                          
+                    });
+                }
+                break;
+            }
+            case "countResponsesByCategoryLabel": {
+                const earliest = AppSensorWebSocketServer.getParameter(request, "earliest");
+                const category = AppSensorWebSocketServer.getParameter(request, "category");
+                const label = AppSensorWebSocketServer.getParameter(request, "label"); 
+
+                if (!earliest) {
+                    AppSensorWebSocketServer.reportMissingParameter(ws, request, "earliest");
+                } else if (!category) {
+                    AppSensorWebSocketServer.reportMissingParameter(ws, request, "category");
+                } else if (!label) {
+                    AppSensorWebSocketServer.reportMissingParameter(ws, request, "label");
+                } else {
+
+                    this.countResponsesByCategoryLabel(earliest, category, label)
+                    .then((result) => {
+                        AppSensorWebSocketServer.sendResult(ws, request, result, null);                                            
+                    })
+                    .catch((error) => {
+                        AppSensorWebSocketServer.reportError(ws, request, error);                                          
+                    });
+                }
+                break;
+            }
+            case "countEventsByUser": {
+                const earliest = AppSensorWebSocketServer.getParameter(request, "earliest");
+                const user = AppSensorWebSocketServer.getParameter(request, "user"); 
+
+                if (!earliest) {
+                    AppSensorWebSocketServer.reportMissingParameter(ws, request, "earliest");
+                } else if (!user) {
+                    AppSensorWebSocketServer.reportMissingParameter(ws, request, "user");
+                } else {
+
+                    this.countEventsByUser(earliest, user)
+                    .then((result) => {
+                        AppSensorWebSocketServer.sendResult(ws, request, result, null);                                            
+                    })
+                    .catch((error) => {
+                        AppSensorWebSocketServer.reportError(ws, request, error);                                          
+                    });
+                }
+
+                break;
+            }
+            case "countAttacksByUser": {
+                const earliest = AppSensorWebSocketServer.getParameter(request, "earliest");
+                const user = AppSensorWebSocketServer.getParameter(request, "user"); 
+
+                if (!earliest) {
+                    AppSensorWebSocketServer.reportMissingParameter(ws, request, "earliest");
+                } else if (!user) {
+                    AppSensorWebSocketServer.reportMissingParameter(ws, request, "user");
+                } else {
+
+                    this.countAttacksByUser(earliest, user)
+                    .then((result) => {
+                        AppSensorWebSocketServer.sendResult(ws, request, result, null);                                            
+                    })
+                    .catch((error) => {
+                        AppSensorWebSocketServer.reportError(ws, request, error);                                          
+                    });
+                }
+
+                break;
+            }
+            case "countResponsesByUser": {
+                const earliest = AppSensorWebSocketServer.getParameter(request, "earliest");
+                const user = AppSensorWebSocketServer.getParameter(request, "user"); 
+
+                if (!earliest) {
+                    AppSensorWebSocketServer.reportMissingParameter(ws, request, "earliest");
+                } else if (!user) {
+                    AppSensorWebSocketServer.reportMissingParameter(ws, request, "user");
+                } else {
+
+                    this.countResponsesByUser(earliest, user)
+                    .then((result) => {
+                        AppSensorWebSocketServer.sendResult(ws, request, result, null);                                            
+                    })
+                    .catch((error) => {
+                        AppSensorWebSocketServer.reportError(ws, request, error);                                          
+                    });
+                }
+
+                break;
+            }
+            case "getServerConfigurationAsJson": {
+                
+                this.getServerConfigurationAsJson()
+                .then((result) => {
+                    AppSensorWebSocketServer.sendResult(ws, request, result, null);                                            
+                })
+                .catch((error) => {
+                    AppSensorWebSocketServer.reportError(ws, request, error);                                          
+                });
+
+                break;
+            }
+            case "": {
+                break;
             }
         }
+
     }
-
-    private static getParameter(request: ReportingMethodRequest, paramName: string): string | null {
-        let param: string | null = null
-
-        if (request.parameters) {
-            const propDescr = Object.getOwnPropertyDescriptor(request.parameters, paramName);
-            if (propDescr) {
-                param = propDescr.value;
-            }
-        } 
-
-        return param;
-    }
-
-    private static reportMissingParameter(ws: WebSocket, request: ReportingMethodRequest, paramName: string) {
-        const response = new ReportingMethodResponse(request.id, 
-                                                     request.reportingMethodName,
-                                                     null,
-                                                     null,
-                                                     `Missing required parameter ${paramName}!`);
-
-        ws.send(JSON.stringify(response));                                             
-    }
-
-    private static reportError(ws: WebSocket, request: ReportingMethodRequest, error: any) {
-        const response = new ReportingMethodResponse(request.id, 
-                                                     request.reportingMethodName,
-                                                     null,
-                                                     null,
-                                                     error.toString());
-
-        ws.send(JSON.stringify(response));                                             
-    }
-
-    private static sendResult(ws: WebSocket, request: ReportingMethodRequest,
-                              result: number | AppSensorEvent[] | Attack[] | Response[] | null | string,
-                              resultElementClass: string | null) {
-        const response = new ReportingMethodResponse(request.id, 
-                                                     request.reportingMethodName,
-                                                     result,
-                                                     resultElementClass);
-
-        ws.send(JSON.stringify(response));                                             
-    }
-
 
     onAdd(event: AppSensorEvent | Attack | Response): Promise<void> {
 
-        const response = new ReportingMethodResponse('', "onAdd", event, event.constructor.name);
-
-        this.server.clients.forEach(function each(client) {
-            if (client.readyState === WebSocket.OPEN) {
-
-              client.send(JSON.stringify(response), { binary: false });
-            }
-        });
+        this.broadcast("onAdd", event, event.constructor.name);
         
         return Promise.resolve();
     }
@@ -607,4 +455,4 @@ class AppSensorReportingWebSocketServer implements ReportingEngineExt {
 
 }
 
-export {AppSensorReportingWebSocketServer, IReportingWebSocketServerConfig};
+export {AppSensorReportingWebSocketServer};

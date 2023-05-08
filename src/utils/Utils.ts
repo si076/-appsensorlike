@@ -30,16 +30,34 @@ class ValidationError extends Error implements ErrorObject {
 
 class JSONConfigReadValidate {
 
-    protected read(configurationLocation: string, validatorLocation: string | null, reload: boolean): any {
+    protected defaultConfigFile: string;
+    protected defaultConfigSchemaFile: string | null;
+    protected prototypeOfConfigObj: Object | null | undefined;
+
+    constructor(defaultConfigFile: string, 
+                defaultConfigSchemaFile: string | null = null, 
+                prototypeOfConfigObj?: Object | null) {
+        this.defaultConfigFile = defaultConfigFile;
+        this.defaultConfigSchemaFile = defaultConfigSchemaFile;
+        this.prototypeOfConfigObj = prototypeOfConfigObj;
+    }
+
+    public read(configLocation: string = '', 
+                validatorLocation: string | null = null, 
+                reload: boolean  = false): any {
         let config: any = null;
 
-        if (configurationLocation === '') {
-            throw new Error('JSONConfig: configurationLocation cannot be null!');
+        if (configLocation === '') {
+            configLocation = this.defaultConfigFile;
+        };
+
+        if (!validatorLocation) {
+            validatorLocation = this.defaultConfigSchemaFile;
         };
 
 
         try {
-            config = JSON.parse(fs.readFileSync(configurationLocation, 'utf8'));
+            config = JSON.parse(fs.readFileSync(configLocation, 'utf8'));
         } catch (error) {
             if (!reload) {
                 throw error;
@@ -56,6 +74,10 @@ class JSONConfigReadValidate {
                 //There is(are) validation error(s) reported by validateConfig
                 config = null;
             }
+        }
+
+        if (config && this.prototypeOfConfigObj !== undefined) {
+            Object.setPrototypeOf(config, this.prototypeOfConfigObj);
         }
 
         return config;

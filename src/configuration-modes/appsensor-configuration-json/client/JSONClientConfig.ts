@@ -8,9 +8,6 @@ class JSONClientConfiguration extends ClientConfiguration {
 
 class JSONClientConfigurationReader extends JSONConfigReadValidate implements ClientConfigurationReader {
 
-    private configFile: string = 'appsensor-client-config.json';
-    private configSchemaFile: string = 'appsensor-client-config_schema.json'; 
-
     private static configPrototypesSample: JSONClientConfiguration;
 
     static {
@@ -19,16 +16,12 @@ class JSONClientConfigurationReader extends JSONConfigReadValidate implements Cl
         JSONClientConfigurationReader.configPrototypesSample.setServerConnection(new ServerConnection());
     }
 
+    constructor() {
+        super('appsensor-client-config.json', 'appsensor-client-config_schema.json');
+    }
+
     public override read(configurationLocation: string = '', validatorLocation: string | null = '', reload: boolean = false): ClientConfiguration | null {
         let config: JSONClientConfiguration | null = null;
-
-        if (configurationLocation === '') {
-            configurationLocation = this.configFile;
-        };
-
-        if (validatorLocation === '') {
-            validatorLocation = this.configSchemaFile;
-        };
 
         config = super.read(configurationLocation, validatorLocation, reload);
 
