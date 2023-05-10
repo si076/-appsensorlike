@@ -1,8 +1,8 @@
-import { AggregateEventAnalysisEngine } from "../../../../analysis-engines/appsensor-analysis-rules/appsensor-analysis-rules.js";
-import { EventAnalysisEngine } from "../../../../core/analysis/analysis.js";
-import { AppSensorEvent, AppSensorServer, Category, DetectionPoint, DetectionSystem, Interval, INTERVAL_UNITS, Response, Threshold, User } from "../../../../core/core.js";
-import { SearchCriteria } from "../../../../core/criteria/criteria.js";
-import { Clause, Expression, MonitorPoint, Rule } from "../../../../core/rule/rule.js";
+import { AggregateEventAnalysisEngine } from "../../../analysis-engines/appsensor-analysis-rules/appsensor-analysis-rules.js";
+import { EventAnalysisEngine } from "../../../core/analysis/analysis.js";
+import { AppSensorClient, AppSensorEvent, AppSensorServer, Category, DetectionPoint, DetectionSystem, Interval, INTERVAL_UNITS, Response, Threshold, User } from "../../../core/core.js";
+import { SearchCriteria } from "../../../core/criteria/criteria.js";
+import { Clause, Expression, MonitorPoint, Rule } from "../../../core/rule/rule.js";
 
 import assert from "assert";
 import { BaseTest } from "./BaseTest.js";
@@ -192,7 +192,6 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
 		return configuredRules;
 	}
 
-	// @BeforeClass
 	static {
 		//detectionPoint1.setThreshold(new Threshold(3, new Interval(5, Interval.MINUTES)));
 
@@ -280,6 +279,10 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
 		return configuredDetectionPoints;
 	}
 
+	constructor(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
+		super(appSensorServer, appSensorClient);
+	}
+
 	private setRule(server: AppSensorServer | null, rule: Rule): void {
 		const rules: Rule[] = [];
 		rules.push(rule);
@@ -310,8 +313,6 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
 		this.appSensorServer.getConfiguration()!.setRules(emptyRules);
 	}
 
-	// this method doesn't actually wait, it just adds events with a predetermined time
-	// does not check anything
 	private async addEvent(detectionPoint: DetectionPoint, time: Date) {
         await this.appSensorClient!.getEventManager()!.addEvent(
             new AppSensorEvent(AggregEventAnalysisEngIntegTest.bob, 
@@ -328,8 +329,6 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
         const attackStore = this.appSensorServer!.getAttackStore();
 		const attacks = await attackStore!.findAttacks(AggregEventAnalysisEngIntegTest.criteria.get(ruleName)!);
         const attackCount: number = attacks.length;
-
-        // let dateTime = new Date();
 
         const millis = time/eventCount;
 
@@ -354,7 +353,6 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
         assert.equal(attackCount, attacks.length);
 	}
 
-	// @Test
 	public async test1_DP1() {
 		console.log('--> test1_DP1');
 		//Add rule
@@ -393,7 +391,6 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
 		console.log('<-- test1_DP1');
 	}
 
-	// @Test
 	public async test2_DP1andDP2() {
 		console.log('--> test2_DP1andDP2');
 		//Add rule
@@ -452,7 +449,6 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
 		console.log('<-- test2_DP1andDP2');
 	}
 
-	// @Test
 	public async test3_DP1orDP2() {
 		console.log('--> test3_DP1orDP2');
 		//Add rule
@@ -497,7 +493,6 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
 		console.log('<-- test3_DP1orDP2');
 	}
 
-	// @Test
 	public async test4_DP1orDP2andDP3() {
 		console.log('--> test4_DP1orDP2andDP3');
 		//Add rule
@@ -553,7 +548,6 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
 		console.log('<-- test4_DP1orDP2andDP3');
 	}
 
-	// @Test
 	public async test5_DP1thenDP2() {
 		console.log('--> test5_DP1thenDP2');
 		//Add rule
@@ -594,7 +588,6 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
 		console.log('<-- test5_DP1thenDP2');
 	}
 
-	// @Test
 	public async test6_DP1thenDP2thenDP1orDP2() {
 		console.log('--> test6_DP1thenDP2thenDP1orDP2');
 		//Add rule
@@ -668,8 +661,6 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
 		console.log('<-- test6_DP1thenDP2thenDP1orDP2');
 	}
 
-	// test the scheduling bug
-	// @Test
 	public async test7_DP1andDP4orDP1andDP3thenDP1() {
 		console.log('--> test7_DP1andDP4orDP1andDP3thenDP1');
 
@@ -727,8 +718,6 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
 		console.log('<-- test7_DP1andDP4orDP1andDP3thenDP1');
 	}
 
-	// test the earliest attack bug
-		// @Test
     public async test8_DP1() {
 		console.log('--> test8_DP1');
 
@@ -769,10 +758,10 @@ class AggregEventAnalysisEngIntegTest extends BaseTest {
 		console.log('<-- test8_DP1');
     }
 
-	public static async runTests() {
+	public static async runTests(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
 		console.log();
 		console.log('----- Run AggregateEventAnalysisEngineIntegrationTest -----');
-		const instance = new AggregEventAnalysisEngIntegTest();
+		const instance = new AggregEventAnalysisEngIntegTest(appSensorServer, appSensorClient);
 
 		instance.initializeTest();
 		await instance.test1_DP1();

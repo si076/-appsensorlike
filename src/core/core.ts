@@ -1866,20 +1866,6 @@ class Utils {
 		return detPointLabel;
 	}
 
-	public static async fromString(ipString: string, geoLocator: GeoLocator): Promise<IPAddress> {
-		if (!ipaddrlib.isValid(ipString)) {
-			throw new Error("IP Address string is invalid: " + ipString);
-		}
-
-		let localGeo: GeoLocation | null = null;
-		
-		if(geoLocator !== null) {
-			localGeo = await geoLocator.readLocation(ipString);
-		}
-
-		return new IPAddress(ipString, localGeo);
-	}
-	
 }
 
 export {IEquals, AppsensorEntity, KeyValuePair, IPAddress, INTERVAL_UNITS, Interval, Threshold, Response, 

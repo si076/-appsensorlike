@@ -1,16 +1,15 @@
 import { BaseTests } from "./BaseTests.js";
-import { AppSensorEvent, AppSensorServer, KeyValuePair } from "../../../core/core.js";
-import { MySQLAttackStore, MySQLEventStore, MySQLResponseStore } from "../appsensor-storage-mysql.js";
+import { AppSensorClient, AppSensorEvent, AppSensorServer, KeyValuePair } from "../../../core/core.js";
 import { SearchCriteria } from "../../../core/criteria/criteria.js";
 
 import assert from "assert";
-import { AggregateAttackAnalysisEngine, AggregateEventAnalysisEngine } from "../../../analysis-engines/appsensor-analysis-rules/appsensor-analysis-rules.js";
-import { ReferenceAttackAnalysisEngine, ReferenceEventAnalysisEngine } from "../../../analysis-engines/appsensor-analysis-reference/appsensor-analysis-reference.js";
-import { ServerConfiguration } from "../../../core/configuration/server/server_configuration.js";
-import { DOP } from "../DOP.js";
 
 
 class MySQLStorageTests extends BaseTests {
+
+    constructor(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
+        super(appSensorServer, appSensorClient);
+    }
 
     private async storeObjects() {
         console.log('--> storeObjects');
@@ -69,9 +68,9 @@ class MySQLStorageTests extends BaseTests {
         console.log('<-- storeObjects');
     } 
 
-    public static async runTests() {
-        console.log('----- Run MySQLStorageTests -----');
-		const inst = new MySQLStorageTests();
+    public static async runTests(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient, executionMode: string) {
+        console.log(`----- Run MySQLStorageTests ${executionMode} -----`);
+		const inst = new MySQLStorageTests(appSensorServer, appSensorClient);
         await inst.initializeTest();
 		await inst.storeObjects();
     }

@@ -1,7 +1,7 @@
-import { AppSensorEvent, Category, DetectionPoint, 
+import { AppSensorClient, AppSensorEvent, AppSensorServer, Category, DetectionPoint, 
 	     DetectionSystem, Interval, INTERVAL_UNITS, IPAddress, KeyValuePair, Resource, Response, 
-		 Threshold, User } from "../../../../core/core.js";
-import { SearchCriteria } from "../../../../core/criteria/criteria.js";
+		 Threshold, User } from "../../../core/core.js";
+import { SearchCriteria } from "../../../core/criteria/criteria.js";
 
 import assert from "assert";
 import { BaseTest } from "./BaseTest.js";
@@ -10,7 +10,9 @@ class ReferenceStatisticalEventAnalysisEngineTest extends BaseTest {
 
 	private sleepAmount: number = 1;
 
-    // private ipAddressLocator: IPAddress = new IPAddress();
+    constructor(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
+		super(appSensorServer, appSensorClient);
+	}
 
 	protected override initializeTest(): void {
 
@@ -271,10 +273,10 @@ class ReferenceStatisticalEventAnalysisEngineTest extends BaseTest {
 		return metaDataCol;
 	}
 
-	public static async runTests() {
+	public static async runTests(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
 		console.log();
 		console.log('----- Run ReferenceStatisticalEventAnalysisEngineTest -----');
-		const test = new ReferenceStatisticalEventAnalysisEngineTest();
+		const test = new ReferenceStatisticalEventAnalysisEngineTest(appSensorServer, appSensorClient);
 		test.initializeTest();
 		await test.testAttackCreation();
 	}

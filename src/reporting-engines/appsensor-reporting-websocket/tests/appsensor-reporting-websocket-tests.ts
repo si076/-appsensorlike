@@ -10,6 +10,7 @@ import { MySQLAttackStore, MySQLEventStore, MySQLResponseStore } from "../../../
 
 import assert from "assert";
 import { Utils } from "../../../utils/Utils.js";
+import { JSONServerConfigurationReader } from "../../../configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
 
 class AppSensorReportingWebsocketClientTest {
 
@@ -56,7 +57,7 @@ class AppSensorReportingWebsocketClientTest {
 
 		const config = JSON.parse(configStr);
 
-		Object.setPrototypeOf(config, ServerConfiguration.prototype);
+		Utils.setPrototypeInDepth(config, JSONServerConfigurationReader.configPrototypesSample);
 
 		console.log(config);
     }
@@ -81,7 +82,10 @@ class AppSensorReportingWebsocketClientExt extends AppSensorReportingWebSocketCl
 	}
 
 	onAdd(event: AppSensorEvent | Attack | Response): Promise<void> {
-		console.log(event);
+        console.log(event);
+        if (event.getTimestamp()) {
+            console.log(event.getTimestamp()!.getMilliseconds());
+        }
 
 		return Promise.resolve();
 	}

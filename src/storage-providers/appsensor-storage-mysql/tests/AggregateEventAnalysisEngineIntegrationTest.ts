@@ -2,7 +2,7 @@
 import assert from "assert";
 import { AggregateEventAnalysisEngine } from "../../../analysis-engines/appsensor-analysis-rules/appsensor-analysis-rules.js";
 import { EventAnalysisEngine } from "../../../core/analysis/analysis.js";
-import { AppSensorEvent, AppSensorServer, Category, DetectionPoint, DetectionSystem, Interval, INTERVAL_UNITS, Response, Threshold, User } from "../../../core/core.js";
+import { AppSensorClient, AppSensorEvent, AppSensorServer, Category, DetectionPoint, DetectionSystem, Interval, INTERVAL_UNITS, Response, Threshold, User } from "../../../core/core.js";
 import { SearchCriteria } from "../../../core/criteria/criteria.js";
 import { Clause, Expression, MonitorPoint, Rule } from "../../../core/rule/rule.js";
 import { DOP } from "../DOP.js";
@@ -28,9 +28,9 @@ class AggregEventAnalysisEngIntegTest extends BaseTests {
 
 	private static criteria = new Map<string, SearchCriteria>();
 
-	private static myEngine: AggregateEventAnalysisEngine | null = null;
-
 	private static rules: Rule[] = [];
+
+	private myEngine: AggregateEventAnalysisEngine | null = null;
 
 	protected sleepAmount: number = 10;
 
@@ -251,6 +251,10 @@ class AggregEventAnalysisEngIntegTest extends BaseTests {
 		return configuredDetectionPoints;
 	}
 
+	constructor(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
+		super(appSensorServer, appSensorClient);
+	}
+
 	private setRule(server: AppSensorServer | null, rule: Rule): void {
 		const rules: Rule[] = [];
 		rules.push(rule);
@@ -259,7 +263,7 @@ class AggregEventAnalysisEngIntegTest extends BaseTests {
 	}
 
 	public async initializeTest() {
-		if (AggregEventAnalysisEngIntegTest.myEngine === null) {
+		if (this.myEngine === null) {
 
 			super.initializeTest();
 			
@@ -270,7 +274,7 @@ class AggregEventAnalysisEngIntegTest extends BaseTests {
 	
 			for (const engine of engines) {
 				if (engine instanceof AggregateEventAnalysisEngine){
-					AggregEventAnalysisEngIntegTest.myEngine = engine as AggregateEventAnalysisEngine;
+					this.myEngine = engine as AggregateEventAnalysisEngine;
 				}
 			}
 		}
@@ -745,10 +749,10 @@ class AggregEventAnalysisEngIntegTest extends BaseTests {
 		console.log('<-- test8_DP1');
     }
 
-	public static async runTests() {
+	public static async runTests(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient, executionMode: string) {
 		console.log();
-		console.log('----- Run AggregateEventAnalysisEngineIntegrationTest -----');
-		const instance = new AggregEventAnalysisEngIntegTest();
+		console.log(`----- Run AggregateEventAnalysisEngineIntegrationTest ${executionMode} -----`);
+		const instance = new AggregEventAnalysisEngIntegTest(appSensorServer, appSensorClient);
 
 		await instance.initializeTest();
 		await instance.test1_DP1();

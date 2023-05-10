@@ -1,10 +1,13 @@
 import { runTests as analysis_rules_tests} from "../analysis-engines/appsensor-analysis-rules/test/tests.js";
 import { runTests as core_tests} from "../core/tests/tests.js";
 import { runTests as appsensor_local_tests} from "../execution-modes/appsensor-local/tests/tests.js";
+import { runTests as appsensor_websocket_tests} from "../execution-modes/appsensor-websocket/tests/tests.js";
 import { runTests as config_tests } from "../configuration-modes/appsensor-configuration-json/tests/tests.js";
 import { runTests as msql_storage_tests} from "../storage-providers/appsensor-storage-mysql/tests/tests.js"
+import { runTests as reporting_websocket_tests } from "../reporting-engines/appsensor-reporting-websocket/tests/appsensor-reporting-websocket-tests.js"
 
 import * as readline from 'readline';
+import { IPAddressGeoLocationTest } from "../geolocators/fast-geoip/tests/IPAddressGeoLocationTest.js";
 
 async function runTests() {
     console.log('---------- Run Tests ----------');
@@ -23,7 +26,10 @@ async function runTests() {
     console.log(" 2: Configuration tests");
     console.log(" 3: Analysis rules tests");
     console.log(" 4: Appsensor local tests");
-    console.log(" 5: MySQL storage tests");
+    console.log(" 5: Appsensor WebSocket tests");
+    console.log(" 6: MySQL storage tests");
+    console.log(" 7: Reporting WebSocket tests");
+    console.log(" 8: IP address GeoLocation tests");
     const choice: string = await new Promise((resolve, reject) => {
         rl.question("To run all tests press 'a', to execute specific test choose a number:", (choice: string) => {
             resolve(choice);
@@ -36,7 +42,7 @@ function isValidChoice(choice: string): boolean {
     let result = true;
     if (!(choice === 'a' || choice === 'A')) {
         const number = parseInt(choice);
-        if (isNaN(number) || number < 1 || number > 5) {
+        if (isNaN(number) || number < 1 || number > 8) {
             result = false;
         }
     }
@@ -68,14 +74,35 @@ async function testChoice(choice: string, readInf: readline.Interface) {
         }
         case "4":  
         case "a": {
-            await appsensor_local_tests();
+            await appsensor_local_tests(readInf);
             if (choice !== 'a') {
                 break;
             }
         }
         case "5":  
         case "a": {
+            await appsensor_websocket_tests(readInf);
+            if (choice !== 'a') {
+                break;
+            }
+        }
+        case "6":  
+        case "a": {
             await msql_storage_tests();
+            if (choice !== 'a') {
+                break;
+            }
+        }
+        case "7":  
+        case "a": {
+            await reporting_websocket_tests();
+            if (choice !== 'a') {
+                break;
+            }
+        }
+        case "8":  
+        case "a": {
+            await IPAddressGeoLocationTest.runTests();
             if (choice !== 'a') {
                 break;
             }

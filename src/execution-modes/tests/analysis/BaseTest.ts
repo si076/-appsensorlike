@@ -1,7 +1,7 @@
-import { AppSensorClient, AppSensorServer } from "../../../../core/core.js";
-import { InMemoryAttackStore, InMemoryEventStore, InMemoryResponseStore } from "../../../../storage-providers/appsensor-storage-in-memory/appsensor-storage-in-memory.js";
-import { Rule } from "../../../../core/rule/rule.js";
-import { AppSensorLocal } from "../../appsensor_local.js";
+import { AppSensorClient, AppSensorServer } from "../../../core/core.js";
+import { InMemoryAttackStore, InMemoryEventStore, InMemoryResponseStore } from "../../../storage-providers/appsensor-storage-in-memory/appsensor-storage-in-memory.js";
+import { Rule } from "../../../core/rule/rule.js";
+import { AppSensorLocal } from "../../appsensor-local/appsensor_local.js";
 
 abstract class BaseTest {
 
@@ -9,14 +9,11 @@ abstract class BaseTest {
 
 	protected appSensorClient: AppSensorClient;
 
-	private appSensorLocal: AppSensorLocal;
+	constructor(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
 
-	constructor() {
-		this.appSensorLocal = new AppSensorLocal('./execution-modes/appsensor-local/tests/analysis/appsensor-server-config.json');
+		this.appSensorServer = appSensorServer;
 
-		this.appSensorServer = this.appSensorLocal.getAppSensorServer();
-
-		this.appSensorClient = this.appSensorLocal.getAppSensorClient();
+		this.appSensorClient = appSensorClient;
 	}
 
 	protected initializeTest(): void {

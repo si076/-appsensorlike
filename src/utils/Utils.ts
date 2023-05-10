@@ -1,6 +1,9 @@
 import fs from 'fs';
 import Ajv, { AnySchemaObject, ErrorObject } from "ajv"
 import addFormats from "ajv-formats"
+import { AppSensorEvent, Attack, DetectionPoint, DetectionSystem, Interval, IPAddress, KeyValuePair, Resource, Response, Threshold, User } from '../core/core.js';
+import { GeoLocation } from '../core/geolocation/geolocation.js';
+import { Clause, Expression, Rule } from '../core/rule/rule.js';
 
 class ValidationError extends Error implements ErrorObject {
     keyword: string;
@@ -125,7 +128,103 @@ class JSONConfigReadValidate {
         return valid;
     }
 
-    protected setPrototypeInDepth(target: Object, source: Object) {
+}
+
+class Utils {
+    
+    public static ipAddressSample: IPAddress;
+    public static detectionPointSample: DetectionPoint;
+    public static ruleSample: Rule;
+    public static appSensorEventPrototypeSample: AppSensorEvent;
+    public static attackPrototypeSample: Attack;
+    public static responsePrototypeSample: Response;
+
+    static {
+        const interval = new Interval();
+
+        const ipAddress = new IPAddress();
+        ipAddress.setGeoLocation(new GeoLocation(0, 0));
+
+        const user = new User();
+        user.setIPAddress(ipAddress);
+
+        const detectionSystem = new DetectionSystem('', ipAddress);
+
+        const resource = new Resource();
+
+        const metadata = [new KeyValuePair()];
+
+        const response = new Response();
+        response.setUser(user);
+        response.setInterval(interval);
+        response.setDetectionSystem(detectionSystem);
+        response.setMetadata(metadata);
+
+        const threshold = new Threshold();
+        threshold.setInterval(interval);
+
+        const detPoint = new DetectionPoint("something", "something");
+        detPoint.setThreshold(threshold);
+        detPoint.setResponses([response]);
+
+        const clause = new Clause();
+        clause.setMonitorPoints([detPoint]);
+
+        const expre = new Expression();
+        expre.setClauses([clause]);
+        expre.setWindow(interval);
+
+        const rule: Rule = new Rule();
+        rule.setWindow(interval);
+        rule.setExpressions([expre]);
+        rule.setResponses([response]);
+
+
+        Utils.ipAddressSample = ipAddress;
+
+        Utils.detectionPointSample = detPoint;
+
+        Utils.ruleSample = rule;
+
+        Utils.appSensorEventPrototypeSample = new AppSensorEvent();
+        Utils.appSensorEventPrototypeSample.setUser(user);
+        Utils.appSensorEventPrototypeSample.setDetectionPoint(detPoint);
+        Utils.appSensorEventPrototypeSample.setDetectionSystem(detectionSystem);
+        Utils.appSensorEventPrototypeSample.setResource(resource);
+        Utils.appSensorEventPrototypeSample.setMetadata(metadata);
+
+        Utils.attackPrototypeSample = new Attack();
+        Utils.attackPrototypeSample.setUser(user);
+        Utils.attackPrototypeSample.setDetectionPoint(detPoint);
+        Utils.attackPrototypeSample.setDetectionSystem(detectionSystem);
+        Utils.attackPrototypeSample.setResource(resource);
+        Utils.attackPrototypeSample.setMetadata(metadata);
+        Utils.attackPrototypeSample.setRule(rule);
+
+        Utils.responsePrototypeSample = new Response();
+        Utils.responsePrototypeSample.setUser(user);
+        Utils.responsePrototypeSample.setInterval(interval);
+        Utils.responsePrototypeSample.setDetectionSystem(detectionSystem);
+        Utils.responsePrototypeSample.setMetadata(metadata);
+    }
+
+    public static setTimestampFromJSONParsedObject(target: AppSensorEvent | Attack | Response, obj: Object) {
+        const propDescr = Object.getOwnPropertyDescriptor(obj, "timestamp");
+        if (propDescr) {
+            target.setTimestamp(new Date(propDescr.value));
+        }
+    }
+
+	public static sleep(timeOutInMilis: number): Promise<null> {
+		return new Promise((resolve, reject) => {
+			setTimeout(() => {
+				resolve(null);
+			}, timeOutInMilis);
+		});
+
+	}
+
+    public static setPrototypeInDepth(target: Object, source: Object) {
         const sourceProto = Object.getPrototypeOf(source);
         Object.setPrototypeOf(target, sourceProto);
 
@@ -160,19 +259,6 @@ class JSONConfigReadValidate {
             }
         }
     }
-
-}
-
-class Utils {
-    
-	public static sleep(timeOutInMilis: number): Promise<null> {
-		return new Promise((resolve, reject) => {
-			setTimeout(() => {
-				resolve(null);
-			}, timeOutInMilis);
-		});
-
-	}
 
 }
 

@@ -1,11 +1,8 @@
-import fs from 'fs';
-
 import { ServerConfiguration, ServerConfigurationReader } from "../../../core/configuration/server/server_configuration.js";
-import { Clause, Expression, MonitorPoint, Rule } from '../../../core/rule/rule.js';
-import { ClientApplication, DetectionPoint, DetectionSystem, Interval, IPAddress, KeyValuePair, Response, Threshold, User } from '../../../core/core.js';
+import { MonitorPoint } from '../../../core/rule/rule.js';
+import { ClientApplication, DetectionPoint } from '../../../core/core.js';
 import { CorrelationSet } from '../../../core/correlation/correlation.js';
-import { GeoLocation } from '../../../core/geolocation/geolocation.js';
-import { JSONConfigReadValidate } from '../../../utils/Utils.js';
+import { JSONConfigReadValidate, Utils } from '../../../utils/Utils.js';
 
 
 class JSONServerConfiguration extends ServerConfiguration {
@@ -13,59 +10,24 @@ class JSONServerConfiguration extends ServerConfiguration {
 
 class JSONServerConfigurationReader extends JSONConfigReadValidate implements ServerConfigurationReader {
 
-    private static configPrototypesSample: JSONServerConfiguration;
+    public static configPrototypesSample: JSONServerConfiguration;
 
     static {
         JSONServerConfigurationReader.configPrototypesSample = new JSONServerConfiguration();
-
-        const interval = new Interval();
-
-        const ipAddress = new IPAddress();
-        ipAddress.setGeoLocation(new GeoLocation(0, 0));
-
-        const user = new User();
-        user.setIPAddress(ipAddress);
-
-        const response = new Response();
-        response.setInterval(interval);
-        response.setDetectionSystem(new DetectionSystem('', ipAddress));
-        response.setMetadata([new KeyValuePair()]);
-
-        const threshold = new Threshold();
-        threshold.setInterval(interval);
-
-        const detPoint = new DetectionPoint("something", "something");
-        detPoint.setThreshold(threshold);
-        detPoint.setResponses([response]);
-
-        const clause = new Clause();
-        clause.setMonitorPoints([detPoint]);
-
-        const expre = new Expression();
-        expre.setClauses([clause]);
-        expre.setWindow(interval);
-
-        const rule: Rule = new Rule();
-        rule.setWindow(interval);
-        rule.setExpressions([expre]);
-        rule.setResponses([response]);
-
-        JSONServerConfigurationReader.configPrototypesSample.rules = [rule];
-
-
+        JSONServerConfigurationReader.configPrototypesSample.rules = [Utils.ruleSample];
         JSONServerConfigurationReader.configPrototypesSample.detectionPoints.clients = [
             {
                 clientName: "client",
-                detectionPoints: [detPoint]
+                detectionPoints: [Utils.detectionPointSample]
             }
         ];
-        JSONServerConfigurationReader.configPrototypesSample.detectionPoints.detectionPoints = [detPoint];
+        JSONServerConfigurationReader.configPrototypesSample.detectionPoints.detectionPoints = [Utils.detectionPointSample];
 
         const correlSet = new CorrelationSet();
         JSONServerConfigurationReader.configPrototypesSample.correlationSets = [correlSet];
 
         const clientAppl = new ClientApplication();
-        clientAppl.setIpAddress(ipAddress);
+        clientAppl.setIpAddress(Utils.ipAddressSample);
 
         JSONServerConfigurationReader.configPrototypesSample.clientApplications = [clientAppl];
     }
@@ -80,7 +42,7 @@ class JSONServerConfigurationReader extends JSONConfigReadValidate implements Se
         config = super.read(configurationLocation, validatorLocation, reload);
 
         if (config) {
-            this.setPrototypeInDepth(config, JSONServerConfigurationReader.configPrototypesSample);
+            Utils.setPrototypeInDepth(config, JSONServerConfigurationReader.configPrototypesSample);
 
             this.customPoints(config);
 

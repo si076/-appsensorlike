@@ -1,7 +1,5 @@
-import fs from 'fs';
-
 import { ClientConfiguration, ClientConfigurationReader, ServerConnection } from "../../../core/configuration/client/client_configuration.js";
-import { JSONConfigReadValidate } from '../../../utils/Utils.js';
+import { JSONConfigReadValidate, Utils } from '../../../utils/Utils.js';
 
 class JSONClientConfiguration extends ClientConfiguration {
 }
@@ -26,7 +24,7 @@ class JSONClientConfigurationReader extends JSONConfigReadValidate implements Cl
         config = super.read(configurationLocation, validatorLocation, reload);
 
         if (config) {
-            this.setPrototypeInDepth(config, JSONClientConfigurationReader.configPrototypesSample);
+            Utils.setPrototypeInDepth(config, JSONClientConfigurationReader.configPrototypesSample);
         }
         
         return config;

@@ -65,7 +65,7 @@ class AppSensorWebSocketClient {
         //your code goes here
     }
 
-    protected static createRequest(methodName: string, parameters?: { [propertyName: string]: string; }): MethodRequest {
+    protected static createRequest(methodName: string, parameters?: { [propertyName: string]: string | Object; }): MethodRequest {
         const uuid = uuidv4();
 
         return new MethodRequest(uuid, methodName, parameters);

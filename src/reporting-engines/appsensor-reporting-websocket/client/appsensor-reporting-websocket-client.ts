@@ -1,5 +1,5 @@
 import { AppSensorEvent, Attack, Response, KeyValuePair } from "../../../core/core.js";
-import { JSONConfigReadValidate } from "../../../utils/Utils.js";
+import { JSONConfigReadValidate, Utils } from "../../../utils/Utils.js";
 import { MethodResponse } from "../../../websocket/appsensor-websocket.js";
 import { ReportingEngineExt } from "../appsensor-reporting-websocket.js";
 import { AppSensorWebSocketClient, WebSocketClientConfig } from "../../../websocket/client/appsensor-websocket-client.js";
@@ -35,15 +35,18 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
 
             switch (response.resultElementClass) {
                 case 'AppSensorEvent': {
-                    Object.setPrototypeOf(response.result, AppSensorEvent.prototype);
+                    Utils.setPrototypeInDepth(response.result as Object, Utils.appSensorEventPrototypeSample);
+                    Utils.setTimestampFromJSONParsedObject(response.result as AppSensorEvent, response.result as Object);
                     break;
                 }
                 case 'Attack': {
-                    Object.setPrototypeOf(response.result, Attack.prototype);
+                    Utils.setPrototypeInDepth(response.result as Object, Utils.attackPrototypeSample);
+                    Utils.setTimestampFromJSONParsedObject(response.result as Attack, response.result as Object);
                     break;
                 }
                 case 'Response': {
-                    Object.setPrototypeOf(response.result, Response.prototype);
+                    Utils.setPrototypeInDepth(response.result as Object, Utils.responsePrototypeSample);
+                    Utils.setTimestampFromJSONParsedObject(response.result as Response, response.result as Object);
                     break;
                 }
             }
@@ -71,7 +74,8 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
                 } else {
                     if (response.result && response.result instanceof Array && response.result.length > 0) {
                         for (let i = 0; i < response.result.length; i++) {
-                            Object.setPrototypeOf(response.result[i], AppSensorEvent.prototype);
+                            Utils.setPrototypeInDepth(response.result[i], Utils.appSensorEventPrototypeSample);
+                            Utils.setTimestampFromJSONParsedObject(response.result[i] as AppSensorEvent, response.result[i]);
                         }
                     }
 
@@ -101,7 +105,8 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
                 } else {
                     if (response.result && response.result instanceof Array && response.result.length > 0) {
                         for (let i = 0; i < response.result.length; i++) {
-                            Object.setPrototypeOf(response.result[i], Attack.prototype);
+                            Utils.setPrototypeInDepth(response.result[i], Utils.attackPrototypeSample);
+                            Utils.setTimestampFromJSONParsedObject(response.result[i] as Attack, response.result[i]);
                         }
                     }
 
@@ -131,7 +136,8 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
                 } else {
                     if (response.result && response.result instanceof Array && response.result.length > 0) {
                         for (let i = 0; i < response.result.length; i++) {
-                            Object.setPrototypeOf(response.result[i], Response.prototype);
+                            Utils.setPrototypeInDepth(response.result[i], Utils.responsePrototypeSample);
+                            Utils.setTimestampFromJSONParsedObject(response.result[i] as Response, response.result[i]);
                         }
                     }
 
@@ -413,7 +419,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
     }
 
     onAdd(event: AppSensorEvent | Attack | Response): Promise<void> {
-        // console.log(event);
+        //your code in the subclass goes here
 
         return Promise.resolve();
     }

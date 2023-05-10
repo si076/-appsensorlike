@@ -56,7 +56,7 @@ class AppSensorReportingWebSocketServer extends AppSensorWebSocketServer impleme
 
                 } else {
 
-                    this.findEvents(earliest)
+                    this.findEvents(earliest as string)
                     .then((result) => {
                         AppSensorWebSocketServer.sendResult(ws, request, result, 'AppSensorEvent');                                            
                     })
@@ -76,7 +76,7 @@ class AppSensorReportingWebSocketServer extends AppSensorWebSocketServer impleme
 
                 } else {
 
-                    this.findAttacks(earliest)
+                    this.findAttacks(earliest as string)
                     .then((result) => {
                         AppSensorWebSocketServer.sendResult(ws, request, result, 'Attack');                                            
                     })
@@ -96,7 +96,7 @@ class AppSensorReportingWebSocketServer extends AppSensorWebSocketServer impleme
 
                 } else {
 
-                    this.findResponses(earliest)
+                    this.findResponses(earliest as string)
                     .then((result) => {
                         AppSensorWebSocketServer.sendResult(ws, request, result, 'Response');                                            
                     })
@@ -116,7 +116,7 @@ class AppSensorReportingWebSocketServer extends AppSensorWebSocketServer impleme
 
                 } else {
 
-                    this.countEvents(earliest)
+                    this.countEvents(earliest as string)
                     .then((result) => {
                         AppSensorWebSocketServer.sendResult(ws, request, result, null);                                            
                     })
@@ -136,7 +136,7 @@ class AppSensorReportingWebSocketServer extends AppSensorWebSocketServer impleme
 
                 } else {
 
-                    this.countAttacks(earliest)
+                    this.countAttacks(earliest as string)
                     .then((result) => {
                         AppSensorWebSocketServer.sendResult(ws, request, result, null);                                            
                     })
@@ -156,7 +156,7 @@ class AppSensorReportingWebSocketServer extends AppSensorWebSocketServer impleme
 
                 } else {
 
-                    this.countResponses(earliest)
+                    this.countResponses(earliest as string)
                     .then((result) => {
                         AppSensorWebSocketServer.sendResult(ws, request, result, null);                                            
                     })
@@ -189,7 +189,7 @@ class AppSensorReportingWebSocketServer extends AppSensorWebSocketServer impleme
                     AppSensorWebSocketServer.reportMissingParameter(ws, request, "label");
                 } else {
 
-                    this.countEventsByCategoryLabel(earliest, category, label)
+                    this.countEventsByCategoryLabel(earliest as string, category as string, label as string)
                     .then((result) => {
                         AppSensorWebSocketServer.sendResult(ws, request, result, null);                                            
                     })
@@ -212,7 +212,7 @@ class AppSensorReportingWebSocketServer extends AppSensorWebSocketServer impleme
                     AppSensorWebSocketServer.reportMissingParameter(ws, request, "label");
                 } else {
 
-                    this.countAttacksByCategoryLabel(earliest, category, label)
+                    this.countAttacksByCategoryLabel(earliest as string, category as string, label as string)
                     .then((result) => {
                         AppSensorWebSocketServer.sendResult(ws, request, result, null);                                            
                     })
@@ -235,7 +235,7 @@ class AppSensorReportingWebSocketServer extends AppSensorWebSocketServer impleme
                     AppSensorWebSocketServer.reportMissingParameter(ws, request, "label");
                 } else {
 
-                    this.countResponsesByCategoryLabel(earliest, category, label)
+                    this.countResponsesByCategoryLabel(earliest as string, category as string, label as string)
                     .then((result) => {
                         AppSensorWebSocketServer.sendResult(ws, request, result, null);                                            
                     })
@@ -255,7 +255,7 @@ class AppSensorReportingWebSocketServer extends AppSensorWebSocketServer impleme
                     AppSensorWebSocketServer.reportMissingParameter(ws, request, "user");
                 } else {
 
-                    this.countEventsByUser(earliest, user)
+                    this.countEventsByUser(earliest as string, user as string)
                     .then((result) => {
                         AppSensorWebSocketServer.sendResult(ws, request, result, null);                                            
                     })
@@ -276,7 +276,7 @@ class AppSensorReportingWebSocketServer extends AppSensorWebSocketServer impleme
                     AppSensorWebSocketServer.reportMissingParameter(ws, request, "user");
                 } else {
 
-                    this.countAttacksByUser(earliest, user)
+                    this.countAttacksByUser(earliest as string, user as string)
                     .then((result) => {
                         AppSensorWebSocketServer.sendResult(ws, request, result, null);                                            
                     })
@@ -297,7 +297,7 @@ class AppSensorReportingWebSocketServer extends AppSensorWebSocketServer impleme
                     AppSensorWebSocketServer.reportMissingParameter(ws, request, "user");
                 } else {
 
-                    this.countResponsesByUser(earliest, user)
+                    this.countResponsesByUser(earliest as string, user as string)
                     .then((result) => {
                         AppSensorWebSocketServer.sendResult(ws, request, result, null);                                            
                     })
@@ -377,23 +377,14 @@ class AppSensorReportingWebSocketServer extends AppSensorWebSocketServer impleme
     }
 
     async countEventsByLabel(earliest: string, label: string): Promise<number> {
-        const criteria = new SearchCriteria();
-        criteria.setEarliest(new Date(earliest));
-
         throw new Error("Method not implemented.");
     }
 
     async countAttacksByLabel(earliest: string, label: string): Promise<number> {
-        const criteria = new SearchCriteria();
-        criteria.setEarliest(new Date(earliest));
-
         throw new Error("Method not implemented.");
     }
 
     async countResponsesByLabel(earliest: string, label: string): Promise<number> {
-        const criteria = new SearchCriteria();
-        criteria.setEarliest(new Date(earliest));
-
         throw new Error("Method not implemented.");
     }
 

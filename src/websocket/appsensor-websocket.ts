@@ -4,7 +4,7 @@ interface IMethodRequest {
     id: string;
     methodName: string;
     parameters?: {
-        [propertyName: string]: string;
+        [propertyName: string]: string | Object;
     }
 
 }
@@ -19,9 +19,9 @@ interface IMethodResponse {
 class MethodRequest implements IMethodRequest {
     id: string;
     methodName: string;
-    parameters?: { [propertyName: string]: string; };
+    parameters?: { [propertyName: string]: string | Object; };
 
-    constructor(id: string, methodName: string, parameters?: { [propertyName: string]: string; }) {
+    constructor(id: string, methodName: string, parameters?: { [propertyName: string]: string | Object; }) {
         this.id = id;
         this.methodName = methodName;
         this.parameters = parameters;

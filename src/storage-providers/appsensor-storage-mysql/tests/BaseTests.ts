@@ -1,6 +1,4 @@
 import { AppSensorClient, AppSensorServer, Category, DetectionPoint, DetectionSystem, Interval, INTERVAL_UNITS, KeyValuePair, Resource, Response, Threshold, User } from "../../../core/core.js";
-import { AppSensorLocal } from "../../../execution-modes/appsensor-local/appsensor_local.js";
-import { MySQLAttackStore, MySQLEventStore, MySQLResponseStore } from "../appsensor-storage-mysql.js";
 import { DOP } from "../DOP.js";
 import { Utils } from "../utils.js";
 
@@ -33,17 +31,13 @@ class BaseTests {
 
 	protected appSensorClient: AppSensorClient;
 
-	private appSensorLocal: AppSensorLocal;
+	// private appSensorLocal: AppSensorLocal;
 
-	constructor() {
-		this.appSensorLocal = new AppSensorLocal('',
-												 new MySQLAttackStore(),
-												 new MySQLEventStore(),
-												 new MySQLResponseStore());
+	constructor(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
 
-		this.appSensorServer = this.appSensorLocal.getAppSensorServer();
+		this.appSensorServer = appSensorServer;
 
-		this.appSensorClient = this.appSensorLocal.getAppSensorClient();
+		this.appSensorClient = appSensorClient;
 	}
 
 	protected static generateResponses(): Response[] {

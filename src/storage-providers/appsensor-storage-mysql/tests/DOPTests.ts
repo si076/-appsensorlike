@@ -1,10 +1,14 @@
-import { AppSensorEvent, DetectionPoint, KeyValuePair } from "../../../core/core.js";
+import { AppSensorClient, AppSensorEvent, AppSensorServer, DetectionPoint, KeyValuePair } from "../../../core/core.js";
 import { DOP, TYPE_FILTER_FUNCTION } from "../DOP.js";
 
 import assert from "assert";
 import { BaseTests } from "./BaseTests.js";
 
 class DOPTests extends BaseTests {
+
+	constructor(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
+		super(appSensorServer, appSensorClient);
+	}
 
     private async persistObjects() {
         console.log('--> persistObjects');
@@ -55,9 +59,9 @@ class DOPTests extends BaseTests {
         console.log('<-- persistObjects');
     } 
 
-    public static async runTests() {
+    public static async runTests(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
         console.log('----- Run DOPTests -----');
-		const inst = new DOPTests();
+		const inst = new DOPTests(appSensorServer, appSensorClient);
 		await inst.initializeTest();
 		await inst.persistObjects();
 		

@@ -1,6 +1,6 @@
-import { AppSensorEvent, Category, DetectionPoint, DetectionSystem, Interval, INTERVAL_UNITS, Response, Threshold, User } from "../../../../core/core.js";
-import { SearchCriteria } from "../../../../core/criteria/criteria.js";
-import { Clause, Expression, MonitorPoint, Rule } from "../../../../core/rule/rule.js";
+import { AppSensorClient, AppSensorEvent, AppSensorServer, Category, DetectionPoint, DetectionSystem, Interval, INTERVAL_UNITS, Response, Threshold, User } from "../../../core/core.js";
+import { SearchCriteria } from "../../../core/criteria/criteria.js";
+import { Clause, Expression, MonitorPoint, Rule } from "../../../core/rule/rule.js";
 import { BaseTest } from "./BaseTest.js";
 
 import assert from "assert";
@@ -123,6 +123,10 @@ class SimpleAggregateEventAnalysisEngineTest extends BaseTest {
 		SimpleAggregateEventAnalysisEngineTest.time = new Date(Date.now() + 2 * 60 * 1000);
 	}
 
+	constructor(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
+		super(appSensorServer, appSensorClient);
+	}
+
 	protected override initializeTest(): void {
 		// const rulesEngine = this.getRulesEngine();
 
@@ -136,7 +140,6 @@ class SimpleAggregateEventAnalysisEngineTest extends BaseTest {
 		this.appSensorServer.getConfiguration()!.setDetectionPoints(emptyDps);
 	}
 
-	// @Test
 	private async test1_DP1() {
 		console.log('--> test1_DP1');
 		// add rules/detection points
@@ -214,23 +217,10 @@ class SimpleAggregateEventAnalysisEngineTest extends BaseTest {
 		}
 	}
 
-
-	// private getRulesEngine(): AggregateEventAnalysisEngine {
-	// 	const engines = this.appSensorServer.getEventAnalysisEngines();
-
-	// 	for (const engine of engines) {
-	// 		if (engine instanceof AggregateEventAnalysisEngine){
-	// 			return engine as AggregateEventAnalysisEngine;
-	// 		}
-	// 	}
-
-	// 	return null;
-	// }
-
-	public static async runTests() {
+	public static async runTests(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
 		console.log();
 		console.log('----- Run SimpleAggregateEventAnalysisEngineTest -----');
-		const inst = new SimpleAggregateEventAnalysisEngineTest();
+		const inst = new SimpleAggregateEventAnalysisEngineTest(appSensorServer, appSensorClient);
 		inst.initializeTest();
 		await inst.test1_DP1();
 	}

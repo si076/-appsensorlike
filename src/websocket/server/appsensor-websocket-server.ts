@@ -116,8 +116,8 @@ class AppSensorWebSocketServer {
 
     }
 
-    protected static getParameter(request: MethodRequest, paramName: string): string | undefined {
-        let param: string | undefined = undefined;
+    protected static getParameter(request: MethodRequest, paramName: string): string | Object | undefined {
+        let param: string | Object | undefined = undefined;
 
         if (request.parameters) {
             const propDescr = Object.getOwnPropertyDescriptor(request.parameters, paramName);
@@ -150,7 +150,7 @@ class AppSensorWebSocketServer {
     }
 
     protected static sendResult(ws: WebSocket, request: MethodRequest,
-                                result: number | AppSensorEvent[] | Attack[] | Response[] | null | string,
+                                result: number | Object | null | string,
                                 resultElementClass: string | null) {
         const response = new MethodResponse(request.id, 
                                             request.methodName,

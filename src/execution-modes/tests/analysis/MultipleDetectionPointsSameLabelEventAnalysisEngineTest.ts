@@ -1,5 +1,5 @@
-import { AppSensorEvent, Category, DetectionPoint, DetectionSystem, User } from "../../../../core/core.js";
-import { SearchCriteria } from "../../../../core/criteria/criteria.js";
+import { AppSensorClient, AppSensorEvent, AppSensorServer, Category, DetectionPoint, DetectionSystem, User } from "../../../core/core.js";
+import { SearchCriteria } from "../../../core/criteria/criteria.js";
 import { BaseTest } from "./BaseTest.js";
 
 import assert from "assert";
@@ -18,6 +18,10 @@ class MultipleDetectionPointsSameLabelEventAnalysisEngineTest extends BaseTest {
 
 		MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionSystems1.push(
 			MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionSystem1.getDetectionSystemId());
+	}
+
+	constructor(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
+		super(appSensorServer, appSensorClient);
 	}
 
 	private async testAttackCreationMultipleDetectionPointsOneLabel() {
@@ -117,9 +121,9 @@ class MultipleDetectionPointsSameLabelEventAnalysisEngineTest extends BaseTest {
 		console.log('<-- testAttackCreationMultipleDetectionPointsOneLabel');
 	}
 
-	public static async runTests() {
+	public static async runTests(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
 		console.log('----- Run MultipleDetectionPointsSameLabelEventAnalysisEngineTest -----');
-		const inst = new MultipleDetectionPointsSameLabelEventAnalysisEngineTest();
+		const inst = new MultipleDetectionPointsSameLabelEventAnalysisEngineTest(appSensorServer, appSensorClient);
 
 		inst.initializeTest();
 		await inst.testAttackCreationMultipleDetectionPointsOneLabel();
