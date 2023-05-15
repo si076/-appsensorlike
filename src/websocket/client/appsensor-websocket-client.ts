@@ -6,6 +6,7 @@ import { ClientRequestArgs } from "http";
 
 import WebSocket from "ws";
 import { v4 as uuidv4 } from 'uuid';
+import { Logger } from "../../logging/logging.js";
 
 interface IWebSocketClientConfig {
     address: string | URL;
@@ -39,23 +40,25 @@ class AppSensorWebSocketClient {
         this.socket = new WebSocket(_address, _options);
 
         this.socket.on('open', function () {
-            // console.log('WebSocket: ->open<- event!');
+            Logger.getClientLogger().trace('AppSensorWebSocketClient.socket: ', 'open');
         });
-        this.socket.on('error', console.error);
+        this.socket.on('error', (error) => {
+            Logger.getClientLogger().trace('AppSensorWebSocketClient.socket: ', 'error ', error);
+        });
 
         const onServerResponseThunk = this.onServerResponseWrapper(this);
 
         this.socket.on('message', onServerResponseThunk);
 
         this.socket.on('close', function close() {
-            // console.log('WebSocket: ->close<- event!');
+            Logger.getClientLogger().trace('AppSensorWebSocketClient.socket: ', 'close');
         });
     }
 
     private onServerResponseWrapper(me: AppSensorWebSocketClient) {
 
         return function onServerResponse(data: WebSocket.RawData, isBinary: boolean) {
-            // console.log('WebSocket: ->message<- event!');
+            Logger.getClientLogger().trace('AppSensorWebSocketClient.socket: ', 'message');
 
             me.onServerResponse(data, isBinary);
         }
@@ -71,7 +74,7 @@ class AppSensorWebSocketClient {
         return new MethodRequest(uuid, methodName, parameters);
     }
 
-    protected async sendRequest(request: MethodRequest) {
+    protected async sendRequest(request: MethodRequest, cb: (err?: Error) => void) {
         let waited = 0;
         const timeout = 500;
         while (this.socket.readyState === WebSocket.CONNECTING && waited < 5000) {
@@ -81,21 +84,25 @@ class AppSensorWebSocketClient {
 
         if (this.socket.readyState === WebSocket.CONNECTING) {
 
-            throw new Error('WebSocket in CONNECTING state for too long!');
+            cb(new Error('WebSocket in CONNECTING state for too long!'));
 
         } else if (this.socket.readyState === WebSocket.CLOSING) {
 
-            throw new Error('WebSocket in CLOSING state!');
+            cb(new Error('WebSocket in CLOSING state!'));
             
         } else if (this.socket.readyState === WebSocket.CLOSED) {
 
-            throw new Error('WebSocket has already been closed!');
+            cb(new Error('WebSocket has already been closed!'));
             
         } else if (this.socket.readyState === WebSocket.OPEN) {
 
-            this.socket.send(JSON.stringify(request));
+            this.socket.send(JSON.stringify(request), cb);
 
         }
+    }
+
+    protected closeSocket() {
+        this.socket.close();
     }
 
 } 

@@ -3,10 +3,11 @@ import { AppSensorEvent, Attack, Response } from "../../../core/core.js";
 import { EventManager } from "../../../core/event/event.js";
 import { JSONConfigReadValidate, Utils } from "../../../utils/Utils.js";
 import { AppSensorWebSocketClient, WebSocketClientConfig } from "../../../websocket/client/appsensor-websocket-client.js";
+import { MethodResponse } from "../../../websocket/appsensor-websocket.js";
+import { Logger } from "../../../logging/logging.js";
 
 import EventEmitter from "events";
 import WebSocket from "ws";
-import { MethodResponse } from "../../../websocket/appsensor-websocket.js";
 
 class WebSocketEventManagerConfigReader  extends JSONConfigReadValidate {
 
@@ -19,27 +20,46 @@ class WebSocketEventManagerConfigReader  extends JSONConfigReadValidate {
 
 class WebSocketEventManager extends AppSensorWebSocketClient implements EventManager {
 	
-	// @SuppressWarnings("unused")
-	// private Logger logger;
-
 	private static eventEmmiter: EventEmitter = new EventEmitter();
 	
     constructor(address: string | URL = '', 
-				configLocation: string = '',
+				configLocation: string = 'appsensor-websocket-event-manager-config.json',
 				options?: WebSocket.ClientOptions | ClientRequestArgs) {
 		super(address, new WebSocketEventManagerConfigReader().read(configLocation), options);
+    }
+
+    public closeSocket() {
+        super.closeSocket();
     }
 
     protected override onServerResponse(data: WebSocket.RawData, isBinary: boolean) {
         const response: MethodResponse = JSON.parse(data.toString());
         Object.setPrototypeOf(response, MethodResponse.prototype);
 
+        const responseStatus = response.error ? 'Error' : 'OK';
+        Logger.getClientLogger().trace('WebSocketEventManager.onServerResponse: ', responseStatus);
+
         WebSocketEventManager.eventEmmiter.emit(response.id, response);
     }
+
+    private genSendCallback(reject: (reason?: any) => void) {
+
+        return function sendCallback(error?: Error) {
+            if (error) {
+                Logger.getClientLogger().error('Communication error:', error);
+                
+                reject(error);
+            }
+        }
+    }
+
 	/**
 	 * {@inheritDoc}
 	 */
 	public async addEvent(event: AppSensorEvent): Promise<void> {
+		Logger.getClientLogger().trace('WebSocketEventManager.addEvent:');
+		Logger.getClientLogger().trace(event);
+
         return new Promise((resolve, reject) => {
 
             const request = AppSensorWebSocketClient.createRequest("addEvent", {event: event});
@@ -49,18 +69,17 @@ class WebSocketEventManager extends AppSensorWebSocketClient implements EventMan
                 WebSocketEventManager.eventEmmiter.removeAllListeners(request.id);
 
                 if (response.error) {
-                    reject(new Error(response.error));
+                    const serverError = new Error(response.error);
+                    Logger.getClientLogger().error('Server error:', serverError);
+
+                    reject(serverError);
                 } else {
                     
                     resolve();
                 }
             });
 
-            try {
-                this.sendRequest(request);
-            } catch (error) {
-                reject(error);
-            }
+            this.sendRequest(request, this.genSendCallback(reject));
         });
 	}
 	
@@ -68,6 +87,9 @@ class WebSocketEventManager extends AppSensorWebSocketClient implements EventMan
 	 * {@inheritDoc}
 	 */
 	public async addAttack(attack: Attack): Promise<void> {
+		Logger.getClientLogger().trace('WebSocketEventManager.addAttack:');
+		Logger.getClientLogger().trace(attack);
+
         return new Promise((resolve, reject) => {
 
             const request = AppSensorWebSocketClient.createRequest("addAttack", {attack: attack});
@@ -77,18 +99,17 @@ class WebSocketEventManager extends AppSensorWebSocketClient implements EventMan
                 WebSocketEventManager.eventEmmiter.removeAllListeners(request.id);
 
                 if (response.error) {
-                    reject(new Error(response.error));
+                    const serverError = new Error(response.error);
+                    Logger.getClientLogger().error('Server error:', serverError);
+                    
+                    reject(serverError);
                 } else {
 
                     resolve();
                 }
             });
 
-            try {
-                this.sendRequest(request);
-            } catch (error) {
-                reject(error);
-            }
+            this.sendRequest(request, this.genSendCallback(reject));
         });
 	}
 	
@@ -96,6 +117,9 @@ class WebSocketEventManager extends AppSensorWebSocketClient implements EventMan
 	 * {@inheritDoc}
 	 */
 	public getResponses(earliest: Date): Promise<Response[]> {
+		Logger.getClientLogger().trace('WebSocketEventManager.getResponses:');
+		Logger.getClientLogger().trace(`earliest: ${earliest}`);
+
         return new Promise((resolve, reject) => {
 
             const request = AppSensorWebSocketClient.createRequest("getResponses", {earliest: earliest});
@@ -105,7 +129,10 @@ class WebSocketEventManager extends AppSensorWebSocketClient implements EventMan
                 WebSocketEventManager.eventEmmiter.removeAllListeners(request.id);
 
                 if (response.error) {
-                    reject(new Error(response.error));
+                    const serverError = new Error(response.error);
+                    Logger.getClientLogger().error('Server error:', serverError);
+                    
+                    reject(serverError);
                 } else {
                     if (response.result && response.result instanceof Array && response.result.length > 0) {
                         for (let i = 0; i < response.result.length; i++) {
@@ -120,11 +147,7 @@ class WebSocketEventManager extends AppSensorWebSocketClient implements EventMan
                 }
             });
 
-            try {
-                this.sendRequest(request);
-            } catch (error) {
-                reject(error);
-            }
+            this.sendRequest(request, this.genSendCallback(reject));
         });
 	}
 	

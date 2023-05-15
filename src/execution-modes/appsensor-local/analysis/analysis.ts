@@ -1,12 +1,10 @@
 import { ResponseAnalysisEngine } from "../../../core/analysis/analysis.js";
 import { Response, Utils } from "../../../core/core.js";
 import { ResponseHandler, RESPONSES } from "../../../core/response/response.js";
+import { Logger } from "../../../logging/logging.js";
 
 class LocalResponseAnalysisEngine extends ResponseAnalysisEngine {
 
-	// private Logger logger;
-	
-	// @Inject
 	private responseHandler: ResponseHandler;
 	
     constructor(responseHandler: ResponseHandler) {
@@ -18,7 +16,6 @@ class LocalResponseAnalysisEngine extends ResponseAnalysisEngine {
 	 * 
 	 * @param response {@link Response} that has been added to the {@link ResponseStore}.
 	 */
-	// @Override
 	public override async analyze(response: Response): Promise<void> {
 		if(response === null) {
 			return;
@@ -27,12 +24,15 @@ class LocalResponseAnalysisEngine extends ResponseAnalysisEngine {
         let userName = Utils.getUserName(response.getUser());
         
 		if (RESPONSES.LOG === response.getAction()) {
-			console.info(`Handling <log> response for user ${userName}`);
+			//we log here with the client logger as with local implementation everyting happens on one side
+			Logger.getClientLogger().trace("LocalResponseAnalysisEngine.analyze:", `Handling <log> response for user ${userName}`);
 		} 
 		// else {
 
 			//in all cases allow configured response handler to handle the response
-			console.info(`Delegating response for user ${userName} to configured response handler ` + this.responseHandler.constructor.name);
+
+
+			Logger.getClientLogger().trace("LocalResponseAnalysisEngine.analyze:", `Delegating response for user ${userName} to configured response handler ${this.responseHandler.constructor.name}`);
 
 			this.responseHandler.handle(response);
 		// }

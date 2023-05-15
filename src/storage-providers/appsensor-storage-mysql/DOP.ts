@@ -8,6 +8,7 @@ import { Utils } from './utils.js'
 
 import { v4 as uuidv4 } from 'uuid';
 import EventEmitter from "events";
+import { Logger } from "../../logging/logging.js";
 
 class Graph {
     private ADJACENCY_MATRIX: number[][] = [];
@@ -376,7 +377,8 @@ class DOP {
 
             resolve(result);
         } else {
-                console.error(`Cannot create objects for class '${className}' because of internal error!`);
+            Logger.getServerLogger().error("DOP.createAndCacheObjectsFromResult: ", 
+                                           `Cannot create objects for class '${className}' because of internal error!`);
         }
 
         return result;

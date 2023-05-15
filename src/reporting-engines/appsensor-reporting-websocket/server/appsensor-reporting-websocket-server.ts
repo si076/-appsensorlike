@@ -27,7 +27,7 @@ class AppSensorReportingWebSocketServer extends AppSensorWebSocketServer impleme
     private responseStore: ResponseStore;
 
     constructor(appSensorServer: AppSensorServer,
-                configLocation: string = '',
+                configLocation: string = 'appsensor-reporting-websocket-server-config.json',
                 serverOptions? :WebSocket.ServerOptions) {
         super(new ReportingWebSocketServerConfigReader().read(configLocation), serverOptions);
 

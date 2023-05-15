@@ -1,0 +1,871 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "definitions": {
+        "Appender": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/CategoryFilterAppender"
+                },
+                {
+                    "$ref": "#/definitions/ConsoleAppender"
+                },
+                {
+                    "$ref": "#/definitions/FileAppender"
+                },
+                {
+                    "$ref": "#/definitions/SyncfileAppender"
+                },
+                {
+                    "$ref": "#/definitions/DateFileAppender"
+                },
+                {
+                    "$ref": "#/definitions/LogLevelFilterAppender"
+                },
+                {
+                    "$ref": "#/definitions/NoLogFilterAppender"
+                },
+                {
+                    "$ref": "#/definitions/MultiFileAppender"
+                },
+                {
+                    "$ref": "#/definitions/MultiprocessAppender"
+                },
+                {
+                    "$ref": "#/definitions/RecordingAppender"
+                },
+                {
+                    "$ref": "#/definitions/StandardErrorAppender"
+                },
+                {
+                    "$ref": "#/definitions/StandardOutputAppender"
+                },
+                {
+                    "$ref": "#/definitions/TCPAppender"
+                },
+                {
+                    "$ref": "#/definitions/CustomAppender"
+                }
+            ]
+        },
+        "AppenderModule": {
+            "additionalProperties": false,
+            "properties": {
+                "configure": {
+                    "additionalProperties": false,
+                    "type": "object"
+                }
+            },
+            "required": [
+                "configure"
+            ],
+            "type": "object"
+        },
+        "BasicLayout": {
+            "additionalProperties": false,
+            "properties": {
+                "type": {
+                    "enum": [
+                        "basic"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "type": "object"
+        },
+        "CategoryFilterAppender": {
+            "additionalProperties": false,
+            "description": "Category Filter",
+            "properties": {
+                "appender": {
+                    "type": "string"
+                },
+                "exclude": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                },
+                "type": {
+                    "enum": [
+                        "categoryFilter"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "type": "object"
+        },
+        "ColoredLayout": {
+            "additionalProperties": false,
+            "properties": {
+                "type": {
+                    "enum": [
+                        "colored",
+                        "coloured"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "type": "object"
+        },
+        "Configuration": {
+            "additionalProperties": false,
+            "properties": {
+                "appenders": {
+                    "additionalProperties": {
+                        "$ref": "#/definitions/Appender"
+                    },
+                    "type": "object"
+                },
+                "categories": {
+                    "additionalProperties": {
+                        "additionalProperties": false,
+                        "properties": {
+                            "appenders": {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            },
+                            "enableCallStack": {
+                                "type": "boolean"
+                            },
+                            "level": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "appenders",
+                            "level"
+                        ],
+                        "type": "object"
+                    },
+                    "type": "object"
+                },
+                "disableClustering": {
+                    "type": "boolean"
+                },
+                "levels": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/Levels"
+                        },
+                        {
+                            "additionalProperties": {
+                                "additionalProperties": false,
+                                "properties": {
+                                    "colour": {
+                                        "type": "string"
+                                    },
+                                    "value": {
+                                        "type": "number"
+                                    }
+                                },
+                                "required": [
+                                    "colour",
+                                    "value"
+                                ],
+                                "type": "object"
+                            },
+                            "type": "object"
+                        }
+                    ]
+                },
+                "pm2": {
+                    "type": "boolean"
+                },
+                "pm2InstanceVar": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "appenders",
+                "categories"
+            ],
+            "type": "object"
+        },
+        "ConsoleAppender": {
+            "additionalProperties": false,
+            "description": "Console Appender",
+            "properties": {
+                "layout": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/BasicLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/ColoredLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/MessagePassThroughLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/DummyLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/PatternLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/CustomLayout"
+                        }
+                    ]
+                },
+                "type": {
+                    "enum": [
+                        "console"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "type": "object"
+        },
+        "CustomAppender": {
+            "additionalProperties": {},
+            "properties": {
+                "type": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/AppenderModule"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "type": "object"
+        },
+        "CustomLayout": {
+            "additionalProperties": {},
+            "properties": {
+                "type": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "type": "object"
+        },
+        "DateFileAppender": {
+            "additionalProperties": false,
+            "properties": {
+                "alwaysIncludePattern": {
+                    "type": "boolean"
+                },
+                "compress": {
+                    "type": "boolean"
+                },
+                "encoding": {
+                    "type": "string"
+                },
+                "fileNameSep": {
+                    "type": "string"
+                },
+                "filename": {
+                    "type": "string"
+                },
+                "flags": {
+                    "type": "string"
+                },
+                "keepFileExt": {
+                    "type": "boolean"
+                },
+                "layout": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/BasicLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/ColoredLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/MessagePassThroughLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/DummyLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/PatternLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/CustomLayout"
+                        }
+                    ]
+                },
+                "mode": {
+                    "type": "number"
+                },
+                "numBackups": {
+                    "type": "number"
+                },
+                "pattern": {
+                    "description": "The following strings are recognised in the pattern:\n - yyyy : the full year, use yy for just the last two digits\n - MM   : the month\n - dd   : the day of the month\n - hh   : the hour of the day (24-hour clock)\n - mm   : the minute of the hour\n - ss   : seconds\n - SSS  : milliseconds (although I'm not sure you'd want to roll your logs every millisecond)\n - O    : timezone (capital letter o)",
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "dateFile"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "filename",
+                "type"
+            ],
+            "type": "object"
+        },
+        "DummyLayout": {
+            "additionalProperties": false,
+            "properties": {
+                "type": {
+                    "enum": [
+                        "dummy"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "type": "object"
+        },
+        "FileAppender": {
+            "additionalProperties": false,
+            "properties": {
+                "backups": {
+                    "type": "number"
+                },
+                "compress": {
+                    "type": "boolean"
+                },
+                "encoding": {
+                    "type": "string"
+                },
+                "fileNameSep": {
+                    "type": "string"
+                },
+                "filename": {
+                    "type": "string"
+                },
+                "flags": {
+                    "type": "string"
+                },
+                "keepFileExt": {
+                    "type": "boolean"
+                },
+                "layout": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/BasicLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/ColoredLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/MessagePassThroughLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/DummyLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/PatternLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/CustomLayout"
+                        }
+                    ]
+                },
+                "maxLogSize": {
+                    "type": [
+                        "string",
+                        "number"
+                    ]
+                },
+                "mode": {
+                    "type": "number"
+                },
+                "type": {
+                    "enum": [
+                        "file"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "filename",
+                "type"
+            ],
+            "type": "object"
+        },
+        "Level": {
+            "additionalProperties": false,
+            "properties": {
+                "colour": {
+                    "type": "string"
+                },
+                "level": {
+                    "type": "number"
+                },
+                "levelStr": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "colour",
+                "level",
+                "levelStr"
+            ],
+            "type": "object"
+        },
+        "Levels": {
+            "additionalProperties": false,
+            "properties": {
+                "ALL": {
+                    "$ref": "#/definitions/Level"
+                },
+                "DEBUG": {
+                    "$ref": "#/definitions/Level"
+                },
+                "ERROR": {
+                    "$ref": "#/definitions/Level"
+                },
+                "FATAL": {
+                    "$ref": "#/definitions/Level"
+                },
+                "INFO": {
+                    "$ref": "#/definitions/Level"
+                },
+                "MARK": {
+                    "$ref": "#/definitions/Level"
+                },
+                "OFF": {
+                    "$ref": "#/definitions/Level"
+                },
+                "TRACE": {
+                    "$ref": "#/definitions/Level"
+                },
+                "WARN": {
+                    "$ref": "#/definitions/Level"
+                },
+                "levels": {
+                    "items": {
+                        "$ref": "#/definitions/Level"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "ALL",
+                "DEBUG",
+                "ERROR",
+                "FATAL",
+                "INFO",
+                "MARK",
+                "OFF",
+                "TRACE",
+                "WARN",
+                "levels"
+            ],
+            "type": "object"
+        },
+        "LogLevelFilterAppender": {
+            "additionalProperties": false,
+            "properties": {
+                "appender": {
+                    "type": "string"
+                },
+                "level": {
+                    "type": "string"
+                },
+                "maxLevel": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "logLevelFilter"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "appender",
+                "level",
+                "type"
+            ],
+            "type": "object"
+        },
+        "MessagePassThroughLayout": {
+            "additionalProperties": false,
+            "properties": {
+                "type": {
+                    "enum": [
+                        "messagePassThrough"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "type": "object"
+        },
+        "MultiFileAppender": {
+            "additionalProperties": false,
+            "properties": {
+                "base": {
+                    "type": "string"
+                },
+                "extension": {
+                    "type": "string"
+                },
+                "property": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "multiFile"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "base",
+                "extension",
+                "property",
+                "type"
+            ],
+            "type": "object"
+        },
+        "MultiprocessAppender": {
+            "additionalProperties": false,
+            "properties": {
+                "appender": {
+                    "type": "string"
+                },
+                "loggerHost": {
+                    "type": "string"
+                },
+                "loggerPort": {
+                    "type": "number"
+                },
+                "mode": {
+                    "enum": [
+                        "master",
+                        "worker"
+                    ],
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "multiprocess"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "mode",
+                "type"
+            ],
+            "type": "object"
+        },
+        "NoLogFilterAppender": {
+            "additionalProperties": false,
+            "description": "No Log Filter",
+            "properties": {
+                "appender": {
+                    "type": "string"
+                },
+                "exclude": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                },
+                "type": {
+                    "enum": [
+                        "noLogFilter"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "appender",
+                "exclude",
+                "type"
+            ],
+            "type": "object"
+        },
+        "PatternLayout": {
+            "additionalProperties": false,
+            "properties": {
+                "pattern": {
+                    "type": "string"
+                },
+                "tokens": {
+                    "additionalProperties": {
+                        "$ref": "#/definitions/Token"
+                    },
+                    "type": "object"
+                },
+                "type": {
+                    "enum": [
+                        "pattern"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "pattern",
+                "type"
+            ],
+            "type": "object"
+        },
+        "RecordingAppender": {
+            "additionalProperties": false,
+            "properties": {
+                "type": {
+                    "enum": [
+                        "recording"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "type": "object"
+        },
+        "StandardErrorAppender": {
+            "additionalProperties": false,
+            "properties": {
+                "layout": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/BasicLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/ColoredLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/MessagePassThroughLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/DummyLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/PatternLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/CustomLayout"
+                        }
+                    ]
+                },
+                "type": {
+                    "enum": [
+                        "stderr"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "type": "object"
+        },
+        "StandardOutputAppender": {
+            "additionalProperties": false,
+            "properties": {
+                "layout": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/BasicLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/ColoredLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/MessagePassThroughLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/DummyLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/PatternLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/CustomLayout"
+                        }
+                    ]
+                },
+                "type": {
+                    "enum": [
+                        "stdout"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "type": "object"
+        },
+        "SyncfileAppender": {
+            "additionalProperties": false,
+            "properties": {
+                "backups": {
+                    "type": "number"
+                },
+                "encoding": {
+                    "type": "string"
+                },
+                "filename": {
+                    "type": "string"
+                },
+                "flags": {
+                    "type": "string"
+                },
+                "layout": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/BasicLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/ColoredLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/MessagePassThroughLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/DummyLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/PatternLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/CustomLayout"
+                        }
+                    ]
+                },
+                "maxLogSize": {
+                    "type": [
+                        "string",
+                        "number"
+                    ]
+                },
+                "mode": {
+                    "type": "number"
+                },
+                "type": {
+                    "enum": [
+                        "fileSync"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "filename",
+                "type"
+            ],
+            "type": "object"
+        },
+        "TCPAppender": {
+            "additionalProperties": false,
+            "description": "TCP Appender",
+            "properties": {
+                "endMsg": {
+                    "type": "string"
+                },
+                "host": {
+                    "type": "string"
+                },
+                "layout": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/BasicLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/ColoredLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/MessagePassThroughLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/DummyLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/PatternLayout"
+                        },
+                        {
+                            "$ref": "#/definitions/CustomLayout"
+                        }
+                    ]
+                },
+                "port": {
+                    "type": "number"
+                },
+                "type": {
+                    "enum": [
+                        "tcp"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "type": "object"
+        },
+        "Token": {
+            "anyOf": [
+                {
+                    "additionalProperties": false,
+                    "type": "object"
+                },
+                {
+                    "type": "string"
+                }
+            ]
+        }
+    },
+    "properties": {
+        "log4jsLoggers": {
+            "$ref": "#/definitions/Configuration"
+        }
+    },
+    "required": [
+        "log4jsLoggers"
+    ],
+    "type": "object"
+}
+

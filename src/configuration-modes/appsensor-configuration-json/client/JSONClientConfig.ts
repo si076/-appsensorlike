@@ -18,7 +18,9 @@ class JSONClientConfigurationReader extends JSONConfigReadValidate implements Cl
         super('appsensor-client-config.json', 'appsensor-client-config_schema.json');
     }
 
-    public override read(configurationLocation: string = '', validatorLocation: string | null = '', reload: boolean = false): ClientConfiguration | null {
+    public override read(configurationLocation: string = '', 
+                         validatorLocation: string | null = '', 
+                         reload: boolean = false): ClientConfiguration | null {
         let config: JSONClientConfiguration | null = null;
 
         config = super.read(configurationLocation, validatorLocation, reload);

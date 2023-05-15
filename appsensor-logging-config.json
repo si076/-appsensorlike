@@ -1,0 +1,76 @@
+{
+    "log4jsLoggers": {
+        "appenders": {
+            "appsensor-client": {
+                "type": "file",
+                "filename": "appsensor-client.log",
+                "maxLogSize": 10485760,
+                "backups": 3,
+                "compress": false,
+                "test": "test"
+            },
+            "appsensor-server": {
+                "type": "file",
+                "filename": "appsensor-server.log",
+                "maxLogSize": 10485760,
+                "backups": 3,
+                "compress": false,
+                "test": "test"
+            },
+            "appsensor-responses": {
+                "type": "file",
+                "filename": "appsensor-responses.log",
+                "maxLogSize": 10485760,
+                "backups": 3,
+                "compress": false,
+                "test": "test"
+            },
+            "_appsensor-client-errors": {
+                "type": "file",
+                "filename": "appsensor-client-errors.log",
+                "maxLogSize": 10485760,
+                "backups": 3,
+                "compress": false
+            },
+            "_appsensor-server-errors": {
+                "type": "file",
+                "filename": "appsensor-server-errors.log",
+                "maxLogSize": 10485760,
+                "backups": 3,
+                "compress": false
+            },
+            "out": { 
+                "type": "stdout" 
+            },
+            "appsensor-client-errors": {
+                "type": "logLevelFilter",
+                "appender": "_appsensor-client-errors",
+                "level": "error"
+            },
+            "appsensor-server-errors": {
+                "type": "logLevelFilter",
+                "appender": "_appsensor-server-errors",
+                "level": "error"
+            }
+
+        },
+        "categories": {
+            "default": {
+                "appenders": ["out"],
+                "level": "trace"
+            },
+            "APPSENSOR_CLIENT": { 
+                "appenders": ["out", "appsensor-client", "appsensor-client-errors"], 
+                "level": "trace"
+            },
+            "APPSENSOR_SERVER": { 
+                "appenders": ["out", "appsensor-server", "appsensor-server-errors"], 
+                "level": "trace"
+            },
+            "APPSENSOR_RESPONSES": { 
+                "appenders": ["out", "appsensor-responses"], 
+                "level": "trace"
+            }
+        }
+    }
+}

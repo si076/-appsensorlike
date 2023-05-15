@@ -36,7 +36,9 @@ class JSONServerConfigurationReader extends JSONConfigReadValidate implements Se
         super('appsensor-server-config.json', 'appsensor-server-config_schema.json');
     }
 
-    public override read(configurationLocation: string = '', validatorLocation: string | null = '', reload: boolean = false): ServerConfiguration | null {
+    public override read(configurationLocation: string = '', 
+                         validatorLocation: string | null = '', 
+                         reload: boolean = false): ServerConfiguration | null {
         let config: ServerConfiguration | null = null;
 
         config = super.read(configurationLocation, validatorLocation, reload);

@@ -68,8 +68,8 @@ class MySQLStorageTests extends BaseTests {
         console.log('<-- storeObjects');
     } 
 
-    public static async runTests(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient, executionMode: string) {
-        console.log(`----- Run MySQLStorageTests ${executionMode} -----`);
+    public static async runTests(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
+        console.log(`----- Run MySQLStorageTests -----`);
 		const inst = new MySQLStorageTests(appSensorServer, appSensorClient);
         await inst.initializeTest();
 		await inst.storeObjects();

@@ -749,9 +749,9 @@ class AggregEventAnalysisEngIntegTest extends BaseTests {
 		console.log('<-- test8_DP1');
     }
 
-	public static async runTests(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient, executionMode: string) {
+	public static async runTests(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
 		console.log();
-		console.log(`----- Run AggregateEventAnalysisEngineIntegrationTest ${executionMode} -----`);
+		console.log(`----- Run AggregateEventAnalysisEngineIntegrationTest -----`);
 		const instance = new AggregEventAnalysisEngIntegTest(appSensorServer, appSensorClient);
 
 		await instance.initializeTest();

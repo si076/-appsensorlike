@@ -1,67 +1,52 @@
-import { PoolConfig, PoolConnection, MysqlError, Pool, createPool } from 'mysql';
-// import { ConfigurationManager, IConfiguration, TYPE_EVENT_CONFIG_RELOADED } from '../config/Configuration.mjs';
-import { strict as assert } from 'assert';
+import { PoolConfig, PoolConnection, Pool, createPool } from 'mysql';
+import { Logger } from '../../logging/logging.js';
+import { JSONConfigManager, JSONConfigReadValidate } from '../../utils/Utils.js';
+
+class MySQLStorageConfig {
+    poolConfig: PoolConfig = {};
+}
 
 class ConnectionManager {
 
-    private static pool: Pool | null = null;
+    private static pool: Pool;
 
-    private static poolConfig: PoolConfig;
+    private static defaultConfigFile       = './storage-providers/appsensor-storage-mysql/appsensor-storage-mysql-config.json';
+    private static defaultConfigSchemeFile = './storage-providers/appsensor-storage-mysql/appsensor-storage-mysql-config_schema.json';
+    private static configFile              = 'appsensor-storage-mysql-config.json';
+    private static configSchemeFile        = './storage-providers/appsensor-storage-mysql/appsensor-storage-mysql-config_schema.json';
 
-    static {
-    //     ConnectionManager.poolConfig = ConfigurationManager.getConfiguration().db;
-    //     ConfigurationManager.listenForConfigurationReload(TYPE_EVENT_CONFIG_RELOADED.EVENT_DB_CONFIG_CHANGED, 
-    //         (newConfig: IConfiguration) => {
-    //             console.log('>>> ConnectionManager on config change');
-    //             ConnectionManager.getPool(newConfig.db);
-    //         });
-        ConnectionManager.poolConfig =  {
-            "user": "test",
-            "password": "test2020",
-            "database": "appsensor",
-            "dateStrings": ["DATE","DATETIME"],
-            // "connectTimeout": 20000,
-            // "acquireTimeout": 20000,
-            "waitForConnections": false,
-            // "connectionLimit": 1000,
-            "queueLimit": 0
-        };
+    private static configManager = 
+                        new JSONConfigManager(new JSONConfigReadValidate(ConnectionManager.defaultConfigFile, 
+                                                                         ConnectionManager.defaultConfigSchemeFile, 
+                                                                         MySQLStorageConfig.prototype), 
+                                                                         ConnectionManager.configFile, 
+                                                                         ConnectionManager.configSchemeFile,
+                                                                         ConnectionManager.defaultConfigFile,
+                                                                         ConnectionManager.defaultConfigSchemeFile,
+                                                                         true);
 
-    }
+    private static createPool(poolConfig: PoolConfig) {
+        Logger.getServerLogger().trace("ConnectionManager.createPool:");
 
-    static getPool(config: PoolConfig | null = null): Pool {
-        let poolConfig: PoolConfig = ConnectionManager.poolConfig;
-        let considerRecreate: boolean = false;
-
-        if (config) {
-            try {
-                assert.deepStrictEqual(config, ConnectionManager.poolConfig);
-            } catch (error) {
-                // console.log(error);
-
-                ConnectionManager.poolConfig = config;
-
-                poolConfig = config;
-
-                considerRecreate = true;
-            }
+        if (ConnectionManager.pool) {
+            ConnectionManager.pool.end();
         }
 
-        if (!ConnectionManager.pool || considerRecreate) {
+        ConnectionManager.pool = createPool(poolConfig);
+    }
 
-            if (ConnectionManager.pool) {
-                ConnectionManager.pool.end();
-            }
+    static {
 
-            console.log('considerRecreate: ' + considerRecreate);
-            console.log(poolConfig);
+        ConnectionManager.createPool((ConnectionManager.configManager.getConfiguration() as MySQLStorageConfig).poolConfig);
 
-            // const stack = new Error().stack
-            // console.log( stack );
+        ConnectionManager.configManager.listenForConfigurationChange((newConfig: any) => {
+            const poolConfig: PoolConfig = (newConfig as MySQLStorageConfig).poolConfig;
+            ConnectionManager.createPool(poolConfig);
+        });
+    
+    }
 
-            ConnectionManager.pool = createPool(poolConfig);
-        } 
-
+    public static getPool(): Pool {
         return ConnectionManager.pool;
     }
 
@@ -81,10 +66,6 @@ class ConnectionManager {
         });
     }
 
-    public static defaultErrorHandler(error: MysqlError) {
-        console.error(error);
-    }
-
 }
 
-export {ConnectionManager};
+export {ConnectionManager, MySQLStorageConfig};

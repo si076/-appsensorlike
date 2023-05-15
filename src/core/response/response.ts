@@ -1,3 +1,4 @@
+import { Logger } from "../../logging/logging.js";
 import { Response, User } from "../core.js";
 
 enum RESPONSES {
@@ -47,24 +48,18 @@ interface UserManager {
 
 class NoopUserManager implements UserManager {
 
-	// private Logger logger;
-	
 	/**
 	 * {@inheritDoc}
 	 */
-	// @Override
 	public logout(user: User): void {
-		// logger.info("The no-op user manager did not logout the user as requested.");
-        console.log("The no-op user manager did not logout the user as requested.");
+        Logger.getClientLogger().trace("NoopUserManager.logout:", "The no-op user manager did not logout the user as requested.");
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	// @Override
 	public disable(user: User): void {
-		// logger.info("The no-op user manager did not disable the user as requested.");
-        console.log("The no-op user manager did not disable the user as requested.");
+        Logger.getClientLogger().trace("NoopUserManager.disable:", "The no-op user manager did not disable the user as requested.");
 	}
 
 }

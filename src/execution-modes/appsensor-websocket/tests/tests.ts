@@ -10,7 +10,13 @@ async function runTests(readInf: readline.Interface | null = null) {
                                              "");
     const appSensorWebSocketClient = new AppSensorWebsocketExecClient();
 
-    await test(appSensorWebSocketServer.getAppSensorServer(), appSensorWebSocketClient.getAppSensorClient(), readInf);
+    await test(appSensorWebSocketServer.getAppSensorServer(), 
+               appSensorWebSocketClient.getAppSensorClient(), 
+               readInf,
+               false);
+    
+    appSensorWebSocketClient.closeWebSocket();
+    appSensorWebSocketServer.closeWebSocketServer();
 }
 
 

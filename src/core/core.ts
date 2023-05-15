@@ -158,7 +158,7 @@ class Interval extends AppsensorEntity {
 	public constructor(duration: number = 0, unit: INTERVAL_UNITS = INTERVAL_UNITS.MINUTES) {
 		super();
 		if (duration === 0) {
-			console.warn("Interval's duration is 0");
+			// console.warn("Interval's duration is 0");
 		}
 		this.setDuration(duration);
 		this.setUnit(unit);
@@ -1537,9 +1537,6 @@ class ClientApplication implements IEquals {
 
 class AppSensorClient {
 	
-	// @SuppressWarnings("unused")
-	// private Logger logger;
-	
 	/** accessor for {@link org.owasp.appsensor.core.configuration.client.ClientConfiguration} */
 	private configuration: ClientConfiguration | null = null;
 	
@@ -1589,9 +1586,6 @@ class AppSensorClient {
 }
 
 class AppSensorServer {
-	
-	// @SuppressWarnings("unused")
-	// private Logger logger;
 	
 	/** accessor for {@link org.owasp.appsensor.core.configuration.server.ServerConfiguration} */
 	private configuration: ServerConfiguration | null = null;

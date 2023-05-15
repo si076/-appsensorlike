@@ -2,10 +2,9 @@ import { AttackAnalysisEngine, EventAnalysisEngine, ResponseAnalysisEngine } fro
 import { AppSensorEvent, AppSensorServer, Attack, DetectionPoint, Interval, INTERVAL_UNITS, Response, Threshold, User, Utils } from "../../core/core.js";
 import { SearchCriteria } from "../../core/criteria/criteria.js";
 import { Clause, Expression, Notification, Rule } from "../../core/rule/rule.js";
+import { Logger } from "../../logging/logging.js";
 
 class AggregateAttackAnalysisEngine extends AttackAnalysisEngine {
-
-	// private Logger logger;
 
 	private appSensorServer: AppSensorServer = new AppSensorServer();
 
@@ -33,7 +32,7 @@ class AggregateAttackAnalysisEngine extends AttackAnalysisEngine {
 			if (response != null) {
                 let userName = Utils.getUserName(attack.getUser());
 
-				console.info("Response set for user <" + userName + "> - storing response action " + response.getAction());
+				Logger.getServerLogger().info("AggregateAttackAnalysisEngine.analyze:", `Response set for user <${userName}> - storing response action ${response.getAction()}`);
 				
                 const responseStore = this.appSensorServer.getResponseStore();
                 if (responseStore !== null) {
@@ -159,8 +158,6 @@ class AggregateAttackAnalysisEngine extends AttackAnalysisEngine {
 }
 
 class AggregateEventAnalysisEngine extends EventAnalysisEngine {
-
-	// private Logger logger;
 
 	private appSensorServer: AppSensorServer = new AppSensorServer();
 
@@ -430,7 +427,7 @@ class AggregateEventAnalysisEngine extends EventAnalysisEngine {
 	public async generateAttack(triggerEvent: AppSensorEvent, rule: Rule) {
 		let userName = Utils.getUserName(triggerEvent.getUser());
 
-		console.info("Attack generated on rule: " + rule.getGuid() + ", by user: " + userName);
+		Logger.getServerLogger().info("AggregateEventAnalysisEngine.generateAttack:", `Attack generated on rule: ${rule.getGuid()} by user: ${userName}`);
 
 		const attack: Attack = new Attack().
 			setUser(new User(userName)).
@@ -530,19 +527,16 @@ class AggregateEventAnalysisEngine extends EventAnalysisEngine {
 
 class AggregateResponseAnalysisEngine extends ResponseAnalysisEngine {
 
-	// private Logger logger;
-
 	/**
 	 * This method simply logs responses.
 	 *
 	 * @param response {@link Response} that has been added to the {@link ResponseStore}.
 	 */
-	// @Override
 	public async analyze(response: Response): Promise<void> {
 		if (response != null) {
             let userName = Utils.getUserName(response.getUser());
 
-			console.info("NO-OP Response for user <" + userName + "> - should be executing response action " + response.getAction());
+			Logger.getServerLogger().trace("AggregateResponseAnalysisEngine.analyze:", `NO-OP Response for user <${userName}> - should be executing response action ${response.getAction()}`);
 		}
 	}
 

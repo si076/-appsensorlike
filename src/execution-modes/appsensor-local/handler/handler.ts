@@ -3,9 +3,6 @@ import { SearchCriteria } from "../../../core/criteria/criteria.js";
 
 class LocalRequestHandler implements RequestHandler {
 
-	// @SuppressWarnings("unused")
-	// private Logger logger;
-	
 	private appSensorServer: AppSensorServer;
 	
 	private static detectionSystemId: string | null = null;	//start with blank

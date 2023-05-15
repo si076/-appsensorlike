@@ -1,6 +1,10 @@
 import fs from 'fs';
+import EventEmitter from "events";
+import assert from 'assert';
+
 import Ajv, { AnySchemaObject, ErrorObject } from "ajv"
 import addFormats from "ajv-formats"
+
 import { AppSensorEvent, Attack, DetectionPoint, DetectionSystem, Interval, IPAddress, KeyValuePair, Resource, Response, Threshold, User } from '../core/core.js';
 import { GeoLocation } from '../core/geolocation/geolocation.js';
 import { Clause, Expression, Rule } from '../core/rule/rule.js';
@@ -31,10 +35,96 @@ class ValidationError extends Error implements ErrorObject {
 
 }
 
+class JSONConfigManager {
+
+    public static CONFIGURATION_CHANGED_EVENT: string = 'CONFIGURATION_CHANGED';
+
+    private eventEmitter = new EventEmitter();
+
+    protected configReader: JSONConfigReadValidate;
+
+    protected configFile: string | null = null;
+    protected configSchemaFile: string | null = null;
+    protected defaultConfigFile: string;
+    protected defaultConfigSchemeFile: string | null = null;
+    protected watchConfigFile: boolean = false;
+
+    protected currentConfig: any = null;
+
+    constructor(configReader: JSONConfigReadValidate,
+                configFile: string | null = null,
+                configSchemaFile: string | null = null,
+                defaultConfigFile: string,
+                defaultConfigSchemeFile: string | null = null,
+                watchConfigFile: boolean = false) {
+        this.configReader = configReader;
+        this.configFile = configFile;
+        this.configSchemaFile = configSchemaFile;
+        this.defaultConfigFile = defaultConfigFile;
+        this.defaultConfigSchemeFile = defaultConfigSchemeFile;
+        this.watchConfigFile = watchConfigFile;
+        
+        if (watchConfigFile) {
+            let fileToWatch = this.defaultConfigFile;
+            if (this.configFile) {
+                fileToWatch = this.configFile;
+            }
+            this.watch(fileToWatch);
+        }
+    }
+
+    public getConfiguration(): any {
+        if (!this.currentConfig) {
+            this.currentConfig = this.configReader.read(this.configFile, this.configSchemaFile);
+        }
+
+        return this.currentConfig;
+    }
+
+    protected reloadConfiguration() {
+        const config = this.configReader.read(this.configFile, this.configSchemaFile, true);
+        if (config) {
+            try {
+                assert.deepStrictEqual(config, 
+                                       this.currentConfig);
+            } catch (error) {
+                if (error instanceof assert.AssertionError) {
+                    this.currentConfig = config;
+
+                    this.eventEmitter.emit(JSONConfigManager.CONFIGURATION_CHANGED_EVENT, this.currentConfig);
+                }
+            }
+        }
+    }
+
+    public listenForConfigurationChange(cb: (newConfig: any) => void) {
+        this.eventEmitter.addListener(JSONConfigManager.CONFIGURATION_CHANGED_EVENT, cb);
+    }
+
+    private watch(file: string) {
+        if (this.watchConfigFile) {
+            const me = this;
+            fs.watchFile(file, {persistent: false}, function (this: JSONConfigManager, curr: fs.Stats, prev: fs.Stats) {
+                // console.log(prev);
+                // console.log(curr);
+                me.reloadConfiguration();
+            });
+        }
+    }
+
+    private unwatch(file: string) {
+        if (this.watchConfigFile) {
+            fs.unwatchFile(file);
+        }
+    }
+}
+
+
 class JSONConfigReadValidate {
 
     protected defaultConfigFile: string;
     protected defaultConfigSchemaFile: string | null;
+
     protected prototypeOfConfigObj: Object | null | undefined;
 
     constructor(defaultConfigFile: string, 
@@ -45,19 +135,26 @@ class JSONConfigReadValidate {
         this.prototypeOfConfigObj = prototypeOfConfigObj;
     }
 
-    public read(configLocation: string = '', 
+    public read(configLocation: string | null = null, 
                 validatorLocation: string | null = null, 
                 reload: boolean  = false): any {
         let config: any = null;
 
-        if (configLocation === '') {
+        if (!configLocation) {
             configLocation = this.defaultConfigFile;
-        };
+        } else {
+            if (!fs.existsSync(configLocation)) {
+                configLocation = this.defaultConfigFile;
+            }
+        }
 
         if (!validatorLocation) {
             validatorLocation = this.defaultConfigSchemaFile;
-        };
-
+        } else {
+            if (!fs.existsSync(validatorLocation)) {
+                validatorLocation = this.defaultConfigSchemaFile;
+            }
+        }
 
         try {
             config = JSON.parse(fs.readFileSync(configLocation, 'utf8'));
@@ -65,6 +162,7 @@ class JSONConfigReadValidate {
             if (!reload) {
                 throw error;
             } else {
+                //don't log here because of circular dependencies
                 console.error(error);
             }
         }
@@ -85,8 +183,6 @@ class JSONConfigReadValidate {
 
         return config;
     }
-
-
 
     protected validateConfig(config: any, validatorLocation: string, reload: boolean): boolean {
 
@@ -208,13 +304,6 @@ class Utils {
         Utils.responsePrototypeSample.setMetadata(metadata);
     }
 
-    public static setTimestampFromJSONParsedObject(target: AppSensorEvent | Attack | Response, obj: Object) {
-        const propDescr = Object.getOwnPropertyDescriptor(obj, "timestamp");
-        if (propDescr) {
-            target.setTimestamp(new Date(propDescr.value));
-        }
-    }
-
 	public static sleep(timeOutInMilis: number): Promise<null> {
 		return new Promise((resolve, reject) => {
 			setTimeout(() => {
@@ -260,6 +349,30 @@ class Utils {
         }
     }
 
+    public static setTimestampFromJSONParsedObject(target: AppSensorEvent | Attack | Response, obj: Object) {
+        const propDescr = Object.getOwnPropertyDescriptor(obj, "timestamp");
+        if (propDescr) {
+            target.setTimestamp(new Date(propDescr.value));
+        }
+    }
+
+    public static copyPropertyValues<T1 extends Object>(srcObj: T1, trgObj: T1) {
+        const trgPropNames = Object.getOwnPropertyNames(trgObj);
+
+        for (let index = 0; index < trgPropNames.length; index++) {
+            const trgPropName = trgPropNames[index];
+            const trgPropDecr: PropertyDescriptor | undefined = 
+                    Object.getOwnPropertyDescriptor(trgObj, trgPropName);
+            const srcPropDecr: PropertyDescriptor | undefined = 
+                    Object.getOwnPropertyDescriptor(srcObj, trgPropName);
+            if (!srcPropDecr) {
+                throw new Error(`Cannot copy the value of property ${trgPropName} because doesn't exist in source object!`);
+            }
+            trgObj[trgPropName as keyof typeof trgObj] = srcObj[trgPropName as keyof typeof srcObj];
+        }
+
+    }
+
 }
 
-export {JSONConfigReadValidate, Utils};
+export {JSONConfigManager, JSONConfigReadValidate, Utils};

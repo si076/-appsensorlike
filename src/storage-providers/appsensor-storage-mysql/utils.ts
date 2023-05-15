@@ -1,4 +1,5 @@
 import { FieldInfo, MysqlError, Pool, PoolConnection } from "mysql";
+import { Logger } from "../../logging/logging.js";
 import { ConnectionManager } from "./connection_manager.js";
 
 class Utils {
@@ -12,12 +13,14 @@ class Utils {
                 conn = ConnectionManager.getPool();
             }
 
+            Logger.getServerLogger().trace("Utils.executeSQLOnDB sql: ", sql);
+
             conn.query(sql, (err:MysqlError | null, 
                             res:any, 
                             fields: FieldInfo[]) => {
 
                 if (err) {
-                    console.log(err);
+                    Logger.getServerLogger().error("Utils.executeSQLOnDB: ", err);
                     
                     reject(err);
                     return;
@@ -40,12 +43,14 @@ class Utils {
                 conn = ConnectionManager.getPool();
             }
 
+            Logger.getServerLogger().trace("Utils.executeSQLOnDBProcResAsync sql: ", sql);
+
             conn.query(sql, (err:MysqlError | null, 
                             res:any, 
                             fields: FieldInfo[]) => {
 
                 if (err) {
-                    console.log(err);
+                    Logger.getServerLogger().error("Utils.executeSQLOnDBProcResAsync: ", err);
                     
                     reject(err);
                     return;
@@ -67,7 +72,7 @@ class Utils {
                                              retryCounter: number = 0): Promise<any> {
         return new Promise((resolve, reject) => {
 
-            // console.log('In executeInTransaction Promise');
+            Logger.getServerLogger().trace('Utils.executeInTransaction: In executeInTransaction Promise');
 
             ConnectionManager.getPool().getConnection((error: MysqlError, connection: PoolConnection) => {
 
@@ -84,6 +89,8 @@ class Utils {
                     //     reject(error);
                     //     return;
                     // }
+
+                    Logger.getServerLogger().error("Utils.executeInTransaction: ", error);
 
                     reject(error);
                     return;
@@ -105,8 +112,10 @@ class Utils {
                         //     reject(error);
                         //     return;
                         // }
+
+                        Logger.getServerLogger().error("Utils.executeInTransaction: ", err);
         
-                        reject(error);
+                        reject(err);
                         return;
                     }
 
@@ -115,11 +124,13 @@ class Utils {
 
                         connection.commit((err) => {
                             if (err) {
+
+                                Logger.getServerLogger().error("Utils.executeInTransaction: ", err);
             
                                 connection.rollback(() => {
                                     connection.release();
 
-                                    reject(error);
+                                    reject(err);
                                     return;
                                 });
                             }
@@ -131,6 +142,8 @@ class Utils {
         
                     })
                     .catch((error) => {
+                        Logger.getServerLogger().error("Utils.executeInTransaction: ", error);
+
                         connection.rollback(() => {
                             connection.release();
 

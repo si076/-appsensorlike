@@ -40,6 +40,9 @@ class AppSensorWebsocketExecClient {
         return this.appSensorClient;
     }
 
+    closeWebSocket() {
+        (this.appSensorClient.getEventManager() as WebSocketEventManager).closeSocket();
+    }
 }
 
 class AppSensorWebsocketExecServer {
@@ -112,6 +115,9 @@ class AppSensorWebsocketExecServer {
         return this.appSensorServer;
     }
 
+    closeWebSocketServer() {
+        (this.requestHandler as WebSocketRequestHandler).closeServer();
+    }
 }
 
 export {AppSensorWebsocketExecClient, AppSensorWebsocketExecServer}

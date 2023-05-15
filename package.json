@@ -6,11 +6,16 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "gen_server_config_schema": "\"C:/Program Files/nodejs_12/npx\" typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-server-config_schema.json IServerConfiguration",
-    "gen_client_config_schema": "\"C:/Program Files/nodejs_12/npx\" typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-client-config_schema.json ClientConfiguration",
-    "gen_mysql_mapping_schema": "\"C:/Program Files/nodejs_12/npx\" typescript-json-schema tsconfig.json --noExtraProps true --required true -o mapping_schema.json IMapping",
+    "gen_server_config_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-server-config_schema.json IServerConfiguration",
+    "gen_client_config_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-client-config_schema.json ClientConfiguration",
+    "gen_mysql_mapping_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o mapping_schema.json IMapping",
+    "gen_storage_mysql_config_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-storage-mysql-config_schema.json MySQLStorageConfig",
     "gen_reporting_websocket_server_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-websocket-server-config_schema.json IWebSocketServerConfig",
-    "gen_reporting_websocket_client_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-websocket-client-config_schema.json IWebSocketClientConfig"
+    "gen_reporting_websocket_client_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-websocket-client-config_schema.json IWebSocketClientConfig",
+    "run_reporting_tests_server_only": "npx run-func ./reporting-engines/appsensor-reporting-websocket/tests/appsensor-reporting-websocket-tests.js runServerSeparately",
+    "run_reporting_tests_client_only": "npx run-func ./reporting-engines/appsensor-reporting-websocket/tests/appsensor-reporting-websocket-tests.js runClientSeparately",
+    "run_reporting_tests_client_only_report_events": "npx run-func ./reporting-engines/appsensor-reporting-websocket/tests/appsensor-reporting-websocket-tests.js runClientSeparatelyReportEvents",
+    "gen_logging_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-logging-config_schema.json LoggingConfiguration"
   },
   "repository": {
     "type": "git",
@@ -22,7 +27,7 @@
     "json"
   ],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/si076/-appsensorlike/issues"
   },
@@ -32,17 +37,16 @@
     "ajv-formats": "^3.0.0-rc.0",
     "fast-geoip": "^1.1.88",
     "ipaddr.js": "^2.0.1",
+    "log4js": "^6.9.1",
     "mysql": "^2.18.1",
-    "readline": "^1.3.0",
-    "underscore": "^1.13.6",
     "uuid": "^9.0.0",
     "ws": "^8.13.0"
   },
   "devDependencies": {
+    "@types/log4js": "^2.3.5",
     "@tsconfig/node14": "^1.0.3",
     "@types/mysql": "^2.15.21",
     "@types/node": "^18.15.1",
-    "@types/underscore": "^1.11.4",
     "@types/uuid": "^9.0.1",
     "@types/ws": "^8.5.4"
   }

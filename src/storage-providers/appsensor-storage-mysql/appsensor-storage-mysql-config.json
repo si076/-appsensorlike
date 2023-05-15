@@ -1,0 +1,10 @@
+{
+    "poolConfig": {
+        "user": "test",
+        "password": "test2020",
+        "database": "appsensor",
+        "dateStrings": ["DATE","DATETIME"],
+        "waitForConnections": false,
+        "queueLimit": 0
+    }
+}

@@ -3,6 +3,7 @@ import { AttackStore, EventStore, ResponseStore } from "../../core/storage/stora
 import { AppSensorEvent, Attack, DetectionPoint, DetectionSystem, Response, User, Utils as coreUtils } from "../../core/core.js";
 import { DOP, TYPE_FILTER_FUNCTION } from "./DOP.js";
 import { Rule } from "../../core/rule/rule.js";
+import { Logger } from "../../logging/logging.js";
 
 
 class MySQLAttackStore extends AttackStore {
@@ -10,7 +11,8 @@ class MySQLAttackStore extends AttackStore {
     public override async addAttack(attack: Attack): Promise<void> {
         let userName = coreUtils.getUserName(attack.getUser());;
         
-		console.warn("Security attack " + attack.getName() + " triggered by user: " + userName);
+		Logger.getServerLogger().warn("MySQLAttackStore.addAttack: ",
+                                      `Security attack ${attack.getName()} triggered by user: ${userName}`);
 
 
         await DOP.persist(attack);
@@ -94,7 +96,8 @@ class MySQLEventStore extends EventStore {
 
         const userName = coreUtils.getUserName(event.getUser());
 
-		console.warn("Security event " + detPointLabel + " triggered by user: " + userName);
+		Logger.getServerLogger().warn("MySQLEventStore.addEvent: ",
+                                      `Security event ${detPointLabel} triggered by user: ${userName}`);
 		
 
         await DOP.persist(event);
@@ -176,7 +179,8 @@ class MySQLResponseStore extends ResponseStore {
     public override async addResponse(response: Response): Promise<void> {
         let userName = coreUtils.getUserName(response.getUser());
 
-		console.warn("Security response " + response.getAction() + " triggered for user: " + userName);
+		Logger.getServerLogger().warn("MySQLResponseStore.addResponse: ", 
+                                      `Security response ${response.getAction()} triggered for user: ${userName}`);
 
         await DOP.persist(response);
 

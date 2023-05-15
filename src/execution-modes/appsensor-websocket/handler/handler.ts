@@ -1,6 +1,9 @@
 import WebSocket from "ws";
+import log from "log4js";
+
 import { AppSensorEvent, RequestHandler, AppSensorServer, Attack, Response } from "../../../core/core.js";
 import { SearchCriteria } from "../../../core/criteria/criteria.js";
+import { Logger } from "../../../logging/logging.js";
 import { JSONConfigReadValidate, Utils } from "../../../utils/Utils.js";
 import { MethodRequest } from "../../../websocket/appsensor-websocket.js";
 import { AppSensorWebSocketServer, WebSockedExt, WebSocketServerConfig } from "../../../websocket/server/appsensor-websocket-server.js";
@@ -16,21 +19,24 @@ class WebSocketRequestHandlerConfigReader  extends JSONConfigReadValidate {
 
 class WebSocketRequestHandler extends AppSensorWebSocketServer implements RequestHandler {
 
-	// @SuppressWarnings("unused")
-	// private Logger logger;
-	
 	private appSensorServer: AppSensorServer;
 	
 	private static detectionSystemId: string | null = null;	//start with blank
 	
     constructor(appSensorServer: AppSensorServer,
-				configLocation: string = '',
+				configLocation: string = 'appsensor-websocket-request-handler-config.json',
 				serverOptions? :WebSocket.ServerOptions) {
 		super(new WebSocketRequestHandlerConfigReader().read(configLocation), serverOptions);
         this.appSensorServer = appSensorServer;
     }
 
+    public closeServer() {
+        super.closeServer();
+    }
+
 	protected override onClientRequest(ws: WebSockedExt, data: WebSocket.RawData, isBinary: boolean): void {
+        Logger.getServerLogger().trace('WebSocketRequestHandler.onClientRequest');
+
         const request: MethodRequest = JSON.parse(data.toString());
         Object.setPrototypeOf(request, MethodRequest.prototype);
 
@@ -109,15 +115,25 @@ class WebSocketRequestHandler extends AppSensorWebSocketServer implements Reques
 	 * {@inheritDoc}
 	 */
 	public async addEvent(event: AppSensorEvent): Promise<void> {
-        // console.log(event);
-        const detSystem = event.getDetectionSystem();
-		if (WebSocketRequestHandler.detectionSystemId === null && detSystem !== null) {
-			WebSocketRequestHandler.detectionSystemId = detSystem.getDetectionSystemId();
-		}
-		
-        const eventStore = this.appSensorServer.getEventStore();
-        if (eventStore) {
-            await eventStore.addEvent(event);
+		Logger.getServerLogger().trace('WebSocketRequestHandler.addEvent:');
+        Logger.getServerLogger().trace(event);
+
+        try {
+
+            const detSystem = event.getDetectionSystem();
+            if (WebSocketRequestHandler.detectionSystemId === null && detSystem !== null) {
+                WebSocketRequestHandler.detectionSystemId = detSystem.getDetectionSystemId();
+            }
+            
+            const eventStore = this.appSensorServer.getEventStore();
+            if (eventStore) {
+                await eventStore.addEvent(event);
+            }
+
+        } catch (error) {
+			Logger.getServerLogger().error(error);
+
+			return Promise.reject(error);
         }
 	}
 
@@ -125,35 +141,57 @@ class WebSocketRequestHandler extends AppSensorWebSocketServer implements Reques
 	 * {@inheritDoc}
 	 */
 	public async addAttack(attack: Attack): Promise<void> {
-        const detSystem = attack.getDetectionSystem();
-		if (WebSocketRequestHandler.detectionSystemId == null && detSystem !== null) {
-			WebSocketRequestHandler.detectionSystemId = detSystem.getDetectionSystemId();
-		}
-		
-        const attackStore = this.appSensorServer.getAttackStore();
-        if (attackStore) {
-            await attackStore.addAttack(attack);
+		Logger.getServerLogger().trace('WebSocketRequestHandler.addAttack:');
+		Logger.getServerLogger().trace(attack);
+
+        try {
+
+            const detSystem = attack.getDetectionSystem();
+            if (WebSocketRequestHandler.detectionSystemId == null && detSystem !== null) {
+                WebSocketRequestHandler.detectionSystemId = detSystem.getDetectionSystemId();
+            }
+            
+            const attackStore = this.appSensorServer.getAttackStore();
+            if (attackStore) {
+                await attackStore.addAttack(attack);
+            }
+
+        } catch (error) {
+            Logger.getServerLogger().error(error);
+
+            return Promise.reject(error);
         }
-	}
+    }
 
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public async getResponses(earliest: Date): Promise<Response[]> {
-        const detSystem = WebSocketRequestHandler.detectionSystemId !== null ? WebSocketRequestHandler.detectionSystemId : "";
-		const criteria: SearchCriteria = new SearchCriteria().
-				setDetectionSystemIds([detSystem]).
-				setEarliest(earliest);
-		
-        let responses: Response[] = []         
+		Logger.getServerLogger().trace('WebSocketRequestHandler.getResponses:');
+		Logger.getServerLogger().trace(`earliest: ${earliest}`);
 
-        const responseStore = this.appSensorServer.getResponseStore();
-        if (responseStore) {
-            responses = await responseStore.findResponses(criteria);
+        try {
+
+            const detSystem = WebSocketRequestHandler.detectionSystemId !== null ? WebSocketRequestHandler.detectionSystemId : "";
+            const criteria: SearchCriteria = new SearchCriteria().
+                    setDetectionSystemIds([detSystem]).
+                    setEarliest(earliest);
+            
+            let responses: Response[] = []         
+
+            const responseStore = this.appSensorServer.getResponseStore();
+            if (responseStore) {
+                responses = await responseStore.findResponses(criteria);
+            }
+            return responses;
+
+        } catch (error) {
+            Logger.getServerLogger().error(error);
+
+            return Promise.reject(error);
         }
-		return responses;
-	}
+    }
 
 }
 

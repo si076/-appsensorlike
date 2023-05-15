@@ -22,7 +22,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
     private static eventEmmiter: EventEmitter = new EventEmitter();
 
     constructor(address: string | URL = '', 
-                configLocation: string = '',
+                configLocation: string = 'appsensor-reporting-websocket-client-config.json',
                 options?: WebSocket.ClientOptions | ClientRequestArgs) {
         super(address, new ReportingWebSocketClientConfigReader().read(configLocation), options);
     }
@@ -60,6 +60,17 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
         }
     }
 
+    private genSendCallback(reject: (reason?: any) => void) {
+
+        return function sendCallback(error?: Error) {
+            if (error) {
+                
+                reject(error);
+            }
+        }
+    }
+
+
     findEvents(earliest: string): Promise<AppSensorEvent[]> {
         return new Promise((resolve, reject) => {
 
@@ -83,11 +94,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
                 }
             });
 
-            try {
-                this.sendRequest(request);
-            } catch (error) {
-                reject(error);
-            }
+            this.sendRequest(request, this.genSendCallback(reject));
         });
     }
 
@@ -114,11 +121,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
                 }
             });
 
-            try {
-                this.sendRequest(request);
-            } catch (error) {
-                reject(error);
-            }
+            this.sendRequest(request, this.genSendCallback(reject));
         });
     }
 
@@ -145,11 +148,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
                 }
             });
 
-            try {
-                this.sendRequest(request);
-            } catch (error) {
-                reject(error);
-            }
+            this.sendRequest(request, this.genSendCallback(reject));
         });
     }
 
@@ -169,11 +168,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
                 }
             });
 
-            try {
-                this.sendRequest(request);
-            } catch (error) {
-                reject(error);
-            }
+            this.sendRequest(request, this.genSendCallback(reject));
         });
     }
 
@@ -193,11 +188,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
                 }
             });
 
-            try {
-                this.sendRequest(request);
-            } catch (error) {
-                reject(error);
-            }
+            this.sendRequest(request, this.genSendCallback(reject));
         });
     }
 
@@ -217,11 +208,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
                 }
             });
 
-            try {
-                this.sendRequest(request);
-            } catch (error) {
-                reject(error);
-            }
+            this.sendRequest(request, this.genSendCallback(reject));
         });
     }
 
@@ -256,11 +243,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
                 }
             });
 
-            try {
-                this.sendRequest(request);
-            } catch (error) {
-                reject(error);
-            }
+            this.sendRequest(request, this.genSendCallback(reject));
         });
     }
 
@@ -283,11 +266,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
                 }
             });
 
-            try {
-                this.sendRequest(request);
-            } catch (error) {
-                reject(error);
-            }
+            this.sendRequest(request, this.genSendCallback(reject));
         });
     }
 
@@ -310,11 +289,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
                 }
             });
 
-            try {
-                this.sendRequest(request);
-            } catch (error) {
-                reject(error);
-            }
+            this.sendRequest(request, this.genSendCallback(reject));
         });
     }
 
@@ -334,11 +309,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
                 }
             });
 
-            try {
-                this.sendRequest(request);
-            } catch (error) {
-                reject(error);
-            }
+            this.sendRequest(request, this.genSendCallback(reject));
         });
     }
 
@@ -358,11 +329,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
                 }
             });
 
-            try {
-                this.sendRequest(request);
-            } catch (error) {
-                reject(error);
-            }
+            this.sendRequest(request, this.genSendCallback(reject));
         });
     }
 
@@ -382,11 +349,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
                 }
             });
 
-            try {
-                this.sendRequest(request);
-            } catch (error) {
-                reject(error);
-            }
+            this.sendRequest(request, this.genSendCallback(reject));
         });
     }
 
@@ -406,11 +369,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
                 }
             });
 
-            try {
-                this.sendRequest(request);
-            } catch (error) {
-                reject(error);
-            }
+            this.sendRequest(request, this.genSendCallback(reject));
         });
     }
 

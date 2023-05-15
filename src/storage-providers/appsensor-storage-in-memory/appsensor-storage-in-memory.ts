@@ -1,10 +1,9 @@
 import { AppSensorEvent, Attack, Response, Utils } from "../../core/core.js";
 import { SearchCriteria } from "../../core/criteria/criteria.js";
 import { AttackStore, EventStore, ResponseStore } from "../../core/storage/storage.js";
+import { Logger } from "../../logging/logging.js";
 
 class InMemoryAttackStore extends AttackStore {
-
-	// private Logger logger;
 
 	/** maintain a collection of {@link Attack}s as an in-memory list */
 	private static attacks: Attack[] = [];
@@ -12,11 +11,11 @@ class InMemoryAttackStore extends AttackStore {
 	/**
 	 * {@inheritDoc}
 	 */
-	// @Override
 	public override async addAttack(attack: Attack): Promise<void> {
         let userName = Utils.getUserName(attack.getUser());;
         
-		console.warn("Security attack " + attack.getName() + " triggered by user: " + userName);
+		Logger.getServerLogger().warn("InMemoryAttackStore.addAttack: ", 
+									  `Security attack ${attack.getName()} triggered by user: ${userName}`);
 
 		InMemoryAttackStore.attacks.push(attack);
 
@@ -41,8 +40,6 @@ class InMemoryAttackStore extends AttackStore {
 
 class InMemoryEventStore extends EventStore {
 	
-	// private Logger logger;
-	
 	/** maintain a collection of {@link Event}s as an in-memory list */
 	private static events: AppSensorEvent[] = [];
 	
@@ -54,7 +51,8 @@ class InMemoryEventStore extends EventStore {
 
         const userName = Utils.getUserName(event.getUser());
 
-		console.warn("Security event " + detPointLabel + " triggered by user: " + userName);
+		Logger.getServerLogger().warn("InMemoryEventStore.addEvent: ", 
+									  `Security event ${detPointLabel} triggered by user: ${userName}`);
 		
 		InMemoryEventStore.events.push(event);
 		
@@ -79,8 +77,6 @@ class InMemoryEventStore extends EventStore {
 
 class InMemoryResponseStore extends ResponseStore {
 
-	// private Logger logger;
-
 	/** maintain a collection of {@link Response}s as an in-memory list */
 	private static responses: Response[] = [];
 	
@@ -90,7 +86,8 @@ class InMemoryResponseStore extends ResponseStore {
 	public override async addResponse(response: Response): Promise<void> {
         let userName = Utils.getUserName(response.getUser());
 
-		console.warn("Security response " + response.getAction() + " triggered for user: " + userName);
+		Logger.getServerLogger().warn("InMemoryResponseStore.addResponse: ",
+									  `Security response ${response.getAction()} triggered for user: ${userName}`);
 
 		InMemoryResponseStore.responses.push(response);
 		

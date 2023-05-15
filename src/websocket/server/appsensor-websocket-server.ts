@@ -1,5 +1,6 @@
 import WebSocket, { PerMessageDeflateOptions, WebSocketServer } from "ws";
 import { AppSensorEvent, Attack, Response } from "../../core/core.js";
+import { Logger } from "../../logging/logging.js";
 import { MethodRequest, MethodResponse } from "../appsensor-websocket.js";
 
 interface IWebSocketServerConfig {
@@ -54,22 +55,24 @@ class AppSensorWebSocketServer {
         const onClientRequestThunk = this.onClientRequestWrapper(this);
 
         this.server.on('connection', function(ws:  WebSockedExt) {
-            // console.log('WebSocketServer: ->connection<- event!');
+            Logger.getServerLogger().trace('AppSensorWebSocketServer.server: ', 'connection');
 
             ws.isAlive = true;
-            ws.on('error', console.error);
+            ws.on('error', (error) => {
+                Logger.getServerLogger().trace('AppSensorWebSocketServer.server: ', 'error ', error);
+            });
 
             ws.on('message', onClientRequestThunk);
             
             ws.on('pong', function(this:  WebSockedExt) {
-                // console.log('WebSocketServer: ->pong<- event!');
+                Logger.getServerLogger().trace('AppSensorWebSocketServer.server: ', 'pong');
 
                 this.isAlive = true;
             });
         });
 
         this.server.on('close', function close() {
-            // console.log('WebSocketServer: ->close<- event!');
+            Logger.getServerLogger().trace('AppSensorWebSocketServer.server: ', 'close');
 
             clearInterval(interval);
         });
@@ -90,9 +93,7 @@ class AppSensorWebSocketServer {
     private onClientRequestWrapper(me: AppSensorWebSocketServer) {
 
         return function onClientRequest(this:  WebSockedExt, data: WebSocket.RawData, isBinary: boolean) {
-            // console.log('WebSocketServer: ->message<- event!');
-            // console.log('received:');
-            // console.log(data);
+            Logger.getServerLogger().trace('AppSensorWebSocketServer.server: ', 'message');
 
             me.onClientRequest(this, data, isBinary);
         }
@@ -100,6 +101,15 @@ class AppSensorWebSocketServer {
 
     protected onClientRequest(ws:  WebSockedExt, data: WebSocket.RawData, isBinary: boolean) {
         //your code goes here
+    }
+
+    protected closeServer() {
+        this.server.close((err?: Error | undefined) => {
+            Logger.getServerLogger().trace('AppSensorWebSocketServer.closeServer');
+            if (err) {
+                Logger.getServerLogger().error('AppSensorWebSocketServer.closeServer: error', err);
+            }
+        });
     }
 
     protected broadcast(methodName: string, 

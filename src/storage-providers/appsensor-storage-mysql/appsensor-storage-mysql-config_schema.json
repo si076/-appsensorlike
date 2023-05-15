@@ -1,0 +1,565 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "definitions": {
+        "KeyObject": {
+            "additionalProperties": false,
+            "properties": {
+                "passphrase": {
+                    "description": "Optional passphrase.",
+                    "type": "string"
+                },
+                "pem": {
+                    "anyOf": [
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "Private keys in PEM format."
+                }
+            },
+            "required": [
+                "pem"
+            ],
+            "type": "object"
+        },
+        "PoolConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "acquireTimeout": {
+                    "description": "The milliseconds before a timeout occurs during the connection acquisition. This is slightly different from connectTimeout,\nbecause acquiring a pool connection does not always involve making a connection. (Default: 10 seconds)",
+                    "type": "number"
+                },
+                "bigNumberStrings": {
+                    "description": "Enabling both supportBigNumbers and bigNumberStrings forces big numbers (BIGINT and DECIMAL columns) to be\nalways returned as JavaScript String objects (Default: false). Enabling supportBigNumbers but leaving\nbigNumberStrings disabled will return big numbers as String objects only when they cannot be accurately\nrepresented with [JavaScript Number objects] (http://ecma262-5.com/ELS5_HTML.htm#Section_8.5)\n(which happens when they exceed the [-2^53, +2^53] range), otherwise they will be returned as Number objects.\nThis option is ignored if supportBigNumbers is disabled.",
+                    "type": "boolean"
+                },
+                "charset": {
+                    "description": "The charset for the connection. This is called \"collation\" in the SQL-level of MySQL (like utf8_general_ci).\nIf a SQL-level charset is specified (like utf8mb4) then the default collation for that charset is used.\n(Default: 'UTF8_GENERAL_CI')",
+                    "type": "string"
+                },
+                "connectTimeout": {
+                    "description": "The milliseconds before a timeout occurs during the initial connection to the MySQL server. (Default: 10 seconds)",
+                    "type": "number"
+                },
+                "connectionLimit": {
+                    "description": "The maximum number of connections to create at once. (Default: 10)",
+                    "type": "number"
+                },
+                "database": {
+                    "description": "Name of the database to use for this connection",
+                    "type": "string"
+                },
+                "dateStrings": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "enum": [
+                                    "DATE",
+                                    "DATETIME",
+                                    "TIMESTAMP"
+                                ],
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "boolean"
+                        }
+                    ],
+                    "description": "Force date types (TIMESTAMP, DATETIME, DATE) to be returned as strings rather then inflated into JavaScript\nDate objects. Can be true/false or an array of type names to keep as strings. (Default: false)"
+                },
+                "debug": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "items": {
+                                "$ref": "#/definitions/Types"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "boolean"
+                        }
+                    ],
+                    "description": "This will print all incoming and outgoing packets on stdout.\nYou can also restrict debugging to packet types by passing an array of types (strings) to debug;\n\n(Default: false)"
+                },
+                "flags": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "List of connection flags to use other than the default ones. It is also possible to blacklist default ones"
+                },
+                "host": {
+                    "description": "The hostname of the database you are connecting to. (Default: localhost)",
+                    "type": "string"
+                },
+                "insecureAuth": {
+                    "description": "Allow connecting to MySQL instances that ask for the old (insecure) authentication method. (Default: false)",
+                    "type": "boolean"
+                },
+                "localAddress": {
+                    "description": "The source IP address to use for TCP connection",
+                    "type": "string"
+                },
+                "multipleStatements": {
+                    "description": "Allow multiple mysql statements per query. Be careful with this, it exposes you to SQL injection attacks. (Default: false)",
+                    "type": "boolean"
+                },
+                "password": {
+                    "description": "The password of that MySQL user",
+                    "type": "string"
+                },
+                "port": {
+                    "description": "The port number to connect to. (Default: 3306)",
+                    "type": "number"
+                },
+                "queueLimit": {
+                    "description": "The maximum number of connection requests the pool will queue before returning an error from getConnection. If set to 0, there\nis no limit to the number of queued connection requests. (Default: 0)",
+                    "type": "number"
+                },
+                "socketPath": {
+                    "description": "The path to a unix domain socket to connect to. When used host and port are ignored",
+                    "type": "string"
+                },
+                "ssl": {
+                    "anyOf": [
+                        {
+                            "additionalProperties": false,
+                            "properties": {
+                                "ca": {
+                                    "anyOf": [
+                                        {
+                                            "additionalProperties": false,
+                                            "patternProperties": {
+                                                "^[0-9]+$": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "items": {
+                                                "anyOf": [
+                                                    {
+                                                        "additionalProperties": false,
+                                                        "patternProperties": {
+                                                            "^[0-9]+$": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    {
+                                                        "type": "string"
+                                                    }
+                                                ]
+                                            },
+                                            "type": "array"
+                                        },
+                                        {
+                                            "type": "string"
+                                        }
+                                    ],
+                                    "description": "Optionally override the trusted CA certificates. Default is to trust\nthe well-known CAs curated by Mozilla. Mozilla's CAs are completely\nreplaced when CAs are explicitly specified using this option."
+                                },
+                                "cert": {
+                                    "anyOf": [
+                                        {
+                                            "additionalProperties": false,
+                                            "patternProperties": {
+                                                "^[0-9]+$": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "items": {
+                                                "anyOf": [
+                                                    {
+                                                        "additionalProperties": false,
+                                                        "patternProperties": {
+                                                            "^[0-9]+$": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    {
+                                                        "type": "string"
+                                                    }
+                                                ]
+                                            },
+                                            "type": "array"
+                                        },
+                                        {
+                                            "type": "string"
+                                        }
+                                    ],
+                                    "description": "Cert chains in PEM format. One cert chain should be provided per\nprivate key. Each cert chain should consist of the PEM formatted\ncertificate for a provided private key, followed by the PEM\nformatted intermediate certificates (if any), in order, and not\nincluding the root CA (the root CA must be pre-known to the peer,\nsee ca). When providing multiple cert chains, they do not have to\nbe in the same order as their private keys in key. If the\nintermediate certificates are not provided, the peer will not be\nable to validate the certificate, and the handshake will fail."
+                                },
+                                "ciphers": {
+                                    "description": "Cipher suite specification, replacing the default. For more\ninformation, see modifying the default cipher suite. Permitted\nciphers can be obtained via tls.getCiphers(). Cipher names must be\nuppercased in order for OpenSSL to accept them.",
+                                    "type": "string"
+                                },
+                                "clientCertEngine": {
+                                    "description": "Name of an OpenSSL engine which can provide the client certificate.",
+                                    "type": "string"
+                                },
+                                "crl": {
+                                    "anyOf": [
+                                        {
+                                            "additionalProperties": false,
+                                            "patternProperties": {
+                                                "^[0-9]+$": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "items": {
+                                                "anyOf": [
+                                                    {
+                                                        "additionalProperties": false,
+                                                        "patternProperties": {
+                                                            "^[0-9]+$": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    {
+                                                        "type": "string"
+                                                    }
+                                                ]
+                                            },
+                                            "type": "array"
+                                        },
+                                        {
+                                            "type": "string"
+                                        }
+                                    ],
+                                    "description": "PEM formatted CRLs (Certificate Revocation Lists)."
+                                },
+                                "dhparam": {
+                                    "anyOf": [
+                                        {
+                                            "additionalProperties": false,
+                                            "patternProperties": {
+                                                "^[0-9]+$": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "type": "string"
+                                        }
+                                    ],
+                                    "description": "Diffie Hellman parameters, required for Perfect Forward Secrecy. Use\nopenssl dhparam to create the parameters. The key length must be\ngreater than or equal to 1024 bits or else an error will be thrown.\nAlthough 1024 bits is permissible, use 2048 bits or larger for\nstronger security. If omitted or invalid, the parameters are\nsilently discarded and DHE ciphers will not be available."
+                                },
+                                "ecdhCurve": {
+                                    "description": "A string describing a named curve or a colon separated list of curve\nNIDs or names, for example P-521:P-384:P-256, to use for ECDH key\nagreement. Set to auto to select the curve automatically. Use\ncrypto.getCurves() to obtain a list of available curve names. On\nrecent releases, openssl ecparam -list_curves will also display the\nname and description of each available elliptic curve. Default:\ntls.DEFAULT_ECDH_CURVE.",
+                                    "type": "string"
+                                },
+                                "honorCipherOrder": {
+                                    "description": "Attempt to use the server's cipher suite preferences instead of the\nclient's. When true, causes SSL_OP_CIPHER_SERVER_PREFERENCE to be\nset in secureOptions",
+                                    "type": "boolean"
+                                },
+                                "key": {
+                                    "anyOf": [
+                                        {
+                                            "additionalProperties": false,
+                                            "patternProperties": {
+                                                "^[0-9]+$": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "items": {
+                                                "anyOf": [
+                                                    {
+                                                        "additionalProperties": false,
+                                                        "patternProperties": {
+                                                            "^[0-9]+$": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    {
+                                                        "$ref": "#/definitions/KeyObject"
+                                                    },
+                                                    {
+                                                        "type": "string"
+                                                    }
+                                                ]
+                                            },
+                                            "type": "array"
+                                        },
+                                        {
+                                            "type": "string"
+                                        }
+                                    ],
+                                    "description": "Private keys in PEM format. PEM allows the option of private keys\nbeing encrypted. Encrypted keys will be decrypted with\noptions.passphrase. Multiple keys using different algorithms can be\nprovided either as an array of unencrypted key strings or buffers,\nor an array of objects in the form {pem: <string|buffer>[,\npassphrase: <string>]}. The object form can only occur in an array.\nobject.passphrase is optional. Encrypted keys will be decrypted with\nobject.passphrase if provided, or options.passphrase if it is not."
+                                },
+                                "maxVersion": {
+                                    "description": "Optionally set the maximum TLS version to allow. One\nof `'TLSv1.3'`, `'TLSv1.2'`, `'TLSv1.1'`, or `'TLSv1'`. Cannot be specified along with the\n`secureProtocol` option, use one or the other.\n**Default:** `'TLSv1.3'`, unless changed using CLI options. Using\n`--tls-max-v1.2` sets the default to `'TLSv1.2'`. Using `--tls-max-v1.3` sets the default to\n`'TLSv1.3'`. If multiple of the options are provided, the highest maximum is used.",
+                                    "enum": [
+                                        "TLSv1",
+                                        "TLSv1.1",
+                                        "TLSv1.2",
+                                        "TLSv1.3"
+                                    ],
+                                    "type": "string"
+                                },
+                                "minVersion": {
+                                    "description": "Optionally set the minimum TLS version to allow. One\nof `'TLSv1.3'`, `'TLSv1.2'`, `'TLSv1.1'`, or `'TLSv1'`. Cannot be specified along with the\n`secureProtocol` option, use one or the other.  It is not recommended to use\nless than TLSv1.2, but it may be required for interoperability.\n**Default:** `'TLSv1.2'`, unless changed using CLI options. Using\n`--tls-v1.0` sets the default to `'TLSv1'`. Using `--tls-v1.1` sets the default to\n`'TLSv1.1'`. Using `--tls-min-v1.3` sets the default to\n'TLSv1.3'. If multiple of the options are provided, the lowest minimum is used.",
+                                    "enum": [
+                                        "TLSv1",
+                                        "TLSv1.1",
+                                        "TLSv1.2",
+                                        "TLSv1.3"
+                                    ],
+                                    "type": "string"
+                                },
+                                "passphrase": {
+                                    "description": "Shared passphrase used for a single private key and/or a PFX.",
+                                    "type": "string"
+                                },
+                                "pfx": {
+                                    "anyOf": [
+                                        {
+                                            "additionalProperties": false,
+                                            "patternProperties": {
+                                                "^[0-9]+$": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "items": {
+                                                "anyOf": [
+                                                    {
+                                                        "additionalProperties": false,
+                                                        "patternProperties": {
+                                                            "^[0-9]+$": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    {
+                                                        "$ref": "#/definitions/PxfObject"
+                                                    },
+                                                    {
+                                                        "type": "string"
+                                                    }
+                                                ]
+                                            },
+                                            "type": "array"
+                                        },
+                                        {
+                                            "type": "string"
+                                        }
+                                    ],
+                                    "description": "PFX or PKCS12 encoded private key and certificate chain. pfx is an\nalternative to providing key and cert individually. PFX is usually\nencrypted, if it is, passphrase will be used to decrypt it. Multiple\nPFX can be provided either as an array of unencrypted PFX buffers,\nor an array of objects in the form {buf: <string|buffer>[,\npassphrase: <string>]}. The object form can only occur in an array.\nobject.passphrase is optional. Encrypted PFX will be decrypted with\nobject.passphrase if provided, or options.passphrase if it is not."
+                                },
+                                "privateKeyEngine": {
+                                    "description": "Name of an OpenSSL engine to get private key from. Should be used\ntogether with privateKeyIdentifier.",
+                                    "type": "string"
+                                },
+                                "privateKeyIdentifier": {
+                                    "description": "Identifier of a private key managed by an OpenSSL engine. Should be\nused together with privateKeyEngine. Should not be set together with\nkey, because both options define a private key in different ways.",
+                                    "type": "string"
+                                },
+                                "rejectUnauthorized": {
+                                    "type": "boolean"
+                                },
+                                "secureOptions": {
+                                    "description": "Optionally affect the OpenSSL protocol behavior, which is not\nusually necessary. This should be used carefully if at all! Value is\na numeric bitmask of the SSL_OP_* options from OpenSSL Options",
+                                    "type": "number"
+                                },
+                                "secureProtocol": {
+                                    "description": "Legacy mechanism to select the TLS protocol version to use, it does\nnot support independent control of the minimum and maximum version,\nand does not support limiting the protocol to TLSv1.3. Use\nminVersion and maxVersion instead. The possible values are listed as\nSSL_METHODS, use the function names as strings. For example, use\n'TLSv1_1_method' to force TLS version 1.1, or 'TLS_method' to allow\nany TLS protocol version up to TLSv1.3. It is not recommended to use\nTLS versions less than 1.2, but it may be required for\ninteroperability. Default: none, see minVersion.",
+                                    "type": "string"
+                                },
+                                "sessionIdContext": {
+                                    "description": "Opaque identifier used by servers to ensure session state is not\nshared between applications. Unused by clients.",
+                                    "type": "string"
+                                },
+                                "sessionTimeout": {
+                                    "description": "The number of seconds after which a TLS session created by the\nserver will no longer be resumable. See Session Resumption for more\ninformation. Default: 300.",
+                                    "type": "number"
+                                },
+                                "sigalgs": {
+                                    "description": "Colon-separated list of supported signature algorithms. The list\ncan contain digest algorithms (SHA256, MD5 etc.), public key\nalgorithms (RSA-PSS, ECDSA etc.), combination of both (e.g\n'RSA+SHA384') or TLS v1.3 scheme names (e.g. rsa_pss_pss_sha512).",
+                                    "type": "string"
+                                },
+                                "ticketKeys": {
+                                    "additionalProperties": false,
+                                    "description": "48-bytes of cryptographically strong pseudo-random data.\nSee Session Resumption for more information.",
+                                    "patternProperties": {
+                                        "^[0-9]+$": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "object with ssl parameters or a string containing name of ssl profile"
+                },
+                "stringifyObjects": {
+                    "description": "Stringify objects instead of converting to values. (Default: 'false')",
+                    "type": "boolean"
+                },
+                "supportBigNumbers": {
+                    "description": "When dealing with big numbers (BIGINT and DECIMAL columns) in the database, you should enable this option\n(Default: false)",
+                    "type": "boolean"
+                },
+                "timeout": {
+                    "description": "Number of milliseconds",
+                    "type": "number"
+                },
+                "timezone": {
+                    "description": "The timezone used to store local dates. (Default: 'local')",
+                    "type": "string"
+                },
+                "trace": {
+                    "description": "Generates stack traces on errors to include call site of library entrance (\"long stack traces\"). Slight\nperformance penalty for most calls. (Default: true)",
+                    "type": "boolean"
+                },
+                "typeCast": {
+                    "anyOf": [
+                        {
+                            "additionalProperties": false,
+                            "type": "object"
+                        },
+                        {
+                            "type": "boolean"
+                        }
+                    ],
+                    "description": "Determines if column values should be converted to native JavaScript types. It is not recommended (and may go away / change in the future)\nto disable type casting, but you can currently do so on either the connection or query level. (Default: true)\n\nYou can also specify a function (field: any, next: () => void) => {} to do the type casting yourself.\n\nWARNING: YOU MUST INVOKE the parser using one of these three field functions in your custom typeCast callback. They can only be called once.\n\nfield.string()\nfield.buffer()\nfield.geometry()\n\nare aliases for\n\nparser.parseLengthCodedString()\nparser.parseLengthCodedBuffer()\nparser.parseGeometryValue()\n\nYou can find which field function you need to use by looking at: RowDataPacket.prototype._typeCast"
+                },
+                "user": {
+                    "description": "The MySQL user to authenticate as",
+                    "type": "string"
+                },
+                "waitForConnections": {
+                    "description": "Determines the pool's action when no connections are available and the limit has been reached. If true, the pool will queue\nthe connection request and call it when one becomes available. If false, the pool will immediately call back with an error.\n(Default: true)",
+                    "type": "boolean"
+                }
+            },
+            "type": "object"
+        },
+        "PxfObject": {
+            "additionalProperties": false,
+            "properties": {
+                "buf": {
+                    "anyOf": [
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "PFX or PKCS12 encoded private key and certificate chain."
+                },
+                "passphrase": {
+                    "description": "Optional passphrase.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "buf"
+            ],
+            "type": "object"
+        },
+        "Types": {
+            "enum": [
+                0,
+                1,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                2,
+                245,
+                246,
+                247,
+                248,
+                249,
+                250,
+                251,
+                252,
+                253,
+                254,
+                255,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9
+            ],
+            "type": "number"
+        }
+    },
+    "properties": {
+        "poolConfig": {
+            "$ref": "#/definitions/PoolConfig"
+        }
+    },
+    "required": [
+        "poolConfig"
+    ],
+    "type": "object"
+}
+

@@ -1,10 +1,9 @@
 import { AttackAnalysisEngine, EventAnalysisEngine, ResponseAnalysisEngine } from "../../core/analysis/analysis.js";
 import { AppSensorEvent, AppSensorServer, Attack, DetectionPoint, Interval, Response, Utils } from "../../core/core.js";
 import { SearchCriteria } from "../../core/criteria/criteria.js";
+import { Logger } from "../../logging/logging.js";
 
 class ReferenceAttackAnalysisEngine extends AttackAnalysisEngine {
-
-	// private Logger logger;
 
 	private appSensorServer: AppSensorServer = new AppSensorServer();
 
@@ -35,7 +34,9 @@ class ReferenceAttackAnalysisEngine extends AttackAnalysisEngine {
                 if (user !== null) {
                     userName = user.getUsername();
                 }
-				console.info("Response set for user <" + userName  + "> - storing response action " + response.getAction());
+
+				Logger.getServerLogger().info("ReferenceAttackAnalysisEngine.analyze:", `Response set for user <${userName}> - storing response action ${response.getAction()}`);
+
                 const responseStore = this.appSensorServer.getResponseStore();
                 if (responseStore !== null) {
                     await responseStore.addResponse(response);
@@ -161,8 +162,6 @@ class ReferenceAttackAnalysisEngine extends AttackAnalysisEngine {
 
 class ReferenceEventAnalysisEngine extends EventAnalysisEngine {
 
-	// private Logger logger;
-
 	private appSensorServer: AppSensorServer = new AppSensorServer();
 
 	public getAppSensorServer(): AppSensorServer {
@@ -245,7 +244,8 @@ class ReferenceEventAnalysisEngine extends EventAnalysisEngine {
                     if (user !== null) {
                         userName = user.getUsername();
                     }
-					console.info("Violation Observed for user <" + userName + "> - storing attack");
+
+					Logger.getServerLogger().info("ReferenceEventAnalysisEngine.analyze:", `Violation Observed for user <${userName}> - storing attack`);
 
 					//have determined this event triggers attack
 					//ensure appropriate detection point is being used (associated responses, etc.)
@@ -267,7 +267,7 @@ class ReferenceEventAnalysisEngine extends EventAnalysisEngine {
 		} else {
             const label = Utils.getDetectionPointLabel(event.getDetectionPoint());
             
-			console.error("Could not find detection point configured for this type: " + label);
+			Logger.getServerLogger().error("ReferenceEventAnalysisEngine.analyze:", `Could not find detection point configured for this type: ${label}`);
 		}
 	}
 
@@ -362,19 +362,16 @@ class ReferenceEventAnalysisEngine extends EventAnalysisEngine {
 
 class ReferenceResponseAnalysisEngine extends ResponseAnalysisEngine {
 
-	// private Logger logger;
-	
 	/**
 	 * This method simply logs responses.
 	 * 
 	 * @param response {@link Response} that has been added to the {@link ResponseStore}.
 	 */
-	// @Override
-	public async analyze(response: Response): Promise<void> {
+	public override async analyze(response: Response): Promise<void> {
 		if (response != null) {
             let userName = Utils.getUserName(response.getUser());
 
-			console.info("NO-OP Response for user <" + userName + "> - should be executing response action " + response.getAction());
+			Logger.getServerLogger().trace("ReferenceResponseAnalysisEngine.analyze:", `NO-OP Response for user <${userName}> - should be executing response action ${response.getAction()}`);
 		}
 	}
 	
