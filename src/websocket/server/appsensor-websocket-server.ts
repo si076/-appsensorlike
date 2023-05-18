@@ -1,7 +1,8 @@
+import { IncomingMessage } from "http";
 import WebSocket, { PerMessageDeflateOptions, WebSocketServer } from "ws";
 import { AppSensorEvent, Attack, Response } from "../../core/core.js";
 import { Logger } from "../../logging/logging.js";
-import { MethodRequest, MethodResponse } from "../appsensor-websocket.js";
+import { AccessDeniedError, ActionRequest, ActionResponse, UnAuthorizedActionError } from "../appsensor-websocket.js";
 
 interface IWebSocketServerConfig {
     options: {
@@ -23,13 +24,16 @@ class WebSocketServerConfig implements IWebSocketServerConfig {
 
 interface WebSocketAdditionalProperties {
     isAlive?: boolean;
+    remoteAddress?: string;
 }
 
-type WebSockedExt = WebSocket.WebSocket & WebSocketAdditionalProperties;
+type WebSocketExt = WebSocket.WebSocket & WebSocketAdditionalProperties;
 
 class AppSensorWebSocketServer {
 
     protected static DEFAULT_PORT = 3000;
+
+    protected static ACCESS_DENIED_CLOSE_CODE = 4000;
 
     protected server: WebSocketServer;
 
@@ -54,8 +58,34 @@ class AppSensorWebSocketServer {
 
         const onClientRequestThunk = this.onClientRequestWrapper(this);
 
-        this.server.on('connection', function(ws:  WebSockedExt) {
-            Logger.getServerLogger().trace('AppSensorWebSocketServer.server: ', 'connection');
+        const isConnectionAllowedThunk = this.isConnectionAllowedWrapper(this);
+
+        this.server.on('connection', function(ws:  WebSocketExt, req: IncomingMessage) {
+            try {
+                if (typeof req.headers['x-forwarded-for'] === 'string') {
+                    ws.remoteAddress = req.headers['x-forwarded-for'].split(',')[0].trim();
+                }
+            } catch (error) {
+                Logger.getServerLogger().trace('AppSensorWebSocketServer.server: ', error);
+            }
+            
+            if (!ws.remoteAddress) {
+                ws.remoteAddress = req.socket.remoteAddress;
+            }
+
+            Logger.getServerLogger().trace('AppSensorWebSocketServer.server: ', 'connection', 
+                                           ' IP address: ', ws.remoteAddress);
+
+
+            if (!isConnectionAllowedThunk(ws)) {
+                
+                Logger.getServerLogger().warn(`AppSensorWebSocketServer.server: Unknown client application with IP address: ${ws.remoteAddress} is trying to access the server`);
+                Logger.getServerLogger().warn(`AppSensorWebSocketServer.server: Closing connection to client application with IP address: ${ws.remoteAddress}`);
+
+                AppSensorWebSocketServer.reportAccessDenied(ws);
+
+                ws.close(AppSensorWebSocketServer.ACCESS_DENIED_CLOSE_CODE, "Access denied");
+            }
 
             ws.isAlive = true;
             ws.on('error', (error) => {
@@ -64,7 +94,7 @@ class AppSensorWebSocketServer {
 
             ws.on('message', onClientRequestThunk);
             
-            ws.on('pong', function(this:  WebSockedExt) {
+            ws.on('pong', function(this:  WebSocketExt) {
                 Logger.getServerLogger().trace('AppSensorWebSocketServer.server: ', 'pong');
 
                 this.isAlive = true;
@@ -78,10 +108,26 @@ class AppSensorWebSocketServer {
         });
     }
 
+    protected isConnectionAllowedWrapper(me: AppSensorWebSocketServer) {
+        return function isConnectionAllowed(ws:  WebSocketExt): boolean {
+            return me.isConnectionAllowed(ws);
+        }
+    }   
+
+    protected isConnectionAllowed(ws:  WebSocketExt): boolean {
+        //overwrite this method to controll the access
+        return true;
+    }
+
+    protected isActionAuthorized(ws:  WebSocketExt, request: ActionRequest): boolean {
+        //overwrite this method to check the authorization
+        return true;
+    }
+
     private ping(me: AppSensorWebSocketServer) {
 
         return function ping() {
-            me.server.clients.forEach(function each(ws:  WebSockedExt) {
+            me.server.clients.forEach(function each(ws:  WebSocketExt) {
               if (ws.isAlive === false) return ws.terminate();
           
               ws.isAlive = false;
@@ -90,16 +136,25 @@ class AppSensorWebSocketServer {
         }
     }
 
-    private onClientRequestWrapper(me: AppSensorWebSocketServer) {
+    protected onClientRequestWrapper(me: AppSensorWebSocketServer) {
 
-        return function onClientRequest(this:  WebSockedExt, data: WebSocket.RawData, isBinary: boolean) {
+        return function onClientRequest(this:  WebSocketExt, data: WebSocket.RawData, isBinary: boolean) {
             Logger.getServerLogger().trace('AppSensorWebSocketServer.server: ', 'message');
 
-            me.onClientRequest(this, data, isBinary);
+            const request: ActionRequest = JSON.parse(data.toString());
+            Object.setPrototypeOf(request, ActionRequest.prototype);
+
+            if (!me.isActionAuthorized(this, request)) {
+
+                AppSensorWebSocketServer.reportUnAuthorizedAction(this, request);
+
+            } else {
+                me.onClientRequest(this, request);
+            }
         }
     }
 
-    protected onClientRequest(ws:  WebSockedExt, data: WebSocket.RawData, isBinary: boolean) {
+    protected onClientRequest(ws: WebSocketExt, request: ActionRequest) {
         //your code goes here
     }
 
@@ -112,10 +167,10 @@ class AppSensorWebSocketServer {
         });
     }
 
-    protected broadcast(methodName: string, 
+    protected broadcast(actionName: string, 
                         result: number | Object | null | string,
                         resultElementClass: string | null) {
-        const response = new MethodResponse('', methodName, result, resultElementClass);
+        const response = new ActionResponse('', actionName, result, resultElementClass);
 
         this.server.clients.forEach(function each(client) {
             if (client.readyState === WebSocket.OPEN) {
@@ -126,7 +181,7 @@ class AppSensorWebSocketServer {
 
     }
 
-    protected static getParameter(request: MethodRequest, paramName: string): string | Object | undefined {
+    protected static getParameter(request: ActionRequest, paramName: string): string | Object | undefined {
         let param: string | Object | undefined = undefined;
 
         if (request.parameters) {
@@ -139,9 +194,9 @@ class AppSensorWebSocketServer {
         return param;
     }
 
-    protected static reportMissingParameter(ws: WebSocket, request: MethodRequest, paramName: string) {
-        const response = new MethodResponse(request.id, 
-                                            request.methodName,
+    protected static reportMissingParameter(ws: WebSocket, request: ActionRequest, paramName: string) {
+        const response = new ActionResponse(request.id, 
+                                            request.actionName,
                                             null,
                                             null,
                                             `Missing required parameter ${paramName}!`);
@@ -149,9 +204,9 @@ class AppSensorWebSocketServer {
         ws.send(JSON.stringify(response));                                             
     }
 
-    protected static reportError(ws: WebSocket, request: MethodRequest, error: any) {
-        const response = new MethodResponse(request.id, 
-                                            request.methodName,
+    protected static reportError(ws: WebSocket, request: ActionRequest, error: any) {
+        const response = new ActionResponse(request.id, 
+                                            request.actionName,
                                             null,
                                             null,
                                             error.toString());
@@ -159,11 +214,34 @@ class AppSensorWebSocketServer {
         ws.send(JSON.stringify(response));                                             
     }
 
-    protected static sendResult(ws: WebSocket, request: MethodRequest,
+    protected static reportAccessDenied(ws: WebSocket) {
+        const response = new ActionResponse('', 
+                                            '',
+                                            null,
+                                            null,
+                                            new AccessDeniedError().toString(),
+                                            true);
+
+        ws.send(JSON.stringify(response));                                             
+    }
+
+    protected static reportUnAuthorizedAction(ws: WebSocket, request: ActionRequest) {
+        const response = new ActionResponse(request.id, 
+                                            request.actionName,
+                                            null,
+                                            null,
+                                            new UnAuthorizedActionError(request.actionName).toString(),
+                                            false,
+                                            true);
+
+        ws.send(JSON.stringify(response));                                             
+    }
+
+    protected static sendResult(ws: WebSocket, request: ActionRequest,
                                 result: number | Object | null | string,
                                 resultElementClass: string | null) {
-        const response = new MethodResponse(request.id, 
-                                            request.methodName,
+        const response = new ActionResponse(request.id, 
+                                            request.actionName,
                                             result,
                                             resultElementClass);
 
@@ -173,4 +251,4 @@ class AppSensorWebSocketServer {
 
 }
 
-export {AppSensorWebSocketServer, IWebSocketServerConfig, WebSocketServerConfig, WebSockedExt};
+export {AppSensorWebSocketServer, IWebSocketServerConfig, WebSocketServerConfig, WebSocketExt};

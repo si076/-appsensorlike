@@ -1,6 +1,7 @@
 import { ClientApplication } from "../core.js";
 
 enum Action {
+	UNKNOWN = "UNKNOWN",
 	ADD_EVENT = "ADD_EVENT",
 	ADD_ATTACK = "ADD_ATTACK",
 	GET_RESPONSES = "GET_RESPONSES",
@@ -25,4 +26,4 @@ interface AccessController {
 	
 }
 
-export {Role, AccessController};
+export {Action, Role, Context, AccessController};

@@ -6,8 +6,8 @@ import { JSONServerConfigurationReader } from "../../../configuration-modes/apps
 
 import WebSocket, {  } from "ws";
 import { JSONConfigReadValidate } from "../../../utils/Utils.js";
-import { AppSensorWebSocketServer, WebSockedExt, WebSocketServerConfig } from "../../../websocket/server/appsensor-websocket-server.js";
-import { MethodRequest } from "../../../websocket/appsensor-websocket.js";
+import { AppSensorWebSocketServer, WebSocketExt, WebSocketServerConfig } from "../../../websocket/server/appsensor-websocket-server.js";
+import { ActionRequest } from "../../../websocket/appsensor-websocket.js";
 
 class ReportingWebSocketServerConfigReader  extends JSONConfigReadValidate {
 
@@ -42,11 +42,9 @@ class AppSensorReportingWebSocketServer extends AppSensorWebSocketServer impleme
         this.responseStore.registerListener(this, true);
     }
 
-    protected override onClientRequest(ws: WebSockedExt, data: WebSocket.RawData, isBinary: boolean) {
-        const request: MethodRequest = JSON.parse(data.toString());
-        Object.setPrototypeOf(request, MethodRequest.prototype);
+    protected override onClientRequest(ws: WebSocketExt, request: ActionRequest) {
 
-        switch (request.methodName) {
+        switch (request.actionName) {
             case "findEvents": {
                 const earliest = AppSensorWebSocketServer.getParameter(request, "earliest");
 

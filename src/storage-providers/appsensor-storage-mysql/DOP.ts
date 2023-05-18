@@ -1,4 +1,4 @@
-import { format, PoolConnection, MysqlError } from "mysql";
+import { format, PoolConnection } from "mysql";
 import * as _core from "../../core/core.js";
 import * as _geolocation from "../../core/geolocation/geolocation.js";
 import * as _rule from "../../core/rule/rule.js";
@@ -366,7 +366,7 @@ class DOP {
                     }
                 }
 
-                (newObject as _core.IValidate).checkValid();
+                (newObject as _core.IValidateInitialize).checkValidInitialize();
 
                 if (DOP.mapping.isClassCachable(className)) {
                     DOP.putInCache(className, element[idColumnName], newObject);

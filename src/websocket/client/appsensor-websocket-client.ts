@@ -1,5 +1,5 @@
 
-import { MethodRequest } from "../appsensor-websocket.js";
+import { ActionRequest, ActionResponse } from "../appsensor-websocket.js";
 import { Utils } from "../../utils/Utils.js";
 
 import { ClientRequestArgs } from "http";
@@ -42,6 +42,7 @@ class AppSensorWebSocketClient {
         this.socket.on('open', function () {
             Logger.getClientLogger().trace('AppSensorWebSocketClient.socket: ', 'open');
         });
+
         this.socket.on('error', (error) => {
             Logger.getClientLogger().trace('AppSensorWebSocketClient.socket: ', 'error ', error);
         });
@@ -50,31 +51,46 @@ class AppSensorWebSocketClient {
 
         this.socket.on('message', onServerResponseThunk);
 
-        this.socket.on('close', function close() {
-            Logger.getClientLogger().trace('AppSensorWebSocketClient.socket: ', 'close');
+        this.socket.on('close', function close(this: WebSocket, code: number, reason: Buffer) {
+            Logger.getClientLogger().trace('AppSensorWebSocketClient.socket: ', 'close', 
+                                           ' CODE: ', code, ' REASON: ', reason.toString());
         });
     }
 
-    private onServerResponseWrapper(me: AppSensorWebSocketClient) {
+    protected onServerResponseWrapper(me: AppSensorWebSocketClient) {
 
         return function onServerResponse(data: WebSocket.RawData, isBinary: boolean) {
             Logger.getClientLogger().trace('AppSensorWebSocketClient.socket: ', 'message');
 
-            me.onServerResponse(data, isBinary);
+            const response: ActionResponse = JSON.parse(data.toString());
+            Object.setPrototypeOf(response, ActionResponse.prototype);
+
+            if (response.accessDenied) {
+
+                Logger.getClientLogger().warn('Access denied for this client application! Configure server!');
+
+            } else if (response.unauthorizedAction) {
+
+                Logger.getClientLogger().warn(`This client application is not authorized to perform ${response.actionName} on server! Configure server!`);
+                
+            } else {
+                me.onServerResponse(response);
+            }
+
         }
     }
 
-    protected onServerResponse(data: WebSocket.RawData, isBinary: boolean) {
+    protected onServerResponse(response: ActionResponse) {
         //your code goes here
     }
 
-    protected static createRequest(methodName: string, parameters?: { [propertyName: string]: string | Object; }): MethodRequest {
+    protected static createRequest(actionName: string, parameters?: { [propertyName: string]: string | Object; }): ActionRequest {
         const uuid = uuidv4();
 
-        return new MethodRequest(uuid, methodName, parameters);
+        return new ActionRequest(uuid, actionName, parameters);
     }
 
-    protected async sendRequest(request: MethodRequest, cb: (err?: Error) => void) {
+    protected async sendRequest(request: ActionRequest, cb: (err?: Error) => void) {
         let waited = 0;
         const timeout = 500;
         while (this.socket.readyState === WebSocket.CONNECTING && waited < 5000) {

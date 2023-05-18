@@ -5,7 +5,9 @@ import assert from 'assert';
 import Ajv, { AnySchemaObject, ErrorObject } from "ajv"
 import addFormats from "ajv-formats"
 
-import { AppSensorEvent, Attack, DetectionPoint, DetectionSystem, Interval, IPAddress, KeyValuePair, Resource, Response, Threshold, User } from '../core/core.js';
+import { AppSensorEvent, Attack, DetectionPoint, DetectionSystem, 
+         Interval, IPAddress, KeyValuePair, Resource, Response, Threshold, 
+         User, IValidateInitialize } from '../core/core.js';
 import { GeoLocation } from '../core/geolocation/geolocation.js';
 import { Clause, Expression, Rule } from '../core/rule/rule.js';
 
@@ -336,6 +338,10 @@ class Utils {
                                 const arEl = element[1][a];
     
                                 this.setPrototypeInDepth(arEl, sourcePropDescr.value[0]);
+
+                                if (Utils.isIValidateInitialize(arEl)) {
+                                    arEl.checkValidInitialize();
+                                }
                             }
                         }
                     }
@@ -344,10 +350,19 @@ class Utils {
                 } else if (element[1] instanceof Object) {
     
                     this.setPrototypeInDepth(element[1], sourcePropDescr.value);
+
+                    if (Utils.isIValidateInitialize(element[1])) {
+                        element[1].checkValidInitialize();
+                    }
                 }
             }
         }
     }
+
+    private static isIValidateInitialize(obj: any): obj is IValidateInitialize {
+        return (obj as IValidateInitialize).checkValidInitialize !== undefined;
+    }
+   
 
     public static setTimestampFromJSONParsedObject(target: AppSensorEvent | Attack | Response, obj: Object) {
         const propDescr = Object.getOwnPropertyDescriptor(obj, "timestamp");

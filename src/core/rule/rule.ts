@@ -397,13 +397,13 @@ class Rule extends AppsensorEntity {
 			   this.guid === other.getGuid();
 	}
 
-	public override checkValid(): void {
+	public override checkValidInitialize(): void {
 		if (this.guid.trim().length === 0) {
 			throw new ObjectValidationError('guid cannot be empty string!', this);
 		}
 
 		if (this.window) {
-			this.window.checkValid();
+			this.window.checkValidInitialize();
 		}
 	}
 	// @Override

@@ -3,7 +3,7 @@ import { AppSensorEvent, Attack, Response } from "../../../core/core.js";
 import { EventManager } from "../../../core/event/event.js";
 import { JSONConfigReadValidate, Utils } from "../../../utils/Utils.js";
 import { AppSensorWebSocketClient, WebSocketClientConfig } from "../../../websocket/client/appsensor-websocket-client.js";
-import { MethodResponse } from "../../../websocket/appsensor-websocket.js";
+import { ActionResponse } from "../../../websocket/appsensor-websocket.js";
 import { Logger } from "../../../logging/logging.js";
 
 import EventEmitter from "events";
@@ -32,9 +32,7 @@ class WebSocketEventManager extends AppSensorWebSocketClient implements EventMan
         super.closeSocket();
     }
 
-    protected override onServerResponse(data: WebSocket.RawData, isBinary: boolean) {
-        const response: MethodResponse = JSON.parse(data.toString());
-        Object.setPrototypeOf(response, MethodResponse.prototype);
+    protected override onServerResponse(response: ActionResponse) {
 
         const responseStatus = response.error ? 'Error' : 'OK';
         Logger.getClientLogger().trace('WebSocketEventManager.onServerResponse: ', responseStatus);
@@ -64,7 +62,7 @@ class WebSocketEventManager extends AppSensorWebSocketClient implements EventMan
 
             const request = AppSensorWebSocketClient.createRequest("addEvent", {event: event});
 
-            WebSocketEventManager.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
+            WebSocketEventManager.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
 
                 WebSocketEventManager.eventEmmiter.removeAllListeners(request.id);
 
@@ -94,7 +92,7 @@ class WebSocketEventManager extends AppSensorWebSocketClient implements EventMan
 
             const request = AppSensorWebSocketClient.createRequest("addAttack", {attack: attack});
 
-            WebSocketEventManager.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
+            WebSocketEventManager.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
 
                 WebSocketEventManager.eventEmmiter.removeAllListeners(request.id);
 
@@ -124,7 +122,7 @@ class WebSocketEventManager extends AppSensorWebSocketClient implements EventMan
 
             const request = AppSensorWebSocketClient.createRequest("getResponses", {earliest: earliest});
 
-            WebSocketEventManager.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
+            WebSocketEventManager.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
 
                 WebSocketEventManager.eventEmmiter.removeAllListeners(request.id);
 

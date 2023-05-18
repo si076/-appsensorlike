@@ -1,6 +1,6 @@
 import { AppSensorEvent, Attack, Response, KeyValuePair } from "../../../core/core.js";
 import { JSONConfigReadValidate, Utils } from "../../../utils/Utils.js";
-import { MethodResponse } from "../../../websocket/appsensor-websocket.js";
+import { ActionResponse } from "../../../websocket/appsensor-websocket.js";
 import { ReportingEngineExt } from "../appsensor-reporting-websocket.js";
 import { AppSensorWebSocketClient, WebSocketClientConfig } from "../../../websocket/client/appsensor-websocket-client.js";
 
@@ -27,11 +27,9 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
         super(address, new ReportingWebSocketClientConfigReader().read(configLocation), options);
     }
 
-    protected override onServerResponse(data: WebSocket.RawData, isBinary: boolean) {
-        const response: MethodResponse = JSON.parse(data.toString());
-        Object.setPrototypeOf(response, MethodResponse.prototype);
+    protected override onServerResponse(response: ActionResponse) {
 
-        if (response.methodName === 'onAdd') {
+        if (response.actionName === 'onAdd') {
 
             switch (response.resultElementClass) {
                 case 'AppSensorEvent': {
@@ -76,7 +74,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
 
             const request = AppSensorWebSocketClient.createRequest("findEvents", {earliest: earliest});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -103,7 +101,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
 
             const request = AppSensorWebSocketClient.createRequest("findAttacks", {earliest: earliest});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -130,7 +128,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
 
             const request = AppSensorWebSocketClient.createRequest("findResponses", {earliest: earliest});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -157,7 +155,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
 
             const request = AppSensorWebSocketClient.createRequest("countEvents", {earliest: earliest});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -177,7 +175,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
 
             const request = AppSensorWebSocketClient.createRequest("countAttacks", {earliest: earliest});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -197,7 +195,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
 
             const request = AppSensorWebSocketClient.createRequest("countResponses", {earliest: earliest});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -232,7 +230,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
                                                                              category: category,
                                                                              label: label});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -255,7 +253,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
                                                                              category: category,
                                                                              label: label});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -278,7 +276,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
                                                                              category: category,
                                                                              label: label});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -298,7 +296,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
 
             const request = AppSensorWebSocketClient.createRequest("countEventsByUser", {earliest: earliest, user: user});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -318,7 +316,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
 
             const request = AppSensorWebSocketClient.createRequest("countAttacksByUser", {earliest: earliest, user: user});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -338,7 +336,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
 
             const request = AppSensorWebSocketClient.createRequest("countResponsesByUser", {earliest: earliest, user: user});
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 
@@ -358,7 +356,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
 
             const request = AppSensorWebSocketClient.createRequest("getServerConfigurationAsJson");
 
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: MethodResponse) => {
+            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
 
                 AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
 

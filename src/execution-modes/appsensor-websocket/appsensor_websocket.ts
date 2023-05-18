@@ -1,5 +1,6 @@
 import { ClientRequestArgs } from "http";
 import WebSocket from "ws";
+import { ReferenceAccessController } from "../../access-controllers/appsensor-access-control-reference/ReferenceAccessController.js";
 
 import { ReferenceAttackAnalysisEngine, ReferenceEventAnalysisEngine } from "../../analysis-engines/appsensor-analysis-reference/appsensor-analysis-reference.js";
 import { AggregateAttackAnalysisEngine, AggregateEventAnalysisEngine } from "../../analysis-engines/appsensor-analysis-rules/appsensor-analysis-rules.js";
@@ -107,6 +108,8 @@ class AppSensorWebsocketExecServer {
 
 		this.refAttackEngine.setAppSensorServer(this.appSensorServer);
         this.refEventEngine.setAppSensorServer(this.appSensorServer);
+
+        this.appSensorServer.setAccessController(new ReferenceAccessController());
 
         this.requestHandler = new WebSocketRequestHandler(this.appSensorServer, webSocketServerConfigFile, serverOptions);
     }

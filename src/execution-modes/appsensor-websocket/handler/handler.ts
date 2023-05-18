@@ -1,12 +1,12 @@
 import WebSocket from "ws";
-import log from "log4js";
+import { Context } from "../../../core/accesscontrol/accesscontrol.js";
 
-import { AppSensorEvent, RequestHandler, AppSensorServer, Attack, Response } from "../../../core/core.js";
+import { AppSensorEvent, RequestHandler, AppSensorServer, Attack, Response, IPAddress, Utils as coreUtils} from "../../../core/core.js";
 import { SearchCriteria } from "../../../core/criteria/criteria.js";
 import { Logger } from "../../../logging/logging.js";
 import { JSONConfigReadValidate, Utils } from "../../../utils/Utils.js";
-import { MethodRequest } from "../../../websocket/appsensor-websocket.js";
-import { AppSensorWebSocketServer, WebSockedExt, WebSocketServerConfig } from "../../../websocket/server/appsensor-websocket-server.js";
+import { ActionRequest } from "../../../websocket/appsensor-websocket.js";
+import { AppSensorWebSocketServer, WebSocketExt, WebSocketServerConfig } from "../../../websocket/server/appsensor-websocket-server.js";
 
 class WebSocketRequestHandlerConfigReader  extends JSONConfigReadValidate {
 
@@ -34,13 +34,41 @@ class WebSocketRequestHandler extends AppSensorWebSocketServer implements Reques
         super.closeServer();
     }
 
-	protected override onClientRequest(ws: WebSockedExt, data: WebSocket.RawData, isBinary: boolean): void {
+    protected isConnectionAllowed(ws: WebSocketExt): boolean {
+        let allowed = false;
+
+        const config = this.appSensorServer.getConfiguration();
+        if (ws.remoteAddress && config) {
+            const clientApp = config.findClientApplication(new IPAddress(ws.remoteAddress));
+            if (clientApp) {
+                allowed = true;
+            }
+        }
+
+        return allowed;
+    }
+
+    protected isActionAuthorized(ws: WebSocketExt, request: ActionRequest): boolean {
+        let authorized = false;
+
+        const config = this.appSensorServer.getConfiguration();
+        if (ws.remoteAddress && config) {
+            const clientApp = config.findClientApplication(new IPAddress(ws.remoteAddress));
+            if (clientApp) {
+                authorized = this.appSensorServer.getAccessController()!
+                                    .isAuthorized(clientApp, 
+                                                  coreUtils.getActionFromMethod(request.actionName), 
+                                                  new Context());
+            }
+        }
+
+        return authorized;
+    }
+
+	protected override onClientRequest(ws: WebSocketExt, request: ActionRequest): void {
         Logger.getServerLogger().trace('WebSocketRequestHandler.onClientRequest');
 
-        const request: MethodRequest = JSON.parse(data.toString());
-        Object.setPrototypeOf(request, MethodRequest.prototype);
-
-        switch (request.methodName) {
+        switch (request.actionName) {
             case "addEvent": {
                 const event = AppSensorWebSocketServer.getParameter(request, "event");
 

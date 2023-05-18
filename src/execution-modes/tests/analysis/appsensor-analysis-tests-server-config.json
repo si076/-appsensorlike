@@ -9,7 +9,11 @@
                 "ADD_ATTACK",
                 "GET_RESPONSES",
                 "EXECUTE_REPORT"
-            ]
+            ],
+            "ipAddress": {
+                "address": "localhost",
+                "geoLocation": null
+            }
         }
     ],
 

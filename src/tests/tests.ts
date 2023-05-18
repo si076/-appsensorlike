@@ -59,7 +59,7 @@ async function testChoice(choice: string, readInf: readline.Interface) {
     switch (choice) {
         case "1":  
         case "a": {
-            core_tests();
+            await core_tests();
             if (choice !== 'a') {
                 break;
             }

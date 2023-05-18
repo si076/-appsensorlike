@@ -1,5 +1,5 @@
 import ipaddrlib from 'ipaddr.js';
-import { AccessController, Role } from './accesscontrol/accesscontrol.js';
+import { AccessController, Action, Role } from './accesscontrol/accesscontrol.js';
 import { AttackAnalysisEngine, EventAnalysisEngine, ResponseAnalysisEngine } from './analysis/analysis.js';
 import { ClientConfiguration } from './configuration/client/client_configuration.js';
 import { ServerConfiguration } from './configuration/server/server_configuration.js';
@@ -25,12 +25,17 @@ interface IEquals {
 
 }
 
-interface IValidate {
+interface IValidateInitialize {
 
-	checkValid(): void;
+	/** 
+	 * Check the validity of object's fields' values 
+	 * after it has been loaded by JSON.parse (configuration file) or 
+	 * a db's table  
+	 */
+	 checkValidInitialize(): void;
 }
 
-interface IAppsensorEntity extends IEquals, IValidate {
+interface IAppsensorEntity extends IEquals, IValidateInitialize {
 
    getId(): string | undefined;
 
@@ -38,9 +43,7 @@ interface IAppsensorEntity extends IEquals, IValidate {
 }
 
 class AppsensorEntity implements IAppsensorEntity {
-	// @Id
-	// @Column(columnDefinition = "integer")
-	// @GeneratedValue
+
 	protected id?: string | undefined;
 
 	public  getId(): string | undefined {
@@ -60,7 +63,7 @@ class AppsensorEntity implements IAppsensorEntity {
 		return true;	
 	}
 
-	checkValid(): void {
+	checkValidInitialize(): void {
 	}
 }
 
@@ -91,13 +94,6 @@ class KeyValuePair extends AppsensorEntity {
 		this.value = value;
 	}
 
-    // public hashCode(): number {
-    // 	int hashKey = key != null ? key.hashCode() : 0;
-    // 	int hashValue = value != null ? value.hashCode() : 0;
-
-    // 	return (hashKey + hashValue) * hashValue + hashKey;
-    // }
-
     public override equals(other: Object | null): boolean {
 		if (!super.equals(other))
 			return false;
@@ -108,7 +104,7 @@ class KeyValuePair extends AppsensorEntity {
 		return this.key === otherPair.key  && this.value === otherPair.value;
     }
 
-	public override checkValid(): void {
+	public override checkValidInitialize(): void {
 		if (this.key.trim().length === 0) {
 			throw new ObjectValidationError("key cannot be empty string", this);
 		}
@@ -137,12 +133,10 @@ enum INTERVAL_UNITS {
 
 class Interval extends AppsensorEntity {
 
-
 	/** 
 	 * Duration portion of interval, ie. '3' if you wanted 
 	 * to represent an interval of '3 minutes' 
 	 */
-	// @Column
 	private duration: number = 0;
 	
 	/** 
@@ -152,7 +146,6 @@ class Interval extends AppsensorEntity {
 	 * units supported by the reference implementation, ie.
 	 * SECONDS, MINUTES, HOURS, DAYS.
 	 */
-	// @Column
 	private unit: INTERVAL_UNITS = INTERVAL_UNITS.MINUTES;
 
 	public constructor(duration: number = 0, unit: INTERVAL_UNITS = INTERVAL_UNITS.MINUTES) {
@@ -200,14 +193,6 @@ class Interval extends AppsensorEntity {
 		return millis;
 	}
 	
-	// @Override
-	// public int hashCode() {
-	// 	return new HashCodeBuilder(17,31).
-	// 			append(duration).
-	// 			append(unit).
-	// 			toHashCode();
-	// }
-	
 	public override equals(obj: Object | null): boolean {
 		if (!super.equals(obj))
 			return false;
@@ -219,7 +204,7 @@ class Interval extends AppsensorEntity {
 		return this.duration === other.getDuration() && this.unit === other.getUnit();
 	}
 	
-	public override checkValid(): void {
+	public override checkValidInitialize(): void {
 		if (this.duration < 0) {
 			throw new ObjectValidationError("duration cannot be negative", this);
 		}
@@ -242,14 +227,12 @@ class Interval extends AppsensorEntity {
 class Threshold extends AppsensorEntity {
 
 	/** The count at which this threshold is triggered. */
-	// @Column(name="t_count")
 	private count: number = 0;
 	
 	/** 
 	 * The time frame within which 'count' number of actions has to be detected in order to
 	 * trigger this threshold.
 	 */
-	// @ManyToOne(cascade = CascadeType.ALL)
 	private interval: Interval | null = null;
 
 	public constructor(count: number = 0, interval: Interval | null = null) {
@@ -276,14 +259,6 @@ class Threshold extends AppsensorEntity {
 		return this;
 	}
 	
-	// @Override
-	// public int hashCode() {
-	// 	return new HashCodeBuilder(17,31).
-	// 			append(count).
-	// 			append(interval).
-	// 			toHashCode();
-	// }
-	
 	public override equals(obj: Object | null): boolean {
 		if (!super.equals(obj))
 			return false;
@@ -296,12 +271,12 @@ class Threshold extends AppsensorEntity {
 			   Utils.equalsEntitys(this.interval, other.getInterval());
 	}
 
-	public override checkValid(): void {
+	public override checkValidInitialize(): void {
 		if (this.count < 0) {
 			throw new ObjectValidationError("count cannot be negative", this);
 		}
 		if (this.interval) {
-			this.interval.checkValid();
+			this.interval.checkValidInitialize();
 		}
 	}
 	// @Override
@@ -317,28 +292,21 @@ class Threshold extends AppsensorEntity {
 class Response  extends AppsensorEntity {
 	
 	/** User the response is for */
-	// @ManyToOne(cascade = CascadeType.ALL)
 	private user?: User | null | undefined;
 	
 	/** When the event occurred */
-	// @Column
 	private timestamp?: Date | undefined;
 	
 	/** String representing response action name */
-	// @Column
 	private action: string = '';
 	
 	/** Interval response should last for, if applicable. Ie. block access for 30 minutes */
-	// @ManyToOne(cascade = CascadeType.ALL)
 	private interval?: Interval | null | undefined;
 
 	/** Client application name that response applies to. */
-	// @ManyToOne(cascade = CascadeType.ALL)
 	private detectionSystem?: DetectionSystem | null | undefined;
 	
 	/** Represent extra metadata, anything client wants to send */
-	// @ElementCollection
-	// @OneToMany(cascade = CascadeType.ALL)
 	private metadata?: KeyValuePair[] | undefined;
 	
 	private active?: boolean;
@@ -451,18 +419,6 @@ class Response  extends AppsensorEntity {
 		return this.active;
 	}
 	
-	// @Override
-	// public int hashCode() {
-	// 	return new HashCodeBuilder(17,31).
-	// 			append(user).
-	// 			append(timestamp).
-	// 			append(action).
-	// 			append(interval).
-	// 			append(detectionSystem).
-	// 			append(metadata).
-	// 			toHashCode();
-	// }
-	
 	public override equals(obj: Object | null): boolean {
 		if (!super.equals(obj)) {
 			return false;
@@ -482,23 +438,23 @@ class Response  extends AppsensorEntity {
 			   Utils.equalsArrayEntitys(this.metadata, other.getMetadata());
 	}
 	
-	public override checkValid(): void {
+	public override checkValidInitialize(): void {
 		if (this.action.trim().length === 0) {
 			throw new ObjectValidationError("action cannot be empty string", this);
 		}
 
 		if (this.user) {
-			this.user.checkValid();
+			this.user.checkValidInitialize();
 		}
 		if (this.detectionSystem) {
-			this.detectionSystem.checkValid();
+			this.detectionSystem.checkValidInitialize();
 		}
 		if (this.interval) {
-			this.interval.checkValid();
+			this.interval.checkValidInitialize();
 		}
 		if (this.metadata) {
 			this.metadata.forEach(element => {
-				element.checkValid();
+				element.checkValidInitialize();
 			});
 			 
 		}
@@ -535,36 +491,27 @@ class Category {
 
 class DetectionPoint  extends AppsensorEntity {
 
-	// @Column
 	protected guid?: string | undefined;
-
 
 	/**
 	 * Category identifier for the detection point. (ex. "Request", "AccessControl", "SessionManagement")
 	 */
-	// @Column
 	private category: string = '';
 
 	/**
 	 * Identifier for the detection point. (ex. "IE1", "RE2")
 	 */
-	// @Column
 	private label?: string | undefined;
 
 	/**
 	 * {@link Threshold} for determining whether given detection point (associated {@link Event})
 	 * should be considered an {@link Attack}.
 	 */
-	// @ManyToOne(cascade = CascadeType.ALL)
-	// @JsonProperty("threshold")
 	private threshold: Threshold  | null = null;
 
 	/**
 	 * Set of {@link Response}s associated with given detection point.
 	 */
-	// @Transient
-	// @JsonProperty("responses")
-	// private Collection<Response> responses = new ArrayList<Response>();
 	private responses: Response[] = [];
 
 	public constructor(category: string = '', 
@@ -614,39 +561,23 @@ class DetectionPoint  extends AppsensorEntity {
 		this.guid = guid;
 	}
 
-	// @XmlTransient
-	// @JsonProperty("threshold")
 	public  getThreshold(): Threshold  | null {
 		return this.threshold;
 	}
 
-	// @JsonProperty("threshold")
 	public setThreshold(threshold: Threshold  | null): DetectionPoint {
 		this.threshold = threshold;
 		return this;
 	}
 
-	// @XmlTransient
-	// @JsonProperty("responses")
 	public getResponses(): Response[] {
 		return this.responses;
 	}
 
-	// @JsonProperty("responses")
 	public setResponses(responses: Response[]): DetectionPoint {
 		this.responses = responses;
 		return this;
 	}
-
-	// @Override
-	// public int hashCode() {
-	// 	return new HashCodeBuilder(17,31).
-	// 			append(category).
-	// 			append(label).
-	// 			append(threshold).
-	// 			append(responses).
-	// 			toHashCode();
-	// }
 
 	public typeMatches(other: DetectionPoint): boolean {
 		if (other == null) {
@@ -690,7 +621,7 @@ class DetectionPoint  extends AppsensorEntity {
 			   this.guid === other.getGuid();
 	}
 
-	public override checkValid(): void {
+	public override checkValidInitialize(): void {
 		if (this.category.trim().length === 0) {
 			throw new ObjectValidationError('category cannot be empty string!', this);
 		}
@@ -708,7 +639,7 @@ class DetectionPoint  extends AppsensorEntity {
 		}
 
 		if (this.threshold) {
-			this.threshold.checkValid();
+			this.threshold.checkValidInitialize();
 		}
 
 	}
@@ -730,21 +661,50 @@ class IPAddress extends AppsensorEntity {
 	
 	private geoLocation: GeoLocation  | null = null;
 
+	private _address:  ipaddrlib.IPv4 | ipaddrlib.IPv6 | null = null;
+
 	public constructor(address: string = '', 
 	                   geoLocation: GeoLocation  | null = null) {
 		super();
-		this.address = address;
+		this.address = address.trim();
 		this.geoLocation = geoLocation;
+
+		this.initialize();
+	}
+
+	private initialize() {
+		this.address = IPAddress.localhostToAddress(this.address);
+
+		if (!this._address && this.address.length > 0) {
+			try {
+				this._address = ipaddrlib.process(this.address);
+			} catch (error) {
+				console.error(`Wrong address format: ${this.address}! ${(error as Error).message}`);
+				// console.error(error);
+			}
+		}
+	}
+
+	public static localhostToAddress(address: string): string {
+		if (address.trim().toLowerCase() === "localhost") {
+			return "127.0.0.1";
+		}
+		return address;
 	}
 	
-	public static async fromString(ipString: string, geoLocator: GeoLocator): Promise<IPAddress> {
+	public static async fromString(ipString: string, geoLocator: GeoLocator | null = null): Promise<IPAddress> {
+		ipString = IPAddress.localhostToAddress(ipString);
+
 		if (!ipaddrlib.isValid(ipString)) {
 			throw new Error("IP Address string is invalid: " + ipString);
 		}
 
-		let localGeo: GeoLocation | null = await geoLocator.readLocation(ipString);
+		let geoLocation: GeoLocation | null = null;
+		if (geoLocator) {
+			geoLocation = await geoLocator.readLocation(ipString);
+		}
 
-		return new IPAddress(ipString, localGeo);
+		return new IPAddress(ipString, geoLocation);
 	}
 	
 	public setAddress(address: string): IPAddress {
@@ -757,36 +717,42 @@ class IPAddress extends AppsensorEntity {
 		return this.address;
 	}
 	
-	public getAddressAsString(): string {
-		return this.address;
-	}
-	
-	// @JsonProperty("geoLocation")
 	public getGeoLocation(): GeoLocation  | null {
 		return this.geoLocation;
 	}
 	
-	// @JsonProperty("geoLocation")
 	public setGeoLocation(geoLocation: GeoLocation | null): IPAddress {
 		this.geoLocation = geoLocation;
 		
 		return this;
 	}
 
-	// public getGeoLocator(): GeoLocator  | null {
-	// 	return this.geoLocator;
-	// }
+	public equalAddress(otherAddress: string): boolean {
+		let equal = false;
+		if (this.address.trim().length === 0 && otherAddress.trim().length === 0) {
+			equal = true;
+		} else {
+			otherAddress = otherAddress.trim();
 
-	// public setGeoLocator(geoLocator: GeoLocator  | null) {
-	// 	this.geoLocator = geoLocator;
-	// }
+			otherAddress = IPAddress.localhostToAddress(otherAddress);
 
-	// @Override
-	// public int hashCode() {
-	// 	return new HashCodeBuilder(17,31).
-	// 			append(address).
-	// 			toHashCode();
-	// }
+			try {
+
+				const _otherAddress = ipaddrlib.process(otherAddress);
+
+				if (this._address instanceof ipaddrlib.IPv4 && _otherAddress instanceof ipaddrlib.IPv4) {
+					equal = this._address.toString() === _otherAddress.toString()
+				} else if (this._address instanceof ipaddrlib.IPv6 && _otherAddress instanceof ipaddrlib.IPv6) {
+					equal = this._address.toNormalizedString() === _otherAddress.toNormalizedString();
+				}
+			} catch (error) {
+				console.error(`Cannot compare for equality addresses: '${this.address}' and '${otherAddress}'`);
+				console.error(`${(error as Error).message}`);			
+			}
+		}
+
+		return equal;
+	}
 	
 	public override equals(obj: Object | null): boolean {
 		if (!super.equals(obj))
@@ -796,18 +762,22 @@ class IPAddress extends AppsensorEntity {
 		
 		const other: IPAddress = obj as IPAddress;
 		
-		return this.address === other.getAddressAsString() &&
+		return this.equalAddress(other.getAddress()) &&
 		       Utils.equalsEntitys(this.geoLocation, other.getGeoLocation());
 	}
 	
-	public override checkValid(): void {
+	public override checkValidInitialize(): void {
+		this.address = IPAddress.localhostToAddress(this.address);
+
 		if (!ipaddrlib.isValid(this.address)) {
 			throw new ObjectValidationError("IP Address string is invalid: " + this.address, this);
 		}
 		
 		if (this.geoLocation) {
-			this.geoLocation.checkValid();
+			this.geoLocation.checkValidInitialize();
 		}
+
+		this.initialize();
 	}
 	// @Override
 	// public String toString() {
@@ -823,17 +793,12 @@ class DetectionSystem extends AppsensorEntity {
 
 	private detectionSystemId: string = '';
 	
-	// @JsonProperty("ipAddress")
 	private ipAddress: IPAddress  | null = null;
 	
-	// private transient IPAddress locator;
-	// private locator: IPAddress | null = null;
-
 	public constructor(detectionSystemId: string = '', ipAddress: IPAddress  | null = null) {
 		super();
 		this.setIPAddress(ipAddress);
 		this.setDetectionSystemId(detectionSystemId);
-		// this.setIPAddress(ipAddress);
 	}
 	
 	public getDetectionSystemId(): string {
@@ -853,24 +818,15 @@ class DetectionSystem extends AppsensorEntity {
 		return this;
 	}
 
-	// @JsonProperty("ipAddress")
 	public getIPAddress(): IPAddress  | null {
 		return this.ipAddress;
 	}
 
-	// @JsonProperty("ipAddress")
 	public setIPAddress(ipAddress: IPAddress  | null): DetectionSystem {
 		this.ipAddress = ipAddress;
 		
 		return this;
 	}
-
-	// @Override
-	// public int hashCode() {
-	// 	return new HashCodeBuilder(17,31).
-	// 			append(detectionSystemId).
-	// 			toHashCode();
-	// }
 	
 	public override equals(obj: Object | null): boolean {
 		if (!super.equals(obj))
@@ -883,10 +839,10 @@ class DetectionSystem extends AppsensorEntity {
 		return this.detectionSystemId === other.getDetectionSystemId();
 	}
 	
-	public override checkValid(): void {
+	public override checkValidInitialize(): void {
 		
 		if (this.ipAddress) {
-			this.ipAddress.checkValid();
+			this.ipAddress.checkValidInitialize();
 		}
 	}
 	// @Override
@@ -903,12 +859,8 @@ class User extends AppsensorEntity {
 
 	private username: string = '';
 	
-	// @JsonProperty("ipAddress")
 	private ipAddress: IPAddress | null = null;
 	
-	// private transient IPAddress locator;
-	// private locator: IPAddress | null = null;
-
 	public constructor(username: string = '', ipAddress: IPAddress | null = null) {
 		super();
 		//set ip first so the setUsername call to geolocate won't run if it's already explicitly set
@@ -933,24 +885,15 @@ class User extends AppsensorEntity {
 		return this;
 	}
 	
-	// @JsonProperty("ipAddress")
 	public getIPAddress(): IPAddress | null {
 		return this.ipAddress;
 	}
 	
-	// @JsonProperty("ipAddress")
 	public setIPAddress(ipAddress: IPAddress | null): User {
 		this.ipAddress = ipAddress;
 		
 		return this;
 	}
-
-	// @Override
-	// public int hashCode() {
-	// 	return new HashCodeBuilder(17,31).
-	// 			append(username).
-	// 			toHashCode();
-	// }
 	
 	public override equals(obj: Object | null | undefined): boolean {
 		if (!super.equals(obj))
@@ -963,10 +906,10 @@ class User extends AppsensorEntity {
 		return this.username === other.getUsername();
 	}
 	
-	public override checkValid(): void {
+	public override checkValidInitialize(): void {
 		
 		if (this.ipAddress) {
-			this.ipAddress.checkValid();
+			this.ipAddress.checkValidInitialize();
 		}
 	}
 	// @Override
@@ -986,14 +929,12 @@ class Resource extends AppsensorEntity {
      * later to block requests to a given function.  In this implementation, 
      * the current request URI is used.
      */
-	// @Column
 	private location: string = '';
 
 	/**
 	 * The method used to request the resource. In terms of HTTP this would be GET/POST/PUT/etc.
 	 * In the case, in which the resources specifies an object this could be the invoked object method.
 	 */
-	// @Column
 	private method: string = '';
 
 	constructor(location: string = '', method: string = '') {
@@ -1029,7 +970,7 @@ class Resource extends AppsensorEntity {
 		return this.location === other.getLocation() && this.method === other.getMethod();
 	}
 
-	public override checkValid(): void {
+	public override checkValidInitialize(): void {
 		if (this.location.trim().length === 0) {
 			throw new ObjectValidationError('location cannot be empty string!', this);
 		}
@@ -1043,42 +984,28 @@ class Resource extends AppsensorEntity {
 class AppSensorEvent extends AppsensorEntity {
 
 	/** User who triggered the event, could be anonymous user */
-	//@ManyToOne(cascade = CascadeType.ALL)
 	private user: User | null = null;
 
 	/** Detection Point that was triggered */
-	//@ManyToOne(cascade = CascadeType.ALL)
 	private detectionPoint: DetectionPoint | null = null;
 
 	/** When the event occurred */
-	// @Column
 	private timestamp: Date = new Date();
 
 	/**
 	 * Identifier label for the system that detected the event.
 	 * This will be either the client application, or possibly an external
 	 * detection system, such as syslog, a WAF, network IDS, etc.  */
-	// @ManyToOne(cascade = CascadeType.ALL)
 	private detectionSystem: DetectionSystem | null = null;
 
 	/**
 	 * The resource being requested when the event was triggered, which can be used
      * later to block requests to a given function.
      */
-	// @ManyToOne(cascade = CascadeType.ALL)
     private resource: Resource | null = null;
 
 	/** Represent extra metadata, anything client wants to send */
-	// @ElementCollection
-	// @OneToMany(cascade = CascadeType.ALL)
-	// private Collection<KeyValuePair> metadata = new ArrayList<>();
 	private metadata: KeyValuePair[] = [];
-
-    // public AppSensorEvent () {}
-
-	// public AppSensorEvent (User user, DetectionPoint detectionPoint, DetectionSystem detectionSystem) {
-	// 	this(user, detectionPoint, DateUtils.getCurrentTimestampAsString(), detectionSystem);
-	// }
 
 	public constructor(user: User | null = null, 
 		               detectionPoint: DetectionPoint | null = null, 
@@ -1164,18 +1091,6 @@ class AppSensorEvent extends AppsensorEntity {
 		}
 	}
 
-	// @Override
-	// public int hashCode() {
-	// 	return new HashCodeBuilder(17,31).
-	// 			append(user).
-	// 			append(detectionPoint).
-	// 			append(timestamp).
-	// 			append(detectionSystem).
-	// 			append(resource).
-	// 			append(metadata).
-	// 			toHashCode();
-	// }
-
 	public override equals(obj: Object | null): boolean {
 		if (!super.equals(obj))
 			return false;
@@ -1192,25 +1107,25 @@ class AppSensorEvent extends AppsensorEntity {
 			   Utils.equalsArrayEntitys(this.metadata, other.getMetadata());
 	}
 
-	public override checkValid(): void {
+	public override checkValidInitialize(): void {
 		if (this.user) {
-			this.user.checkValid();
+			this.user.checkValidInitialize();
 		}
 
 		if (this.detectionSystem) {
-			this.detectionSystem.checkValid();
+			this.detectionSystem.checkValidInitialize();
 		}
 
 		if (this.detectionPoint) {
-			this.detectionPoint.checkValid();
+			this.detectionPoint.checkValidInitialize();
 		}
 
 		if (this.resource) {
-			this.resource.checkValid();
+			this.resource.checkValidInitialize();
 		}
 
 		this.metadata.forEach(element => {
-			element.checkValid();
+			element.checkValidInitialize();
 		});
 	}
 	// @Override
@@ -1229,38 +1144,30 @@ class AppSensorEvent extends AppsensorEntity {
 class Attack extends AppsensorEntity {
 
 	/** User who triggered the attack, could be anonymous user */
-	// @ManyToOne(cascade = CascadeType.ALL)
 	private user: User | null = null;
 
 	/** Detection Point that was triggered */
-	// @ManyToOne(cascade = CascadeType.ALL)
 	private detectionPoint: DetectionPoint | null = null;
 
 	/** When the attack occurred */
-	// @Column
 	private timestamp: Date = new Date();
 
 	/**
 	 * Identifier label for the system that detected the attack.
 	 * This will be either the client application, or possibly an external
 	 * detection system, such as syslog, a WAF, network IDS, etc.  */
-	// @ManyToOne(cascade = CascadeType.ALL)
 	private detectionSystem: DetectionSystem | null = null;
 
 	/**
 	 * The resource being requested when the attack was triggered, which can be used
      * later to block requests to a given function.
      */
-	// @ManyToOne(cascade = CascadeType.ALL)
     private resource: Resource | null = null;
 
 	/** Rule that was triggered */
-	// @ManyToOne(cascade = CascadeType.ALL)
 	private rule: Rule | null = null;
 
 	/** Represent extra metadata, anything client wants to send */
-	// @ElementCollection
-	// @OneToMany(cascade = CascadeType.ALL)
 	private metadata: KeyValuePair[] = [];
 
 	public constructor(event: AppSensorEvent | null = null, 
@@ -1364,18 +1271,6 @@ class Attack extends AppsensorEntity {
 		return name;
 	}
 
-	// @Override
-	// public int hashCode() {
-	// 	return new HashCodeBuilder(17,31).
-	// 			append(user).
-	// 			append(detectionPoint).
-	// 			append(timestamp).
-	// 			append(detectionSystem).
-	// 			append(resource).
-	// 			append(metadata).
-	// 			toHashCode();
-	// }
-
 	public override equals(obj: Object): boolean {
 		if (!super.equals(obj))
 			return false;
@@ -1392,29 +1287,29 @@ class Attack extends AppsensorEntity {
 			   Utils.equalsArrayEntitys(this.metadata, other.getMetadata());
 	}
 
-	public override checkValid(): void {
+	public override checkValidInitialize(): void {
 		if (this.user) {
-			this.user.checkValid();
+			this.user.checkValidInitialize();
 		}
 
 		if (this.detectionSystem) {
-			this.detectionSystem.checkValid();
+			this.detectionSystem.checkValidInitialize();
 		}
 
 		if (this.detectionPoint) {
-			this.detectionPoint.checkValid();
+			this.detectionPoint.checkValidInitialize();
 		}
 
 		if (this.resource) {
-			this.resource.checkValid();
+			this.resource.checkValidInitialize();
 		}
 
 		if (this.rule) {
-			this.rule.checkValid();
+			this.rule.checkValidInitialize();
 		}
 
 		this.metadata.forEach(element => {
-			element.checkValid();
+			element.checkValidInitialize();
 		});
 	}
 	// @Override
@@ -1489,11 +1384,11 @@ class ClientApplication implements IEquals {
 		return this.roles;
 	}
 
-	public getIpAddress(): IPAddress | undefined {
+	public getIPAddress(): IPAddress | undefined {
 		return this.ipAddress;
 	}
 
-	public setIpAddress(ipAddress: IPAddress): ClientApplication {
+	public setIPAddress(ipAddress: IPAddress): ClientApplication {
 		this.ipAddress = ipAddress;
 		return this;
 	}
@@ -1509,7 +1404,7 @@ class ClientApplication implements IEquals {
 		const other: ClientApplication = obj as ClientApplication;
 
 		let equals = this.name === other.getName() && 
-		             Utils.equalsEntitys(this.ipAddress, other.getIpAddress());
+		             Utils.equalsEntitys(this.ipAddress, other.getIPAddress());
 		
 		if (equals) {
 			const _roles: Role[] = this.roles;
@@ -1537,16 +1432,12 @@ class ClientApplication implements IEquals {
 
 class AppSensorClient {
 	
-	/** accessor for {@link org.owasp.appsensor.core.configuration.client.ClientConfiguration} */
 	private configuration: ClientConfiguration | null = null;
 	
-	/** accessor for {@link org.owasp.appsensor.core.event.EventManager} */
 	private eventManager: EventManager | null = null; 
 
-	/** accessor for {@link org.owasp.appsensor.core.response.ResponseHandler} */
 	private responseHandler: ResponseHandler | null = null;
 	
-	/** accessor for {@link org.owasp.appsensor.core.response.UserManager} */
 	private userManager: UserManager | null = null;
 	
 	public constructor() { }
@@ -1587,28 +1478,20 @@ class AppSensorClient {
 
 class AppSensorServer {
 	
-	/** accessor for {@link org.owasp.appsensor.core.configuration.server.ServerConfiguration} */
 	private configuration: ServerConfiguration | null = null;
 	
-	/** accessor for {@link org.owasp.appsensor.core.storage.EventStore} */
 	private eventStore: EventStore | null = null;
 	
-	/** accessor for {@link org.owasp.appsensor.core.storage.AttackStore} */
 	private attackStore: AttackStore | null = null;
 	
-	/** accessor for {@link org.owasp.appsensor.core.storage.ResponseStore} */
 	private responseStore: ResponseStore | null = null;
 	
-	/** accessor for {@link org.owasp.appsensor.core.analysis.EventAnalysisEngine} */
 	private eventAnalysisEngines: EventAnalysisEngine[] = [];
 	
-	/** accessor for {@link org.owasp.appsensor.core.analysis.AttackAnalysisEngine} */
 	private attackAnalysisEngines: AttackAnalysisEngine[] = [];
 	
-	/** accessor for {@link org.owasp.appsensor.core.analysis.ResponseAnalysisEngine} */
 	private responseAnalysisEngines: ResponseAnalysisEngine[] = [];
 	
-	/** accessor for {@link org.owasp.appsensor.core.accesscontrol.AccessController} */
 	private accessController: AccessController | null = null;
 	
 	public constructor() { }
@@ -1860,8 +1743,45 @@ class Utils {
 		return detPointLabel;
 	}
 
+	public static getMethodFromAction(action: Action): string {
+		let method = "unknown";
+		switch (action) {
+			case Action.ADD_ATTACK: {
+				method = "addAttack";
+				break;
+			}
+			case Action.ADD_EVENT: {
+				method = "addEvent";
+				break;
+			}
+			case Action.GET_RESPONSES: {
+				method = "getResponses";
+				break;
+			}
+		}
+		return method;
+	}
+
+	public static getActionFromMethod(method: string): Action {
+		let action: Action = Action.UNKNOWN;
+		switch (method) {
+			case "addAttack": {
+				action = Action.ADD_ATTACK;
+				break;
+			}
+			case "addEvent": {
+				action = Action.ADD_EVENT;
+				break;
+			}
+			case "getResponses": {
+				action = Action.GET_RESPONSES;
+				break;
+			}
+		}
+		return action;
+	}
 }
 
 export {IEquals, AppsensorEntity, KeyValuePair, IPAddress, INTERVAL_UNITS, Interval, Threshold, Response, 
 	    DetectionPoint, DetectionSystem, RequestHandler, AppSensorEvent, Attack, User, ClientApplication, 
-		Utils, AppSensorClient, AppSensorServer, Category, Resource, ObjectValidationError, IValidate};
+		Utils, AppSensorClient, AppSensorServer, Category, Resource, ObjectValidationError, IValidateInitialize};

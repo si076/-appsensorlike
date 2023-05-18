@@ -1,4 +1,4 @@
-import { AppSensorEvent, ClientApplication, DetectionPoint, DetectionSystem, IEquals, Utils } from "../../core.js";
+import { AppSensorEvent, ClientApplication, DetectionPoint, DetectionSystem, IEquals, IPAddress, Utils } from "../../core.js";
 import { CorrelationSet } from "../../correlation/correlation.js";
 import { Rule } from "../../rule/rule.js";
 // import { IServerConfiguration } from "./server_config_defs.js";
@@ -58,10 +58,6 @@ abstract class ServerConfiguration implements IServerConfiguration {
 	serverPort: number = 0;
 
 	serverSocketTimeout: number = 0;
-
-	// geolocateIpAddresses: boolean | undefined;
-
-	// geolocationDatabasePath: string | undefined;
 
 	//Change for adding new custom client specific detection points
 	customDetectionPoints: Map<string, DetectionPoint[]> = new Map<string, DetectionPoint[]>();
@@ -163,26 +159,6 @@ abstract class ServerConfiguration implements IServerConfiguration {
 		return this;
 	}
 
-	// public isGeolocateIpAddresses(): boolean {
-	// 	return this.geolocateIpAddresses;
-	// }
-
-	// public setGeolocateIpAddresses(geolocateIpAddresses: boolean): ServerConfiguration {
-	// 	this.geolocateIpAddresses = geolocateIpAddresses;
-
-	// 	return this;
-	// }
-
-	// public getGeolocationDatabasePath(): string {
-	// 	return this.geolocationDatabasePath;
-	// }
-
-	// public setGeolocationDatabasePath(geolocationDatabasePath: string): ServerConfiguration {
-	// 	this.geolocationDatabasePath = geolocationDatabasePath;
-
-	// 	return this;
-	// }
-
 	/**
 	 * Find related detection systems based on a given detection system.
 	 * This simply means those systems that have been configured along with the
@@ -271,18 +247,30 @@ abstract class ServerConfiguration implements IServerConfiguration {
 		return matches;
 	}
 
-	public findClientApplication(clientApplicationName: string): ClientApplication | undefined {
+	public findClientApplication(clientApplicationNameOrIP: string | IPAddress): ClientApplication | undefined {
 		let clientApplication: ClientApplication | undefined = undefined;
 
-		clientApplication = ServerConfiguration.clientApplicationCache.get(clientApplicationName);
+		const clientApplicationId = (clientApplicationNameOrIP instanceof IPAddress) ? clientApplicationNameOrIP.getAddress(): clientApplicationNameOrIP;
 
-		if (clientApplication === undefined) {
+		clientApplication = ServerConfiguration.clientApplicationCache.get(clientApplicationId);
+
+		if (!clientApplication) {
 			for (const configuredClientApplication of this.getClientApplications()) {
-				if (configuredClientApplication.getName() === clientApplicationName) {
+
+				const configClientAppIPAddress = configuredClientApplication.getIPAddress();
+
+				let found = false;
+				if (typeof clientApplicationNameOrIP === 'string') {
+					found = configuredClientApplication.getName() === clientApplicationNameOrIP;
+				} else if (configClientAppIPAddress) {
+					found = configClientAppIPAddress.equals(clientApplicationNameOrIP);
+				}
+
+				if (found) {
 					clientApplication = configuredClientApplication;
 
 					//cache
-					ServerConfiguration.clientApplicationCache.set(clientApplicationName, clientApplication);
+					ServerConfiguration.clientApplicationCache.set(clientApplicationId, clientApplication);
 
 					break;
 				}
