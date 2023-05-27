@@ -1,3 +1,4 @@
+import { ReferenceAccessController } from "../../access-controllers/appsensor-access-control-reference/ReferenceAccessController.js";
 import { ReferenceAttackAnalysisEngine, ReferenceEventAnalysisEngine } from "../../analysis-engines/appsensor-analysis-reference/appsensor-analysis-reference.js";
 import { AggregateAttackAnalysisEngine, AggregateEventAnalysisEngine } from "../../analysis-engines/appsensor-analysis-rules/appsensor-analysis-rules.js";
 import { JSONServerConfiguration, JSONServerConfigurationReader } from "../../configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
@@ -50,11 +51,8 @@ class AppSensorLocal {
             this.responseHandler = responseHandler;
         }
 
-        this.appSensorServer.setConfiguration(new JSONServerConfiguration());
-        if (configFile.trim().length > 0) {
-            this.appSensorServer.setConfiguration(
+        this.appSensorServer.setConfiguration(
                 new JSONServerConfigurationReader().read(configFile.trim()));
-        }
 
         this.appSensorServer.setAttackStore(this.attackStore);
         this.appSensorServer.setEventStore(this.eventStore);
@@ -77,6 +75,8 @@ class AppSensorLocal {
 
 		this.refAttackEngine.setAppSensorServer(this.appSensorServer);
         this.refEventEngine.setAppSensorServer(this.appSensorServer);
+
+        this.appSensorServer.setAccessController(new ReferenceAccessController());
 
         const localResponseHandler = new LocalResponseAnalysisEngine(this.responseHandler);
 

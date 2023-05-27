@@ -1,0 +1,84 @@
+{
+    "IDs": {
+        "None": "No response",
+        "ASR-P": "No Response", 
+
+        "Silent": "User unaware of application's response",
+        "ASR-A": "Logging Change",
+        "ASR-B": "Administrator Notification",
+        "ASR-C": "Other Notification",
+        "ASR-N": "Proxy",
+
+        "Passive": "Changes to user experience but nothing denied",
+        "ASR-D": "User Status Change",
+        "ASR-E": "User Notification",
+        "ASR-F": "Timing Change",
+        
+        "Active": "Application functionality reduced for user(s)",
+        "ASR-G": "Process Terminated",
+        "ASR-H": "Function Amended",
+        "ASR-I": "Function Disabled",
+        "ASR-J": "Account Logout",
+        "ASR-K": "Account Lockout",
+        "ASR-L": "Application Disabled",   
+        
+        "Intrusive": "User's environment altered",
+        "ASR-M": "Collect Data from User"
+    },
+
+    "Categorization": {
+        "Purpose": {
+            "Logging": {
+                "always": ["ASR-A", "ASR-B", "ASR-C", "ASR-D", 
+                           "ASR-E", "ASR-F", "ASR-G", "ASR-H", 
+                           "ASR-I", "ASR-J", "ASR-K", "ASR-L", 
+                           "ASR-M", "ASR-N"],
+                "sometimes": []
+            },
+            "Notifying" : {
+                "always": ["ASR-B", "ASR-C", "ASR-E"],
+                "sometimes": ["ASR-G", "ASR-H", 
+                              "ASR-I", "ASR-J", 
+                              "ASR-K", "ASR-L"]
+            },
+            "Disrupting" : {
+                "always": ["ASR-E", "ASR-F", "ASR-G", "ASR-H", 
+                           "ASR-I", "ASR-J", "ASR-K", "ASR-L"],
+                "sometimes": []
+            },
+            "Blocking" : {
+                "always": ["ASR-H", "ASR-I", "ASR-J", "ASR-K", "ASR-L"],
+                "sometimes": []
+            }
+        },
+        "Target_User": {
+            "One" : {
+                "always": ["ASR-A", "ASR-B", "ASR-C", "ASR-D", 
+                           "ASR-E", "ASR-F", "ASR-G", "ASR-H", 
+                           "ASR-I", "ASR-J", "ASR-K", 
+                           "ASR-M", "ASR-N"],
+                "sometimes": []
+            },
+            "All" : {
+                "always": ["ASR-B", "ASR-L"],
+                "sometimes": ["ASR-A", "ASR-F", "ASR-H", "ASR-I", "ASR-N"]
+            }
+        },
+        "Response_Duration": {
+            "Instantaneous" : {
+                "always": ["ASR-B", "ASR-C", "ASR-E", "ASR-G", "ASR-J"],
+                "sometimes": ["ASR-A", "ASR-F"]
+            },
+            "Period" : {
+                "always": ["ASR-D", "ASR-H", "ASR-I", "ASR-K", 
+                           "ASR-M", "ASR-N"],
+                "sometimes": ["ASR-A", "ASR-F"]
+            },
+            "Permanent" : {
+                "always": ["ASR-L"],
+                "sometimes": ["ASR-H", "ASR-I", "ASR-K", "ASR-N"]
+            }
+
+        }
+    }
+}

@@ -186,6 +186,27 @@ class JSONConfigReadValidate {
         return config;
     }
 
+    public readFromString(configAsString: string, 
+                          validatorLocation: string | null = null) {
+        let config = JSON.parse(configAsString);
+
+        if (config && validatorLocation !== null) {
+            // console.log('Validating config...');
+
+            const valid = this.validateConfig(config, validatorLocation, false);
+            if (!valid) {
+                //There is(are) validation error(s) reported by validateConfig
+                config = null;
+            }
+        }
+
+        if (config && this.prototypeOfConfigObj !== undefined) {
+            Object.setPrototypeOf(config, this.prototypeOfConfigObj);
+        }
+
+        return config;
+    }
+
     protected validateConfig(config: any, validatorLocation: string, reload: boolean): boolean {
 
         const schema = JSON.parse(fs.readFileSync(validatorLocation, 'utf8'));
@@ -304,6 +325,8 @@ class Utils {
         Utils.responsePrototypeSample.setInterval(interval);
         Utils.responsePrototypeSample.setDetectionSystem(detectionSystem);
         Utils.responsePrototypeSample.setMetadata(metadata);
+        Utils.responsePrototypeSample.setDetectionPoint(detPoint);
+        Utils.responsePrototypeSample.setRule(rule);
     }
 
 	public static sleep(timeOutInMilis: number): Promise<null> {
@@ -356,6 +379,10 @@ class Utils {
                     }
                 }
             }
+        }
+
+        if (Utils.isIValidateInitialize(target)) {
+            target.checkValidInitialize();
         }
     }
 

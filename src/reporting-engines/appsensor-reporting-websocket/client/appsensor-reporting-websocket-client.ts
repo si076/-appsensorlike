@@ -1,7 +1,7 @@
 import { AppSensorEvent, Attack, Response, KeyValuePair } from "../../../core/core.js";
 import { JSONConfigReadValidate, Utils } from "../../../utils/Utils.js";
 import { ActionResponse } from "../../../websocket/appsensor-websocket.js";
-import { ReportingEngineExt } from "../appsensor-reporting-websocket.js";
+import { ReportingEngineExt } from "../../reporting-engines.js";
 import { AppSensorWebSocketClient, WebSocketClientConfig } from "../../../websocket/client/appsensor-websocket-client.js";
 
 import { ClientRequestArgs } from "http";

@@ -145,6 +145,9 @@ class AppSensorWebSocketServer {
             Object.setPrototypeOf(request, ActionRequest.prototype);
 
             if (!me.isActionAuthorized(this, request)) {
+                Logger.getServerLogger().warn(`AppSensorWebSocketServer.onClientRequestWrapper:`+ 
+                                              ` client application with IP address: ${this.remoteAddress}` + 
+                                              ` is trying to perform unauthorized action: ${request.actionName}`);
 
                 AppSensorWebSocketServer.reportUnAuthorizedAction(this, request);
 

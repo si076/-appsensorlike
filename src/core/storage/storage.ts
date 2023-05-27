@@ -1,4 +1,4 @@
-import { AppSensorEvent, Attack, DetectionPoint, Response, User } from "../core.js";
+import { AppSensorEvent, Attack, DetectionPoint, Response, User, Utils } from "../core.js";
 import { SearchCriteria } from "../criteria/criteria.js";
 import { AttackListener, EventListener, ResponseListener } from "../listener/listener.js";
 import { Rule } from "../rule/rule.js";
@@ -134,54 +134,55 @@ abstract class AttackStore {
 	 * @return true or false depending on the matching of the search criteria to the {@link Attack}
 	 */
 	protected isMatchingAttack(criteria: SearchCriteria, attack: Attack ): boolean {
-		let match: boolean = false;
+		// let match: boolean = false;
 
-		const user: User | null = criteria.getUser();
-		const detectionPoint: DetectionPoint | null = criteria.getDetectionPoint();
-		const detectionSystemIds: string[] = criteria.getDetectionSystemIds();
-		const earliest: Date | null = criteria.getEarliest();
-		const rule: Rule | null = criteria.getRule();
+		// const user: User | null = criteria.getUser();
+		// const detectionPoint: DetectionPoint | null = criteria.getDetectionPoint();
+		// const detectionSystemIds: string[] = criteria.getDetectionSystemIds();
+		// const earliest: Date | null = criteria.getEarliest();
+		// const rule: Rule | null = criteria.getRule();
 
-		// check user match if user specified
-		const userMatch: boolean = (user != null) ? user.equals(attack.getUser()) : true;
+		// // check user match if user specified
+		// const userMatch: boolean = (user != null) ? user.equals(attack.getUser()) : true;
 
-		//check detection system match if detection systems specified
-		let detectionSystemMatch: boolean = true;
-		const attDetSystemId = attack.getDetectionSystem();
-		if (detectionSystemIds != null && detectionSystemIds.length > 0 && attDetSystemId !== null) {
-			detectionSystemMatch = detectionSystemIds.indexOf(attDetSystemId.getDetectionSystemId()) > -1 ;
-		}
+		// //check detection system match if detection systems specified
+		// let detectionSystemMatch: boolean = true;
+		// const attDetSystemId = attack.getDetectionSystem();
+		// if (detectionSystemIds != null && detectionSystemIds.length > 0 && attDetSystemId !== null) {
+		// 	detectionSystemMatch = detectionSystemIds.indexOf(attDetSystemId.getDetectionSystemId()) > -1 ;
+		// }
 
-		//check detection point match if detection point specified
-		let detectionPointMatch: boolean = true;
-		if (detectionPoint !== null) {
-			const attDetoint = attack.getDetectionPoint();
+		// //check detection point match if detection point specified
+		// let detectionPointMatch: boolean = true;
+		// if (detectionPoint !== null) {
+		// 	const attDetoint = attack.getDetectionPoint();
 
-			detectionPointMatch = (attDetoint !== null) ?
-					detectionPoint.typeAndThresholdMatches(attDetoint) : false;
-		}
+		// 	detectionPointMatch = (attDetoint !== null) ?
+		// 			detectionPoint.typeAndThresholdMatches(attDetoint) : false;
+		// }
 
-		//check rule match if rule specified
-		let ruleMatch: boolean = true;
-		if (rule !== null) {
-			const attRule = attack.getRule();
-			ruleMatch = (attRule !== null) ? rule.guidMatches(attRule) : false;
-		}
+		// //check rule match if rule specified
+		// let ruleMatch: boolean = true;
+		// if (rule !== null) {
+		// 	const attRule = attack.getRule();
+		// 	ruleMatch = (attRule !== null) ? rule.guidMatches(attRule) : false;
+		// }
 
-		let earliestMatch: boolean = true; 
-		if (earliest !== null) {
+		// let earliestMatch: boolean = true; 
+		// if (earliest !== null) {
 
-			const attackTimestampMillis = attack.getTimestamp().getTime();
-			const earliestMillis = earliest.getTime();
+		// 	const attackTimestampMillis = attack.getTimestamp().getTime();
+		// 	const earliestMillis = earliest.getTime();
 
-			earliestMatch = (earliestMillis < attackTimestampMillis || earliestMillis === attackTimestampMillis)
-		}
+		// 	earliestMatch = (earliestMillis < attackTimestampMillis || earliestMillis === attackTimestampMillis)
+		// }
 
-		if (userMatch && detectionSystemMatch && detectionPointMatch && ruleMatch && earliestMatch) {
-			match = true;
-		}
+		// if (userMatch && detectionSystemMatch && detectionPointMatch && ruleMatch && earliestMatch) {
+		// 	match = true;
+		// }
 
-		return match;
+		// return match;
+		return Utils.isMatchingAttack(criteria, attack);
 	}
 
 }
@@ -305,54 +306,55 @@ abstract class EventStore {
 	 * @return true or false depending on the matching of the search criteria to the event
 	 */
 	protected isMatchingEvent(criteria: SearchCriteria, event: AppSensorEvent): boolean {
-		let match: boolean = false;
+		// let match: boolean = false;
 
-		const user: User | null = criteria.getUser();
-		const detectionPoint: DetectionPoint | null = criteria.getDetectionPoint();
-		const detectionSystemIds: string[] = criteria.getDetectionSystemIds();
-		const earliest: Date | null = criteria.getEarliest();
-		const rule: Rule | null = criteria.getRule();
+		// const user: User | null = criteria.getUser();
+		// const detectionPoint: DetectionPoint | null = criteria.getDetectionPoint();
+		// const detectionSystemIds: string[] = criteria.getDetectionSystemIds();
+		// const earliest: Date | null = criteria.getEarliest();
+		// const rule: Rule | null = criteria.getRule();
 
-		// check user match if user specified
-		const userMatch: boolean = (user != null) ? user.equals(event.getUser()) : true;
+		// // check user match if user specified
+		// const userMatch: boolean = (user != null) ? user.equals(event.getUser()) : true;
 
-		//check detection system match if detection systems specified
-		let detectionSystemMatch: boolean = true;
-		const eventDetSystemId = event.getDetectionSystem();
-		if (detectionSystemIds != null && detectionSystemIds.length > 0 && eventDetSystemId !== null) {
-			detectionSystemMatch = detectionSystemIds.indexOf(eventDetSystemId.getDetectionSystemId()) > -1 ;
-		}
+		// //check detection system match if detection systems specified
+		// let detectionSystemMatch: boolean = true;
+		// const eventDetSystemId = event.getDetectionSystem();
+		// if (detectionSystemIds != null && detectionSystemIds.length > 0 && eventDetSystemId !== null) {
+		// 	detectionSystemMatch = detectionSystemIds.indexOf(eventDetSystemId.getDetectionSystemId()) > -1 ;
+		// }
 
-		//check detection point match if detection point specified
-		let detectionPointMatch: boolean = true;
-		if (detectionPoint !== null) {
-			const attDetoint = event.getDetectionPoint();
+		// //check detection point match if detection point specified
+		// let detectionPointMatch: boolean = true;
+		// if (detectionPoint !== null) {
+		// 	const attDetoint = event.getDetectionPoint();
 
-			detectionPointMatch = (attDetoint !== null) ?
-					detectionPoint.typeAndThresholdMatches(attDetoint) : false;
-		}
+		// 	detectionPointMatch = (attDetoint !== null) ?
+		// 			detectionPoint.typeAndThresholdMatches(attDetoint) : false;
+		// }
 
-		// check rule match if rule specified
-		let ruleMatch: boolean = true;
-		if (rule !== null) {
-			const detPoint = event.getDetectionPoint();
-			ruleMatch = (detPoint !== null) ? rule.typeAndThresholdContainsDetectionPoint(detPoint) : false;
-		}
+		// // check rule match if rule specified
+		// let ruleMatch: boolean = true;
+		// if (rule !== null) {
+		// 	const detPoint = event.getDetectionPoint();
+		// 	ruleMatch = (detPoint !== null) ? rule.typeAndThresholdContainsDetectionPoint(detPoint) : false;
+		// }
 
-		let earliestMatch: boolean = true; 
-		if (earliest !== null) {
+		// let earliestMatch: boolean = true; 
+		// if (earliest !== null) {
 
-			const eventTimestampMillis = event.getTimestamp().getTime();
-			const earliestMillis = earliest.getTime();
+		// 	const eventTimestampMillis = event.getTimestamp().getTime();
+		// 	const earliestMillis = earliest.getTime();
 
-			earliestMatch =	(earliestMillis < eventTimestampMillis || earliestMillis === eventTimestampMillis)
-		}
+		// 	earliestMatch =	(earliestMillis < eventTimestampMillis || earliestMillis === eventTimestampMillis)
+		// }
 		
-		if (userMatch && detectionSystemMatch && detectionPointMatch && ruleMatch && earliestMatch) {
-			match = true;
-		}
+		// if (userMatch && detectionSystemMatch && detectionPointMatch && ruleMatch && earliestMatch) {
+		// 	match = true;
+		// }
 
-		return match;
+		// return match;
+		return Utils.isMatchingEvent(criteria, event);
 	}
 
 }
@@ -469,39 +471,63 @@ abstract class ResponseStore {
 	}
 
 	protected isMatchingResponse(criteria: SearchCriteria, response: Response): boolean {
-		let match: boolean = false;
+		// let match: boolean = false;
 
-		const user: User | null = criteria.getUser();
-		const detectionSystemIds: string[] = criteria.getDetectionSystemIds();
-		const earliest: Date | null = criteria.getEarliest();
+		// const user: User | null = criteria.getUser();
+		// const detectionSystemIds: string[] = criteria.getDetectionSystemIds();
+		// const earliest: Date | null = criteria.getEarliest();
 
-		// check user match if user specified
-		const userMatch: boolean = (user != null) ? user.equals(response.getUser()) : true;
+		// const detectionPoint: DetectionPoint | null = criteria.getDetectionPoint();
+		// const rule: Rule | null = criteria.getRule();
 
-		//check detection system match if detection systems specified
-		let detectionSystemMatch: boolean = true;
-		const respDetSystemId = response.getDetectionSystem();
-		if (detectionSystemIds && detectionSystemIds.length > 0 && 
-			respDetSystemId) {
-			detectionSystemMatch = detectionSystemIds.indexOf(respDetSystemId.getDetectionSystemId()) > -1 ;
-		}
+		// // check user match if user specified
+		// const userMatch: boolean = (user != null) ? user.equals(response.getUser()) : true;
+
+		// //check detection system match if detection systems specified
+		// let detectionSystemMatch: boolean = true;
+		// const respDetSystemId = response.getDetectionSystem();
+		// if (detectionSystemIds && detectionSystemIds.length > 0 && 
+		// 	respDetSystemId) {
+		// 	detectionSystemMatch = detectionSystemIds.indexOf(respDetSystemId.getDetectionSystemId()) > -1 ;
+		// }
 		
-		const responseTimestamp = response.getTimestamp();
+		// const responseTimestamp = response.getTimestamp();
 
-		let earliestMatch: boolean = true; 
-		if (earliest !== null && responseTimestamp instanceof Date) {
+		// let earliestMatch: boolean = true; 
+		// if (earliest !== null && responseTimestamp instanceof Date) {
 
-			const responseTimestampMillis = responseTimestamp.getTime();
-			const earliestMillis = earliest.getTime();
+		// 	const responseTimestampMillis = responseTimestamp.getTime();
+		// 	const earliestMillis = earliest.getTime();
 
-			earliestMatch =	(earliestMillis < responseTimestampMillis || earliestMillis === responseTimestampMillis)
-		}
+		// 	earliestMatch =	(earliestMillis < responseTimestampMillis || earliestMillis === responseTimestampMillis)
+		// }
 			
-		if (userMatch && detectionSystemMatch && earliestMatch) {
-			match = true;
-		}
+		// //ADDITION TO THE ORIGINAL CODE TO TRACE WHAT CAUSED THIS RESPONSE
+		// //ESSENTIAL FOR REPORTING
+		// //check detection point match if detection point specified
+		// let detectionPointMatch: boolean = true;
+		// if (detectionPoint !== null) {
+		// 	const attDetoint = response.getDetectionPoint();
 
-		return match;
+		// 	detectionPointMatch = (attDetoint !== null) ?
+		// 			detectionPoint.typeAndThresholdMatches(attDetoint) : false;
+		// }
+
+		// //ADDITION TO THE ORIGINAL CODE TO TRACE WHAT CAUSED THIS RESPONSE
+		// //ESSENTIAL FOR REPORTING
+		// //check rule match if rule specified
+		// let ruleMatch: boolean = true;
+		// if (rule !== null) {
+		// 	const attRule = response.getRule();
+		// 	ruleMatch = (attRule !== null) ? rule.guidMatches(attRule) : false;
+		// }
+
+		// if (userMatch && detectionSystemMatch && earliestMatch && detectionPointMatch && ruleMatch) {
+		// 	match = true;
+		// }
+
+		// return match;
+		return Utils.isMatchingResponse(criteria, response);
 	}
 
 }

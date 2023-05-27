@@ -113,6 +113,9 @@ class ReferenceAttackAnalysisEngine extends AttackAnalysisEngine {
 		response.setAction(responseAction);
 		response.setInterval(interval);
 		response.setDetectionSystem(attack.getDetectionSystem());
+		//addition to the original code to track what caused the response
+		response.setDetectionPoint(attack.getDetectionPoint());
+		response.setRule(attack.getRule());
 
 		return response;
 	}

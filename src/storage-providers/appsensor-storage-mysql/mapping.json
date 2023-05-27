@@ -225,6 +225,14 @@
                     "arrayElementClass": "KeyValuePair",
                     "arrayTable": "metadata",
                     "column": "metadata_uuid"
+                },
+                "detectionPoint": {
+                    "class": "DetectionPoint",
+                    "column": "detection_point_id"
+                },
+                "rule": {
+                    "class": "Rule",
+                    "column": "rule_id"
                 }
             }
         }

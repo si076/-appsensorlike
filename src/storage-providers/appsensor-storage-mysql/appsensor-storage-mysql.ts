@@ -211,6 +211,9 @@ class MySQLResponseStore extends ResponseStore {
 		const detectionSystemIds: string[] = criteria.getDetectionSystemIds();
 		const earliest: Date | null = criteria.getEarliest();
 
+		const detectionPoint: DetectionPoint | null = criteria.getDetectionPoint();
+		const rule: Rule | null = criteria.getRule();
+
         const propFilterFuncMap = new Map<string, TYPE_FILTER_FUNCTION | string>();
 
         if (user) {
@@ -234,6 +237,22 @@ class MySQLResponseStore extends ResponseStore {
             const datetime = earliest.toISOString().replace('T', ' ').replace('Z', '');
             const expre = `timestamp > '${datetime}' OR timestamp = '${datetime}'`;
             propFilterFuncMap.set("timestamp", expre);
+        }
+
+        //ADDITION TO TRACE WHAT CAUSED THIS RESPONSE
+        //ESSENTIAL FOR REPORTING
+        if (detectionPoint !== null) {
+
+            propFilterFuncMap.set("detectionPoint", (obj: Object) => {
+                return detectionPoint.typeAndThresholdMatches(obj as DetectionPoint);
+            });
+
+        } else if (rule !== null) {
+
+            propFilterFuncMap.set("rule", (obj: Object) => {
+                return rule.guidMatches(obj as Rule);
+            });
+            
         }
 
         return propFilterFuncMap;

@@ -3,6 +3,7 @@ import { AccessController, Action, Role } from './accesscontrol/accesscontrol.js
 import { AttackAnalysisEngine, EventAnalysisEngine, ResponseAnalysisEngine } from './analysis/analysis.js';
 import { ClientConfiguration } from './configuration/client/client_configuration.js';
 import { ServerConfiguration } from './configuration/server/server_configuration.js';
+import { SearchCriteria } from './criteria/criteria.js';
 import { EventManager } from './event/event.js';
 import {GeoLocation, GeoLocator} from './geolocation/geolocation.js';
 import { ResponseHandler, UserManager } from './response/response.js';
@@ -310,6 +311,17 @@ class Response  extends AppsensorEntity {
 	private metadata?: KeyValuePair[] | undefined;
 	
 	private active?: boolean;
+
+	/** ADDITION TO THE ORIGINAL CODE TO TRACE WHAT CAUSED THIS RESPONSE
+	 *  ESSENTIAL FOR REPORTING
+	 *  Detection Point that was triggered */
+	private detectionPoint: DetectionPoint | null = null;
+
+	/** ADDITION TO THE ORIGINAL CODE TO TRACE WHAT CAUSED THIS RESPONSE
+	 *  ESSENTIAL FOR REPORTING
+	 *  Rule that was triggered */
+	private rule: Rule | null = null;
+
 	
 	public constructor(user: User | null | undefined = undefined, 
 		               action: string = '', 
@@ -419,6 +431,24 @@ class Response  extends AppsensorEntity {
 		return this.active;
 	}
 	
+	public getDetectionPoint(): DetectionPoint | null {
+		return this.detectionPoint;
+	}
+
+	public setDetectionPoint(detectionPoint: DetectionPoint | null): Response {
+		this.detectionPoint = detectionPoint;
+		return this;
+	}
+
+	public getRule(): Rule | null {
+		return this.rule;
+	}
+
+	public setRule(rule: Rule | null): Response {
+		this.rule = rule;
+		return this;
+	}
+
 	public override equals(obj: Object | null): boolean {
 		if (!super.equals(obj)) {
 			return false;
@@ -435,7 +465,9 @@ class Response  extends AppsensorEntity {
 			   this.action === other.getAction() && 
 			   Utils.equalsEntitys(this.interval, other.getInterval()) &&
 			   Utils.equalsEntitys(this.detectionSystem, other.getDetectionSystem()) &&
-			   Utils.equalsArrayEntitys(this.metadata, other.getMetadata());
+			   Utils.equalsArrayEntitys(this.metadata, other.getMetadata()) &&
+			   Utils.equalsEntitys(this.detectionPoint, other.getDetectionPoint()) &&
+			   Utils.equalsEntitys(this.rule, other.getRule());
 	}
 	
 	public override checkValidInitialize(): void {
@@ -446,18 +478,29 @@ class Response  extends AppsensorEntity {
 		if (this.user) {
 			this.user.checkValidInitialize();
 		}
+
 		if (this.detectionSystem) {
 			this.detectionSystem.checkValidInitialize();
 		}
+
 		if (this.interval) {
 			this.interval.checkValidInitialize();
 		}
+		
 		if (this.metadata) {
 			this.metadata.forEach(element => {
 				element.checkValidInitialize();
 			});
-			 
 		}
+
+		if (this.detectionPoint === undefined) {
+			this.detectionPoint = null;
+		}
+		
+		if (this.rule === undefined) {
+			this.rule = null;
+		}
+		
 	}
 	// @Override
 	// public String toString() {
@@ -661,28 +704,13 @@ class IPAddress extends AppsensorEntity {
 	
 	private geoLocation: GeoLocation  | null = null;
 
-	private _address:  ipaddrlib.IPv4 | ipaddrlib.IPv6 | null = null;
-
 	public constructor(address: string = '', 
 	                   geoLocation: GeoLocation  | null = null) {
 		super();
 		this.address = address.trim();
 		this.geoLocation = geoLocation;
 
-		this.initialize();
-	}
-
-	private initialize() {
 		this.address = IPAddress.localhostToAddress(this.address);
-
-		if (!this._address && this.address.length > 0) {
-			try {
-				this._address = ipaddrlib.process(this.address);
-			} catch (error) {
-				console.error(`Wrong address format: ${this.address}! ${(error as Error).message}`);
-				// console.error(error);
-			}
-		}
 	}
 
 	public static localhostToAddress(address: string): string {
@@ -738,12 +766,13 @@ class IPAddress extends AppsensorEntity {
 
 			try {
 
+				const _address = ipaddrlib.process(this.address);
 				const _otherAddress = ipaddrlib.process(otherAddress);
 
-				if (this._address instanceof ipaddrlib.IPv4 && _otherAddress instanceof ipaddrlib.IPv4) {
-					equal = this._address.toString() === _otherAddress.toString()
-				} else if (this._address instanceof ipaddrlib.IPv6 && _otherAddress instanceof ipaddrlib.IPv6) {
-					equal = this._address.toNormalizedString() === _otherAddress.toNormalizedString();
+				if (_address instanceof ipaddrlib.IPv4 && _otherAddress instanceof ipaddrlib.IPv4) {
+					equal = _address.toString() === _otherAddress.toString()
+				} else if (_address instanceof ipaddrlib.IPv6 && _otherAddress instanceof ipaddrlib.IPv6) {
+					equal = _address.toNormalizedString() === _otherAddress.toNormalizedString();
 				}
 			} catch (error) {
 				console.error(`Cannot compare for equality addresses: '${this.address}' and '${otherAddress}'`);
@@ -776,8 +805,6 @@ class IPAddress extends AppsensorEntity {
 		if (this.geoLocation) {
 			this.geoLocation.checkValidInitialize();
 		}
-
-		this.initialize();
 	}
 	// @Override
 	// public String toString() {
@@ -1124,9 +1151,13 @@ class AppSensorEvent extends AppsensorEntity {
 			this.resource.checkValidInitialize();
 		}
 
-		this.metadata.forEach(element => {
-			element.checkValidInitialize();
-		});
+		if (this.metadata) {
+			this.metadata.forEach(element => {
+				element.checkValidInitialize();
+			});
+		} else {
+			this.metadata = [];
+		}
 	}
 	// @Override
 	// public String toString() {
@@ -1284,6 +1315,7 @@ class Attack extends AppsensorEntity {
 			   this.timestamp.getTime() === other.getTimestamp().getTime() &&
 			   Utils.equalsEntitys(this.detectionSystem, other.getDetectionSystem()) &&
 			   Utils.equalsEntitys(this.resource, other.getResource()) &&
+			   Utils.equalsEntitys(this.rule, other.getRule()) &&
 			   Utils.equalsArrayEntitys(this.metadata, other.getMetadata());
 	}
 
@@ -1308,9 +1340,13 @@ class Attack extends AppsensorEntity {
 			this.rule.checkValidInitialize();
 		}
 
-		this.metadata.forEach(element => {
-			element.checkValidInitialize();
-		});
+		if (this.metadata) {
+			this.metadata.forEach(element => {
+				element.checkValidInitialize();
+			});
+		} else {
+			this.metadata = [];
+		}
 	}
 	// @Override
 	// public String toString() {
@@ -1780,6 +1816,182 @@ class Utils {
 		}
 		return action;
 	}
+
+   /**
+	* Finder for attacks in the AttackStore.
+	*
+	* @param criteria the {@link org.owasp.appsensor.core.criteria.SearchCriteria} object to search by
+	* @param attack the {@link Attack} object to match on
+	* @return true or false depending on the matching of the search criteria to the {@link Attack}
+	*/
+	public static isMatchingAttack(criteria: SearchCriteria, attack: Attack ): boolean {
+	   let match: boolean = false;
+
+	   const user: User | null = criteria.getUser();
+	   const detectionPoint: DetectionPoint | null = criteria.getDetectionPoint();
+	   const detectionSystemIds: string[] = criteria.getDetectionSystemIds();
+	   const earliest: Date | null = criteria.getEarliest();
+	   const rule: Rule | null = criteria.getRule();
+
+	   // check user match if user specified
+	   const userMatch: boolean = (user != null) ? user.equals(attack.getUser()) : true;
+
+	   //check detection system match if detection systems specified
+	   let detectionSystemMatch: boolean = true;
+	   const attDetSystemId = attack.getDetectionSystem();
+	   if (detectionSystemIds != null && detectionSystemIds.length > 0 && attDetSystemId !== null) {
+		   detectionSystemMatch = detectionSystemIds.indexOf(attDetSystemId.getDetectionSystemId()) > -1 ;
+	   }
+
+	   //check detection point match if detection point specified
+	   let detectionPointMatch: boolean = true;
+	   if (detectionPoint !== null) {
+		   const attDetoint = attack.getDetectionPoint();
+
+		   detectionPointMatch = (attDetoint !== null) ?
+				   detectionPoint.typeAndThresholdMatches(attDetoint) : false;
+	   }
+
+	   //check rule match if rule specified
+	   let ruleMatch: boolean = true;
+	   if (rule !== null) {
+		   const attRule = attack.getRule();
+		   ruleMatch = (attRule !== null) ? rule.guidMatches(attRule) : false;
+	   }
+
+	   let earliestMatch: boolean = true; 
+	   if (earliest !== null) {
+
+		   const attackTimestampMillis = attack.getTimestamp().getTime();
+		   const earliestMillis = earliest.getTime();
+
+		   earliestMatch = (earliestMillis < attackTimestampMillis || earliestMillis === attackTimestampMillis)
+	   }
+
+	   if (userMatch && detectionSystemMatch && detectionPointMatch && ruleMatch && earliestMatch) {
+		   match = true;
+	   }
+
+	   return match;
+   }
+
+	/**
+	 * A finder for Event objects in the EventStore
+	 *
+	 * @param criteria the {@link org.owasp.appsensor.core.criteria.SearchCriteria} object to search by
+	 * @param event the {@link Event} object to match on
+	 * @return true or false depending on the matching of the search criteria to the event
+	 */
+	 public static isMatchingEvent(criteria: SearchCriteria, event: AppSensorEvent): boolean {
+		let match: boolean = false;
+
+		const user: User | null = criteria.getUser();
+		const detectionPoint: DetectionPoint | null = criteria.getDetectionPoint();
+		const detectionSystemIds: string[] = criteria.getDetectionSystemIds();
+		const earliest: Date | null = criteria.getEarliest();
+		const rule: Rule | null = criteria.getRule();
+
+		// check user match if user specified
+		const userMatch: boolean = (user != null) ? user.equals(event.getUser()) : true;
+
+		//check detection system match if detection systems specified
+		let detectionSystemMatch: boolean = true;
+		const eventDetSystemId = event.getDetectionSystem();
+		if (detectionSystemIds != null && detectionSystemIds.length > 0 && eventDetSystemId !== null) {
+			detectionSystemMatch = detectionSystemIds.indexOf(eventDetSystemId.getDetectionSystemId()) > -1 ;
+		}
+
+		//check detection point match if detection point specified
+		let detectionPointMatch: boolean = true;
+		if (detectionPoint !== null) {
+			const attDetoint = event.getDetectionPoint();
+
+			detectionPointMatch = (attDetoint !== null) ?
+					detectionPoint.typeAndThresholdMatches(attDetoint) : false;
+		}
+
+		// check rule match if rule specified
+		let ruleMatch: boolean = true;
+		if (rule !== null) {
+			const detPoint = event.getDetectionPoint();
+			ruleMatch = (detPoint !== null) ? rule.typeAndThresholdContainsDetectionPoint(detPoint) : false;
+		}
+
+		let earliestMatch: boolean = true; 
+		if (earliest !== null) {
+
+			const eventTimestampMillis = event.getTimestamp().getTime();
+			const earliestMillis = earliest.getTime();
+
+			earliestMatch =	(earliestMillis < eventTimestampMillis || earliestMillis === eventTimestampMillis)
+		}
+		
+		if (userMatch && detectionSystemMatch && detectionPointMatch && ruleMatch && earliestMatch) {
+			match = true;
+		}
+
+		return match;
+	}
+
+	public static isMatchingResponse(criteria: SearchCriteria, response: Response): boolean {
+		let match: boolean = false;
+
+		const user: User | null = criteria.getUser();
+		const detectionSystemIds: string[] = criteria.getDetectionSystemIds();
+		const earliest: Date | null = criteria.getEarliest();
+
+		const detectionPoint: DetectionPoint | null = criteria.getDetectionPoint();
+		const rule: Rule | null = criteria.getRule();
+
+		// check user match if user specified
+		const userMatch: boolean = (user != null) ? user.equals(response.getUser()) : true;
+
+		//check detection system match if detection systems specified
+		let detectionSystemMatch: boolean = true;
+		const respDetSystemId = response.getDetectionSystem();
+		if (detectionSystemIds && detectionSystemIds.length > 0 && 
+			respDetSystemId) {
+			detectionSystemMatch = detectionSystemIds.indexOf(respDetSystemId.getDetectionSystemId()) > -1 ;
+		}
+		
+		const responseTimestamp = response.getTimestamp();
+
+		let earliestMatch: boolean = true; 
+		if (earliest !== null && responseTimestamp instanceof Date) {
+
+			const responseTimestampMillis = responseTimestamp.getTime();
+			const earliestMillis = earliest.getTime();
+
+			earliestMatch =	(earliestMillis < responseTimestampMillis || earliestMillis === responseTimestampMillis)
+		}
+			
+		//ADDITION TO THE ORIGINAL CODE TO TRACE WHAT CAUSED THIS RESPONSE
+		//ESSENTIAL FOR REPORTING
+		//check detection point match if detection point specified
+		let detectionPointMatch: boolean = true;
+		if (detectionPoint !== null) {
+			const attDetoint = response.getDetectionPoint();
+
+			detectionPointMatch = (attDetoint !== null) ?
+					detectionPoint.typeAndThresholdMatches(attDetoint) : false;
+		}
+
+		//ADDITION TO THE ORIGINAL CODE TO TRACE WHAT CAUSED THIS RESPONSE
+		//ESSENTIAL FOR REPORTING
+		//check rule match if rule specified
+		let ruleMatch: boolean = true;
+		if (rule !== null) {
+			const attRule = response.getRule();
+			ruleMatch = (attRule !== null) ? rule.guidMatches(attRule) : false;
+		}
+
+		if (userMatch && detectionSystemMatch && earliestMatch && detectionPointMatch && ruleMatch) {
+			match = true;
+		}
+
+		return match;
+	}
+
 }
 
 export {IEquals, AppsensorEntity, KeyValuePair, IPAddress, INTERVAL_UNITS, Interval, Threshold, Response, 

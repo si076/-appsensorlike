@@ -71,7 +71,7 @@ class AppSensorWebSocketClient {
 
             } else if (response.unauthorizedAction) {
 
-                Logger.getClientLogger().warn(`This client application is not authorized to perform ${response.actionName} on server! Configure server!`);
+                Logger.getClientLogger().warn(`This client application is not authorized to perform '${response.actionName}' on server! Configure server!`);
                 
             } else {
                 me.onServerResponse(response);

@@ -1,13 +1,14 @@
-import { AppSensorEvent, Attack, Response, KeyValuePair, AppSensorServer, User, DetectionPoint } from "../../../core/core.js";
+import { AppSensorEvent, Attack, Response, KeyValuePair, AppSensorServer, User, DetectionPoint, IPAddress } from "../../../core/core.js";
 import { SearchCriteria } from "../../../core/criteria/criteria.js";
 import { AttackStore, EventStore, ResponseStore } from "../../../core/storage/storage.js";
-import { ReportingEngineExt } from "../appsensor-reporting-websocket.js";
+import { ReportingEngineExt } from "../../reporting-engines.js";
 import { JSONServerConfigurationReader } from "../../../configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
-
-import WebSocket, {  } from "ws";
 import { JSONConfigReadValidate } from "../../../utils/Utils.js";
 import { AppSensorWebSocketServer, WebSocketExt, WebSocketServerConfig } from "../../../websocket/server/appsensor-websocket-server.js";
 import { ActionRequest } from "../../../websocket/appsensor-websocket.js";
+import { Action, Context } from "../../../core/accesscontrol/accesscontrol.js";
+
+import WebSocket, {  } from "ws";
 
 class ReportingWebSocketServerConfigReader  extends JSONConfigReadValidate {
 
@@ -42,6 +43,37 @@ class AppSensorReportingWebSocketServer extends AppSensorWebSocketServer impleme
         this.responseStore.registerListener(this, true);
     }
 
+    protected isConnectionAllowed(ws: WebSocketExt): boolean {
+        let allowed = false;
+
+        const config = this.appSensorServer.getConfiguration();
+        if (ws.remoteAddress && config) {
+            const clientApp = config.findClientApplication(new IPAddress(ws.remoteAddress));
+            if (clientApp) {
+                allowed = true;
+            }
+        }
+
+        return allowed;
+    }
+
+    protected isActionAuthorized(ws: WebSocketExt, request: ActionRequest): boolean {
+        let authorized = false;
+
+        const config = this.appSensorServer.getConfiguration();
+        if (ws.remoteAddress && config) {
+            const clientApp = config.findClientApplication(new IPAddress(ws.remoteAddress));
+            if (clientApp) {
+                authorized = this.appSensorServer.getAccessController()!
+                                    .isAuthorized(clientApp, 
+                                                  Action.EXECUTE_REPORT, 
+                                                  new Context());
+            }
+        }
+
+        return authorized;
+    }
+    
     protected override onClientRequest(ws: WebSocketExt, request: ActionRequest) {
 
         switch (request.actionName) {

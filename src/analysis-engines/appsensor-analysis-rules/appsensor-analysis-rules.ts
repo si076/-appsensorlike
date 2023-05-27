@@ -109,7 +109,10 @@ class AggregateAttackAnalysisEngine extends AttackAnalysisEngine {
 				setTimestamp(attack.getTimestamp()).
 				setAction(responseAction).
 				setInterval(interval).
-				setDetectionSystem(attack.getDetectionSystem());
+				setDetectionSystem(attack.getDetectionSystem())
+				//addition to the original code to track what caused the response
+				.setDetectionPoint(attack.getDetectionPoint())
+				.setRule(attack.getRule());
 
 		return response;
 	}

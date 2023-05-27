@@ -43,6 +43,26 @@ class JSONServerConfigurationReader extends JSONConfigReadValidate implements Se
 
         config = super.read(configurationLocation, validatorLocation, reload);
 
+        this.adjustConfig(config);
+
+        // console.log(JSON.stringify(config, null, 2));
+        
+        return config;
+    }
+
+    public override readFromString(configAsString: string, validatorLocation?: string | null) {
+        let config: ServerConfiguration | null = null;
+
+        config = super.readFromString(configAsString, validatorLocation);
+
+        this.adjustConfig(config);
+
+        // console.log(JSON.stringify(config, null, 2));
+        
+        return config;
+    }
+
+    protected adjustConfig(config: ServerConfiguration | null) {
         if (config) {
             Utils.setPrototypeInDepth(config, JSONServerConfigurationReader.configPrototypesSample);
 
@@ -56,10 +76,6 @@ class JSONServerConfigurationReader extends JSONConfigReadValidate implements Se
             this.adjustRulesMonitorPoints(config);
 
         }
-
-        // console.log(JSON.stringify(config, null, 2));
-        
-        return config;
     }
 
     private customPoints(config: ServerConfiguration) {

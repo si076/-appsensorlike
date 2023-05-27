@@ -1,7 +1,6 @@
-import { AppSensorEvent, ClientApplication, DetectionPoint, DetectionSystem, IEquals, IPAddress, Utils } from "../../core.js";
+import { AppSensorEvent, ClientApplication, DetectionPoint, DetectionSystem, IPAddress, IValidateInitialize, Utils } from "../../core.js";
 import { CorrelationSet } from "../../correlation/correlation.js";
 import { Rule } from "../../rule/rule.js";
-// import { IServerConfiguration } from "./server_config_defs.js";
 
 interface IClient {
 	clientName: string;
@@ -13,7 +12,7 @@ interface IDetectionPoints {
 	detectionPoints: DetectionPoint[];
 } 
 
-interface IServerConfiguration {
+interface IServerConfiguration extends IValidateInitialize {
 
 	configurationFile?: string;
 
@@ -64,6 +63,21 @@ abstract class ServerConfiguration implements IServerConfiguration {
 
 	static clientApplicationCache: Map<string, ClientApplication> = new Map<string, ClientApplication>();
 
+	public checkValidInitialize(): void {
+		//when loaded from a config file
+		
+		if (!this.rules) {
+			this.rules = [];	
+		}
+		
+		if (!this.correlationSets) {
+			this.correlationSets = [];	
+		}
+		
+		if (!this.clientApplications) {
+			this.clientApplications = [];	
+		}
+	}
 
 	public getCustomDetectionPoints(): Map<string, DetectionPoint[]> {
 		return this.customDetectionPoints;
@@ -237,10 +251,12 @@ abstract class ServerConfiguration implements IServerConfiguration {
 	public findRules(triggerEvent: AppSensorEvent): Rule[] {
 		const matches: Rule[] = [];
 
-		for (const rule of this.rules) {
-            const detPoint = triggerEvent.getDetectionPoint();
-			if (detPoint !== null && rule.checkLastExpressionForDetectionPoint(detPoint)) {
-				matches.push(rule);
+		if (this.rules) {
+			for (const rule of this.rules) {
+				const detPoint = triggerEvent.getDetectionPoint();
+				if (detPoint !== null && rule.checkLastExpressionForDetectionPoint(detPoint)) {
+					matches.push(rule);
+				}
 			}
 		}
 
@@ -254,8 +270,8 @@ abstract class ServerConfiguration implements IServerConfiguration {
 
 		clientApplication = ServerConfiguration.clientApplicationCache.get(clientApplicationId);
 
-		if (!clientApplication) {
-			for (const configuredClientApplication of this.getClientApplications()) {
+		if (!clientApplication && this.clientApplications) {
+			for (const configuredClientApplication of this.clientApplications) {
 
 				const configClientAppIPAddress = configuredClientApplication.getIPAddress();
 

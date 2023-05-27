@@ -8,7 +8,7 @@ create table `interval` (id int not null auto_increment, duration int, unit varc
 create table ipaddress (id int not null auto_increment, address varchar(255), geo_location int, primary key (id));
 create table key_value_pair (id int not null auto_increment, `key` varchar(255), value varchar(255), primary key (id));
 create table `resource` (id int not null auto_increment, location varchar(255), method varchar(255), primary key (id));
-create table response (id int not null auto_increment, action varchar(255), active bit, timestamp datetime(3), detection_system_id int, interval_id int, user_id int, metadata_uuid char(36), primary key (id));
+create table response (id int not null auto_increment, action varchar(255), active bit, timestamp datetime(3), detection_system_id int, interval_id int, user_id int, metadata_uuid char(36), detection_point_id int, rule_id int, primary key (id));
 create table rule (id int not null auto_increment, guid char(36), name varchar(255), window_id int, primary key (id));
 create table threshold (id int not null auto_increment, t_count int, interval_id int, primary key (id));
 create table `user` (id int not null auto_increment, ip_address int, username varchar(255), primary key (id));
@@ -28,6 +28,8 @@ alter table response add constraint FK_87uubvo2fgwwpbmfcfkp82a62 foreign key (de
 alter table response add constraint FK_cqbci2wy6y9upuqsel4asb3fl foreign key (interval_id) references `interval` (id);
 alter table response add constraint FK_1j5vg1wv52y5trquwxsa1bmno foreign key (user_id) references user (id);
 alter table response add constraint fk_response_metadata_uuid FOREIGN KEY (metadata_uuid) REFERENCES metadata (metadata_uuid)
+alter table response add constraint FK_response_detection_point_id foreign key (detection_point_id) references detection_point (id);
+alter table response add constraint FK_rule_id foreign key (rule_id) references rule (id);
 alter table rule add constraint FK_e0jelcpuf1edn8lubjrp8agx2 foreign key (window_id) references `interval` (id);
 alter table threshold add constraint FK_cmrw7h9idnjhcqd6mfv4w4u5d foreign key (interval_id) references `interval` (id);
 alter table metadata add constraint fk_metadata_key_value_pair_id FOREIGN KEY (key_value_pair_id) REFERENCES key_value_pair (id);
