@@ -12,6 +12,10 @@ class JSONServerConfigurationReader extends JSONConfigReadValidate implements Se
 
     public static configPrototypesSample: JSONServerConfiguration;
 
+    public static DEFAULT_CONFIG_FILE        = 'appsensor-server-config.json';
+    public static DEFAULT_CONFIG_SCHEMA_FILE = 'appsensor-server-config_schema.json';
+
+
     static {
         JSONServerConfigurationReader.configPrototypesSample = new JSONServerConfiguration();
         JSONServerConfigurationReader.configPrototypesSample.rules = [Utils.ruleSample];
@@ -33,7 +37,8 @@ class JSONServerConfigurationReader extends JSONConfigReadValidate implements Se
     }
 
     constructor() {
-        super('appsensor-server-config.json', 'appsensor-server-config_schema.json');
+        super(JSONServerConfigurationReader.DEFAULT_CONFIG_FILE, 
+              JSONServerConfigurationReader.DEFAULT_CONFIG_SCHEMA_FILE);
     }
 
     public override read(configurationLocation: string = '', 

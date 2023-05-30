@@ -1,22 +1,15 @@
-import { ReferenceAccessController } from "../../access-controllers/appsensor-access-control-reference/ReferenceAccessController.js";
-import { ReferenceAttackAnalysisEngine, ReferenceEventAnalysisEngine } from "../../analysis-engines/appsensor-analysis-reference/appsensor-analysis-reference.js";
-import { AggregateAttackAnalysisEngine, AggregateEventAnalysisEngine } from "../../analysis-engines/appsensor-analysis-rules/appsensor-analysis-rules.js";
-import { JSONServerConfiguration, JSONServerConfigurationReader } from "../../configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
-import { AppSensorClient, AppSensorServer } from "../../core/core.js";
-import { NoopUserManager, ResponseHandler, UserManager } from "../../core/response/response.js";
-import { AttackStore, EventStore, ResponseStore } from "../../core/storage/storage.js";
-import { InMemoryAttackStore, InMemoryEventStore, InMemoryResponseStore } from "../../storage-providers/appsensor-storage-in-memory/appsensor-storage-in-memory.js";
-import { JSONConfigManager } from "../../utils/Utils.js";
-import { LocalResponseAnalysisEngine } from "./analysis/analysis.js";
-import { LocalEventManager } from "./event/event.js";
-import { LocalRequestHandler } from "./handler/handler.js";
-import { LocalResponseHandler } from "./response/response.js";
+import { ReferenceAccessController } from "../../../access-controllers/appsensor-access-control-reference/ReferenceAccessController";
+import { ReferenceAttackAnalysisEngine, ReferenceEventAnalysisEngine } from "../../../analysis-engines/appsensor-analysis-reference/appsensor-analysis-reference";
+import { AggregateAttackAnalysisEngine, AggregateEventAnalysisEngine } from "../../../analysis-engines/appsensor-analysis-rules/appsensor-analysis-rules";
+import { JSONServerConfigurationReader } from "../../../configuration-modes/appsensor-configuration-json/server/JSONServerConfig";
+import { AppSensorServer, RequestHandler } from "../../../core/core";
+import { AttackStore, EventStore, ResponseStore } from "../../../core/storage/storage";
+import { InMemoryAttackStore, InMemoryEventStore, InMemoryResponseStore } from "../../../storage-providers/appsensor-storage-in-memory/appsensor-storage-in-memory";
+import { JSONConfigManager } from "../../../utils/Utils";
+import { RestRequestHandler } from "./handler/handler";
 
-class AppSensorLocal {
-
+class AppSensorRestServer {
 	private appSensorServer = new AppSensorServer();
-
-	private appSensorClient = new AppSensorClient();
 
 	private aggrEventEngine = new AggregateEventAnalysisEngine();
 	private aggrAttackEngine = new AggregateAttackAnalysisEngine();
@@ -28,16 +21,15 @@ class AppSensorLocal {
     private eventStore: EventStore = new InMemoryEventStore();
     private responseStore: ResponseStore = new InMemoryResponseStore();
 
-    private userManager: UserManager = new NoopUserManager();
-    private responseHandler: ResponseHandler = new LocalResponseHandler(this.userManager);
+    private requestHandler: RequestHandler;
 
     private configManager: JSONConfigManager;
 
-    constructor(configFile: string = '',
+    constructor(appServerConfigFile: string = '',
+                restServerConfigFile: string = '',
                 attackStore?: AttackStore,
                 eventStore?: EventStore,
-                responseStore?: ResponseStore,
-                responseHandler?: ResponseHandler) {
+                responseStore?: ResponseStore) {
         if (attackStore) {
             this.attackStore = attackStore;
         }
@@ -50,12 +42,9 @@ class AppSensorLocal {
             this.responseStore = responseStore;
         }
 
-        if (responseHandler) {
-            this.responseHandler = responseHandler;
-        }
 
         this.configManager = new JSONConfigManager(new JSONServerConfigurationReader(),
-                                                   configFile.trim(),
+                                                   appServerConfigFile.trim(),
                                                    null,
                                                    JSONServerConfigurationReader.DEFAULT_CONFIG_FILE, 
                                                    JSONServerConfigurationReader.DEFAULT_CONFIG_SCHEMA_FILE,
@@ -65,6 +54,7 @@ class AppSensorLocal {
         });                                           
 
         this.appSensorServer.setConfiguration(this.configManager.getConfiguration());
+
 
         this.appSensorServer.setAttackStore(this.attackStore);
         this.appSensorServer.setEventStore(this.eventStore);
@@ -90,30 +80,11 @@ class AppSensorLocal {
 
         this.appSensorServer.setAccessController(new ReferenceAccessController());
 
-        const localResponseHandler = new LocalResponseAnalysisEngine(this.responseHandler);
-
-        const responseAnalysisEngines = [localResponseHandler];
-        this.appSensorServer.setResponseAnalysisEngines(responseAnalysisEngines);
-        for (let i = 0; i < responseAnalysisEngines.length; i++) {
-            this.responseStore.registerListener(responseAnalysisEngines[i]);
-        }
-
-        const requestHandler = new LocalRequestHandler(this.appSensorServer);
-        const eventManager = new LocalEventManager(requestHandler);
-
-        this.appSensorClient = new AppSensorClient();
-        this.appSensorClient.setEventManager(eventManager);
-        this.appSensorClient.setResponseHandler(this.responseHandler);
-        this.appSensorClient.setUserManager(this.userManager);
+        this.requestHandler = new RestRequestHandler(this.appSensorServer, restServerConfigFile);
     }
 
     getAppSensorServer() {
         return this.appSensorServer;
     }
 
-    getAppSensorClient() {
-        return this.appSensorClient;
-    }
 }
-
-export {AppSensorLocal};

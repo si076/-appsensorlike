@@ -1,10 +1,10 @@
 import { ClientRequestArgs } from "http";
-import { AppSensorEvent, Attack, Response } from "../../../core/core.js";
-import { EventManager } from "../../../core/event/event.js";
-import { JSONConfigReadValidate, Utils } from "../../../utils/Utils.js";
-import { AppSensorWebSocketClient, WebSocketClientConfig } from "../../../websocket/client/appsensor-websocket-client.js";
-import { ActionResponse } from "../../../websocket/appsensor-websocket.js";
-import { Logger } from "../../../logging/logging.js";
+import { AppSensorEvent, Attack, Response } from "../../../../core/core.js";
+import { EventManager } from "../../../../core/event/event.js";
+import { JSONConfigReadValidate, Utils } from "../../../../utils/Utils.js";
+import { AppSensorWebSocketClient, WebSocketClientConfig } from "../../../../websocket/client/appsensor-websocket-client.js";
+import { ActionResponse } from "../../../../websocket/appsensor-websocket.js";
+import { Logger } from "../../../../logging/logging.js";
 
 import EventEmitter from "events";
 import WebSocket from "ws";
@@ -12,7 +12,7 @@ import WebSocket from "ws";
 class WebSocketEventManagerConfigReader  extends JSONConfigReadValidate {
 
     constructor() {
-        super('./execution-modes/appsensor-websocket/event/appsensor-websocket-event-manager-config.json',
+        super('./execution-modes/appsensor-websocket/client/event/appsensor-websocket-event-manager-config.json',
               './websocket/client/appsensor-websocket-client-config_schema.json',
               WebSocketClientConfig.prototype);
     }

@@ -1,17 +1,17 @@
 import WebSocket from "ws";
-import { Context } from "../../../core/accesscontrol/accesscontrol.js";
+import { Context } from "../../../../core/accesscontrol/accesscontrol.js";
 
-import { AppSensorEvent, RequestHandler, AppSensorServer, Attack, Response, IPAddress, Utils as coreUtils} from "../../../core/core.js";
-import { SearchCriteria } from "../../../core/criteria/criteria.js";
-import { Logger } from "../../../logging/logging.js";
-import { JSONConfigReadValidate, Utils } from "../../../utils/Utils.js";
-import { ActionRequest } from "../../../websocket/appsensor-websocket.js";
-import { AppSensorWebSocketServer, WebSocketExt, WebSocketServerConfig } from "../../../websocket/server/appsensor-websocket-server.js";
+import { AppSensorEvent, RequestHandler, AppSensorServer, Attack, Response, IPAddress, Utils as coreUtils} from "../../../../core/core.js";
+import { SearchCriteria } from "../../../../core/criteria/criteria.js";
+import { Logger } from "../../../../logging/logging.js";
+import { JSONConfigReadValidate, Utils } from "../../../../utils/Utils.js";
+import { ActionRequest } from "../../../../websocket/appsensor-websocket.js";
+import { AppSensorWebSocketServer, WebSocketExt, WebSocketServerConfig } from "../../../../websocket/server/appsensor-websocket-server.js";
 
 class WebSocketRequestHandlerConfigReader  extends JSONConfigReadValidate {
 
     constructor() {
-        super('./execution-modes/appsensor-websocket/handler/appsensor-websocket-request-handler-config.json',
+        super('./execution-modes/appsensor-websocket/server/handler/appsensor-websocket-request-handler-config.json',
               './websocket/server/appsensor-websocket-server-config_schema.json',
               WebSocketServerConfig.prototype);
     }
@@ -21,7 +21,7 @@ class WebSocketRequestHandler extends AppSensorWebSocketServer implements Reques
 
 	private appSensorServer: AppSensorServer;
 	
-	private static detectionSystemId: string | null = null;	//start with blank
+	private static detectionSystemId: string | null = null;
 	
     constructor(appSensorServer: AppSensorServer,
 				configLocation: string = 'appsensor-websocket-request-handler-config.json',

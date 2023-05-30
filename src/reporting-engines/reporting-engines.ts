@@ -59,49 +59,76 @@ class ReportingSettingsLoader extends JSONConfigReadValidate {
     }
 }
 
-class DetectionPointsDescription {
+class DetectionPointDescriptions {
     IDs: {
         [id: string]:string
     } = {};
     Categorization: {
-        Suspicious: {
-            description: string,
-            one_user: string[],
-            all_users: string[]
-        },
-        Attack: {
-            description: string,
-            one_user: string[],
-            all_users: string[]
-        },
-        Discrete: {
-            description: string,
-            one_user: string[],
-            all_users: string[]
-        },
-        Aggregating: {
-            description: string,
-            one_user: string[],
-            all_users: string[]
-        },
-        Modifying: {
-            description: string,
-            one_user: string[],
-            all_users: string[]
-        }
-    } = {Suspicious: {description: '', one_user:[], all_users: []},
-         Attack: {description: '', one_user:[], all_users: []},
-         Discrete: {description: '', one_user:[], all_users: []},
-         Aggregating: {description: '', one_user:[], all_users: []},
-         Modifying: {description: '', one_user:[], all_users: []}
+        Suspicious: { description: string, one_user: string[], all_users: string[] },
+        Attack: { description: string, one_user: string[], all_users: string[] },
+        Discrete: { description: string, one_user: string[], all_users: string[] },
+        Aggregating: { description: string, one_user: string[], all_users: string[] },
+        Modifying: { description: string, one_user: string[], all_users: string[] },
+    } = {
+        Suspicious: {description: '', one_user:[], all_users: []},
+        Attack: {description: '', one_user:[], all_users: []},
+        Discrete: {description: '', one_user:[], all_users: []},
+        Aggregating: {description: '', one_user:[], all_users: []},
+        Modifying: {description: '', one_user:[], all_users: []}
         };
 }
 
-class DetectionPointsDescriptionReader extends JSONConfigReadValidate {
+class DetectionPointDescriptionsReader extends JSONConfigReadValidate {
     constructor() {
-        super('appsensor-detection-point-descriptions.json', null, DetectionPointsDescription.prototype);
+        super('appsensor-detection-point-descriptions.json', null, DetectionPointDescriptions.prototype);
+    }
+}
+
+class ResponseDescriptions {
+    IDs: {
+        [id: string]:string
+    } = {};
+    Categorization: {
+        Purpose: {
+            Logging: { always: string[], sometimes: string[] },
+            Notifying: { always: string[], sometimes: string[] },
+            Disrupting: { always: string[], sometimes: string[] },
+            Blocking: { always: string[], sometimes: string[] },
+        },
+        Target_User: {
+            One: { always: string[], sometimes: string[] },
+            All: { always: string[], sometimes: string[] }
+        },
+        Response_Duration: {
+            Instantaneous: { always: string[], sometimes: string[] },
+            Period: { always: string[], sometimes: string[] },
+            Permanent: { always: string[], sometimes: string[] }
+        }
+    } = {
+        Purpose: {
+            Logging: { always: [], sometimes: [] },
+            Notifying: { always: [], sometimes: [] },
+            Disrupting: { always: [], sometimes: [] },
+            Blocking: { always: [], sometimes: [] }
+        },
+        Target_User: {
+            One: { always: [], sometimes: [] },
+            All: { always: [], sometimes: [] },
+        },
+        Response_Duration: {
+            Instantaneous: { always: [], sometimes: [] },
+            Period: { always: [], sometimes: [] },
+            Permanent: { always: [], sometimes: [] },
+        }
+    };
+}
+
+class ResponseDescriptionsReader extends JSONConfigReadValidate {
+    constructor() {
+        super('appsensor-responses-descriptions.json', null, ResponseDescriptions.prototype);
     }
 }
 
 export {ReportingEngineExt, ReportingSettingsLoader, ReportingSettings, 
-        DetectionPointsDescription, DetectionPointsDescriptionReader};
+        DetectionPointDescriptions, DetectionPointDescriptionsReader,
+        ResponseDescriptions, ResponseDescriptionsReader};

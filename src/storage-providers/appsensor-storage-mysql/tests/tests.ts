@@ -1,12 +1,13 @@
 import { AppSensorLocal } from "../../../execution-modes/appsensor-local/appsensor_local.js";
-import { AppSensorWebsocketExecClient, AppSensorWebsocketExecServer } from "../../../execution-modes/appsensor-websocket/appsensor_websocket.js";
 import { MySQLAttackStore, MySQLEventStore, MySQLResponseStore } from "../appsensor-storage-mysql.js";
 import { AggregateEventAnalysisEngineIntegrationTest } from "./AggregateEventAnalysisEngineIntegrationTest.js";
 import { DOPTests } from "./DOPTests.js";
 import { MySQLStorageTests } from "./MySQLStorageTests.js";
+import { AppSensorClient, AppSensorServer } from "../../../core/core.js";
+import { AppSensorWebsocketExecServer } from "../../../execution-modes/appsensor-websocket/server/appsensor_websocket_server.js";
+import { AppSensorWebsocketExecClient } from "../../../execution-modes/appsensor-websocket/client/appsensor_websocket_client.js";
 
 import * as readline from 'readline';
-import { AppSensorClient, AppSensorServer } from "../../../core/core.js";
 
 async function runTests(appSensorServer: AppSensorServer, 
                         appSensorClient: AppSensorClient, 
@@ -61,7 +62,7 @@ async function testChoice(appSensorServer: AppSensorServer,
 
 
 async function runTestsLocally(readInf: readline.Interface | null = null) {
-    console.log('----- Run MySQL Storage Tests -----');
+    console.log('----- Run MySQL Storage Tests Locall Execution -----');
     const appSensorLocal = new AppSensorLocal('',
                                                 new MySQLAttackStore(),
                                                 new MySQLEventStore(),
@@ -72,7 +73,7 @@ async function runTestsLocally(readInf: readline.Interface | null = null) {
 }
 
 async function runTestsWebSocket(readInf: readline.Interface | null = null) {
-    console.log('----- Run MySQL Storage Tests -----');
+    console.log('----- Run MySQL Storage Tests WebSocket Execution -----');
     const appSensorWebSocketServer = 
             new AppSensorWebsocketExecServer('', '', undefined,
                                              new MySQLAttackStore(),

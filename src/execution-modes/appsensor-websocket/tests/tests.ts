@@ -1,8 +1,8 @@
 
 import * as readline from 'readline';
-import { MySQLAttackStore, MySQLEventStore, MySQLResponseStore } from '../../../storage-providers/appsensor-storage-mysql/appsensor-storage-mysql.js';
 import { runTests as test} from '../../tests/tests.js';
-import { AppSensorWebsocketExecClient, AppSensorWebsocketExecServer } from '../appsensor_websocket.js';
+import { AppSensorWebsocketExecClient } from '../client/appsensor_websocket_client.js';
+import { AppSensorWebsocketExecServer } from '../server/appsensor_websocket_server.js';
 
 async function runTests(readInf: readline.Interface | null = null) {
     const appSensorWebSocketServer = 

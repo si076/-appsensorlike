@@ -1,5 +1,5 @@
 import { JSONServerConfigurationReader } from "../../configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
-import { DetectionPointsDescription, DetectionPointsDescriptionReader, ReportingEngineExt, ReportingSettings, ReportingSettingsLoader } from "../reporting-engines.js";
+import { DetectionPointDescriptions, DetectionPointDescriptionsReader, ReportingEngineExt, ReportingSettings, ReportingSettingsLoader } from "../reporting-engines.js";
 import { AppSensorReportingWebSocketClient } from "../appsensor-reporting-websocket/client/appsensor-reporting-websocket-client.js";
 import { ServerConfiguration } from "../../core/configuration/server/server_configuration.js";
 import { AppSensorEvent, Attack, DetectionPoint, DetectionSystem, Response, User, Utils as coreUtils} from "../../core/core.js";
@@ -96,7 +96,7 @@ class ActivatedDetectionPointsReport extends Report {
                              attacks: number, 
                              responses: number}][] = [];
     
-    private detectionPointsDescription: DetectionPointsDescription = new DetectionPointsDescription();
+    private detectionPointDescriptions: DetectionPointDescriptions = new DetectionPointDescriptions();
 
     setItems(config: ServerConfiguration | null, 
              settings: ReportingSettings, 
@@ -109,7 +109,7 @@ class ActivatedDetectionPointsReport extends Report {
 
         this.itemCount = this.items.length;
 
-        this.detectionPointsDescription = new DetectionPointsDescriptionReader().read();
+        this.detectionPointDescriptions = new DetectionPointDescriptionsReader().read();
     }
  
 
@@ -131,7 +131,7 @@ class ActivatedDetectionPointsReport extends Report {
             const splited = item[0].split(ActivatedDetectionPointsReport.SEPARATOR);
 
             let detectionPointDescr = "";
-            const propDesc = Object.getOwnPropertyDescriptor(this.detectionPointsDescription.IDs, splited[1]);
+            const propDesc = Object.getOwnPropertyDescriptor(this.detectionPointDescriptions.IDs, splited[1]);
             if (propDesc) {
                 detectionPointDescr = propDesc.value;
             }

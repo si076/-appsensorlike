@@ -1,0 +1,7 @@
+{
+    "protocol": "http",
+
+    "listenOptions": {
+        "port": 8080
+    }
+}
