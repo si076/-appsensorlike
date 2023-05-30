@@ -1,5 +1,6 @@
 import { AppSensorClient, AppSensorEvent, AppSensorServer } from "../../../core/core.js";
 import { BaseTest } from "./BaseTest.js";
+import { EXEC_MODE } from "../tests.js";
 
 import assert from "assert";
 
@@ -9,12 +10,21 @@ class ErrorHandlingTest extends BaseTest {
         super(appSensorServer, appSensorClient);
     }
 
-    public async testError(execModeLocal: boolean = true) {
+    public async testError(execMode: EXEC_MODE = EXEC_MODE.EXEC_MODE_LOCAL) {
         //generate false event object
         const event: AppSensorEvent = JSON.parse("{}");
 
-        const errorToCheck = execModeLocal ? new TypeError("event.getDetectionSystem is not a function") : 
-                                             new Error("TypeError: Cannot read property 'getDetectionSystemId' of undefined");
+        let errorToCheck: string | Error = new TypeError("event.getDetectionSystem is not a function");
+        switch (execMode) {
+            case EXEC_MODE.EXEC_MODE_WEBSOCKET: {
+                errorToCheck = new Error("TypeError: Cannot read property 'getDetectionSystemId' of undefined");
+                break;
+            }
+            case EXEC_MODE.EXEC_MODE_REST: {
+                errorToCheck = new Error('Server responded with status: 500');
+                break;
+            }
+        }
 
         await assert.rejects(this.appSensorClient.getEventManager()!.addEvent(event), 
                              errorToCheck);
@@ -23,12 +33,12 @@ class ErrorHandlingTest extends BaseTest {
 
     public static async runTests(appSensorServer: AppSensorServer, 
                                  appSensorClient: AppSensorClient, 
-                                 execModeLocal: boolean = true) {
+                                 execMode: EXEC_MODE = EXEC_MODE.EXEC_MODE_LOCAL) {
 		console.log();
 		console.log('----- Run ErrorHandlingTest -----');
 		const inst = new ErrorHandlingTest(appSensorServer, appSensorClient);
 		inst.initializeTest();
-		await inst.testError(execModeLocal);
+		await inst.testError(execMode);
     }
 }
 

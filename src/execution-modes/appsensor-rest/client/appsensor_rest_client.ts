@@ -1,7 +1,7 @@
-import { AppSensorClient } from "../../../core/core";
-import { UserManager, NoopUserManager, ResponseHandler } from "../../../core/response/response";
-import { LocalResponseHandler } from "../../appsensor-local/response/response";
-import { RestEventManager } from "./event/event";
+import { AppSensorClient } from "../../../core/core.js";
+import { UserManager, NoopUserManager, ResponseHandler } from "../../../core/response/response.js";
+import { LocalResponseHandler } from "../../appsensor-local/response/response.js";
+import { RestEventManager } from "./event/event.js";
 
 class AppSensorRestClient {
 	private appSensorClient = new AppSensorClient();

@@ -7,10 +7,16 @@ import { MultipleDetectionPointsSameLabelEventAnalysisEngineTest } from './analy
 import { ReferenceStatisticalEventAnalysisEngineTest } from './analysis/ReferenceStatisticalEventAnalysisEngineTest.js';
 import { SimpleAggregateEventAnalysisEngineTest } from './analysis/SimpleAggregateEventAnalysisEngineTest.js';
 
+enum EXEC_MODE {
+    EXEC_MODE_LOCAL     = "EXEC_MODE_LOCAL",
+    EXEC_MODE_WEBSOCKET = "EXEC_MODE_WEBSOCKET",
+    EXEC_MODE_REST      = "EXEC_MODE_REST"
+}
+
 async function runTests(appSensorServer: AppSensorServer, 
                         appSensorClient: AppSensorClient, 
                         readInf: readline.Interface | null = null,
-                        execModeLocal: boolean = true) {
+                        execMode: EXEC_MODE = EXEC_MODE.EXEC_MODE_LOCAL) {
 
     let rl = readInf;
     if (!rl) {
@@ -31,13 +37,13 @@ async function runTests(appSensorServer: AppSensorServer,
             resolve(choice);
         });
     });
-    await testChoice(appSensorServer, appSensorClient, choice, execModeLocal);
+    await testChoice(appSensorServer, appSensorClient, choice, execMode);
 }
 
 async function testChoice(appSensorServer: AppSensorServer, 
                           appSensorClient: AppSensorClient, 
                           choice: string,
-                          execModeLocal: boolean = true) {
+                          execMode: EXEC_MODE = EXEC_MODE.EXEC_MODE_LOCAL) {
     switch (choice) {
         case "1":  
         case "a": {
@@ -69,7 +75,7 @@ async function testChoice(appSensorServer: AppSensorServer,
         }
         case "5":  
         case "a": {
-            await ErrorHandlingTest.runTests(appSensorServer, appSensorClient, execModeLocal);
+            await ErrorHandlingTest.runTests(appSensorServer, appSensorClient, execMode);
             if (choice !== 'a') {
                 break;
             }
@@ -79,4 +85,4 @@ async function testChoice(appSensorServer: AppSensorServer,
 
 }
 
-export {runTests};
+export {runTests, EXEC_MODE};

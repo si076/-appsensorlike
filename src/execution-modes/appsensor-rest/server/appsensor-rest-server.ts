@@ -1,12 +1,12 @@
-import { ReferenceAccessController } from "../../../access-controllers/appsensor-access-control-reference/ReferenceAccessController";
-import { ReferenceAttackAnalysisEngine, ReferenceEventAnalysisEngine } from "../../../analysis-engines/appsensor-analysis-reference/appsensor-analysis-reference";
-import { AggregateAttackAnalysisEngine, AggregateEventAnalysisEngine } from "../../../analysis-engines/appsensor-analysis-rules/appsensor-analysis-rules";
-import { JSONServerConfigurationReader } from "../../../configuration-modes/appsensor-configuration-json/server/JSONServerConfig";
-import { AppSensorServer, RequestHandler } from "../../../core/core";
-import { AttackStore, EventStore, ResponseStore } from "../../../core/storage/storage";
-import { InMemoryAttackStore, InMemoryEventStore, InMemoryResponseStore } from "../../../storage-providers/appsensor-storage-in-memory/appsensor-storage-in-memory";
-import { JSONConfigManager } from "../../../utils/Utils";
-import { RestRequestHandler } from "./handler/handler";
+import { ReferenceAccessController } from "../../../access-controllers/appsensor-access-control-reference/ReferenceAccessController.js";
+import { ReferenceAttackAnalysisEngine, ReferenceEventAnalysisEngine } from "../../../analysis-engines/appsensor-analysis-reference/appsensor-analysis-reference.js";
+import { AggregateAttackAnalysisEngine, AggregateEventAnalysisEngine } from "../../../analysis-engines/appsensor-analysis-rules/appsensor-analysis-rules.js";
+import { JSONServerConfigurationReader } from "../../../configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
+import { AppSensorServer, RequestHandler } from "../../../core/core.js";
+import { AttackStore, EventStore, ResponseStore } from "../../../core/storage/storage.js";
+import { InMemoryAttackStore, InMemoryEventStore, InMemoryResponseStore } from "../../../storage-providers/appsensor-storage-in-memory/appsensor-storage-in-memory.js";
+import { JSONConfigManager } from "../../../utils/Utils.js";
+import { RestRequestHandler } from "./handler/handler.js";
 
 class AppSensorRestServer {
 	private appSensorServer = new AppSensorServer();
@@ -88,3 +88,5 @@ class AppSensorRestServer {
     }
 
 }
+
+export {AppSensorRestServer}

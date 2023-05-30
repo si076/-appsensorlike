@@ -1,9 +1,10 @@
-import { runTests as analysis_rules_tests} from "../analysis-engines/appsensor-analysis-rules/test/tests.js";
-import { runTests as core_tests} from "../core/tests/tests.js";
-import { runTests as appsensor_local_tests} from "../execution-modes/appsensor-local/tests/tests.js";
-import { runTests as appsensor_websocket_tests} from "../execution-modes/appsensor-websocket/tests/tests.js";
+import { runTests as analysis_rules_tests } from "../analysis-engines/appsensor-analysis-rules/test/tests.js";
+import { runTests as core_tests } from "../core/tests/tests.js";
+import { runTests as appsensor_local_tests } from "../execution-modes/appsensor-local/tests/tests.js";
+import { runTests as appsensor_websocket_tests } from "../execution-modes/appsensor-websocket/tests/tests.js";
+import { runTests as appsensor_rest_tests } from "../execution-modes/appsensor-rest/tests/tests.js";
 import { runTests as config_tests } from "../configuration-modes/appsensor-configuration-json/tests/tests.js";
-import { runTestsLocally as msql_storage_tests_locally, runTestsWebSocket as msql_storage_tests_websocket} from "../storage-providers/appsensor-storage-mysql/tests/tests.js"
+import { runTestsLocally as msql_storage_tests_locally, runTestsWebSocket as msql_storage_tests_websocket } from "../storage-providers/appsensor-storage-mysql/tests/tests.js"
 import { runTests as reporting_websocket_tests } from "../reporting-engines/appsensor-reporting-websocket/tests/appsensor-reporting-websocket-tests.js"
 
 import * as readline from 'readline';
@@ -28,10 +29,11 @@ async function runTests() {
     console.log(" 3: Analysis rules tests");
     console.log(" 4: Appsensor Local execution mode tests");
     console.log(" 5: Appsensor WebSocket execution mode tests");
-    console.log(" 6: MySQL storage Local execution mode tests");
-    console.log(" 7: MySQL storage WebSocket execution mode tests");
-    console.log(" 8: Reporting WebSocket tests");
-    console.log(" 9: IP address GeoLocation tests");
+    console.log(" 6: Appsensor Rest execution mode tests");
+    console.log(" 7: MySQL storage Local execution mode tests");
+    console.log(" 8: MySQL storage WebSocket execution mode tests");
+    console.log(" 9: Reporting WebSocket tests");
+    console.log(" 10: IP address GeoLocation tests");
     const choice: string = await new Promise((resolve, reject) => {
         rl.question("To run all tests press 'a', to execute specific test choose a number:", (choice: string) => {
             resolve(choice);
@@ -48,7 +50,7 @@ function isValidChoice(choice: string): boolean {
     let result = true;
     if (!(choice === 'a' || choice === 'A')) {
         const number = parseInt(choice);
-        if (isNaN(number) || number < 1 || number > 9) {
+        if (isNaN(number) || number < 1 || number > 10) {
             result = false;
         }
     }
@@ -94,26 +96,33 @@ async function testChoice(choice: string, readInf: readline.Interface) {
         }
         case "6":  
         case "a": {
-            await msql_storage_tests_locally(readInf);
+            await appsensor_rest_tests(readInf);
             if (choice !== 'a') {
                 break;
             }
         }
         case "7":  
         case "a": {
-            await msql_storage_tests_websocket(readInf);
+            await msql_storage_tests_locally(readInf);
             if (choice !== 'a') {
                 break;
             }
         }
         case "8":  
         case "a": {
-            await reporting_websocket_tests();
+            await msql_storage_tests_websocket(readInf);
             if (choice !== 'a') {
                 break;
             }
         }
         case "9":  
+        case "a": {
+            await reporting_websocket_tests();
+            if (choice !== 'a') {
+                break;
+            }
+        }
+        case "10":  
         case "a": {
             await IPAddressGeoLocationTest.runTests();
             if (choice !== 'a') {

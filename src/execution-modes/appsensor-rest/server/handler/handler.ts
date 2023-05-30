@@ -1,9 +1,9 @@
-import { AppSensorEvent, AppSensorServer, Attack, RequestHandler, Response } from "../../../../core/core";
-import { SearchCriteria } from "../../../../core/criteria/criteria";
-import { Logger } from "../../../../logging/logging";
-import { JSONConfigReadValidate, Utils } from "../../../../utils/Utils";
-import { Action } from "../../../../core/accesscontrol/accesscontrol";
-import { RestServer, RestServerConfig } from "../../../../rest/server/rest-server";
+import { AppSensorEvent, AppSensorServer, Attack, RequestHandler, Response } from "../../../../core/core.js";
+import { SearchCriteria } from "../../../../core/criteria/criteria.js";
+import { Logger } from "../../../../logging/logging.js";
+import { JSONConfigReadValidate, Utils } from "../../../../utils/Utils.js";
+import { Action } from "../../../../core/accesscontrol/accesscontrol.js";
+import { RestServer, RestServerConfig } from "../../../../rest/server/rest-server.js";
 
 import e from 'express';
 
@@ -40,11 +40,15 @@ class RestRequestHandler extends RestServer implements RequestHandler {
             }
         });
 
-        this.expressApp.post("/events", this.addEventRequest);
-        this.expressApp.get("/events:earliest", this.findEventsRequest);
+
+        this.expressApp.post("/events", this.addEventRequestWrapper());
+        this.expressApp.get("/events:earliest", this.findEventsRequestWrapper());
+
+        this.expressApp.post("/attacks", this.addAttackRequestWrapper());
+        this.expressApp.get("/attacks:earliest", this.findAttacksRequestWrapper());
+
+        this.expressApp.get("/responses:earliest", this.getResponsesRequestWrapper());
     }
-
-
 
     private checkConsumerRights(req: e.Request, res: e.Response, action: Action): boolean {
 
@@ -66,34 +70,98 @@ class RestRequestHandler extends RestServer implements RequestHandler {
         return true;
     }
 
-    addEventRequest(req: e.Request, res: e.Response, next: e.NextFunction) {
+    addEventRequestWrapper(): (req: e.Request, res: e.Response, next: e.NextFunction) => void {
 
-        if (this.checkConsumerRights(req, res, Action.ADD_EVENT)) {
-            const event: AppSensorEvent = req.body;
+        const me = this;
 
-            Utils.setPrototypeInDepth(event, Utils.appSensorEventPrototypeSample);
+        return function addEventRequest(req: e.Request, res: e.Response, next: e.NextFunction) {
+
+            if (me.checkConsumerRights(req, res, Action.ADD_EVENT)) {
+                const event: AppSensorEvent = req.body;
     
-            Utils.setTimestampFromJSONParsedObject(event, event);
-    
-            this.addEvent(event)
-            .then((result) => {
-                res.status(201).send();                                
-            })
-            .catch((error) => {
-                res.status(500).send(error.toString);                              
-            });
+                Utils.setPrototypeInDepth(event, Utils.appSensorEventPrototypeSample);
+        
+                Utils.setTimestampFromJSONParsedObject(event, event);
+        
+                me.addEvent(event)
+                .then((result) => {
+                    res.status(201).send();                                
+                })
+                .catch((error) => {
+                    res.status(500).send(error.toString());                              
+                });
+            }
         }
     }
 
-    findEventsRequest(req: e.Request, res: e.Response, next: e.NextFunction) {
-        if (this.checkConsumerRights(req, res, Action.FIND_EVENTS)) {
-            this.findEvents(req.query.earliest as string)
-            .then((result) => {
-                res.send(result);
-            })
-            .catch((error) => {
-                res.status(500).send(error.toString);
-            });
+    findEventsRequestWrapper(): (req: e.Request, res: e.Response, next: e.NextFunction) => void {
+        const me = this;
+
+        return function findEventsRequest(req: e.Request, res: e.Response, next: e.NextFunction) {
+            if (me.checkConsumerRights(req, res, Action.FIND_EVENTS)) {
+                me.findEvents(req.query.earliest as string)
+                .then((result) => {
+                    res.send(result);
+                })
+                .catch((error) => {
+                    res.status(500).send(error.toString());
+                });
+            }
+        }
+    }
+
+    addAttackRequestWrapper(): (req: e.Request, res: e.Response, next: e.NextFunction) => void {
+        const me = this;
+
+        return function addAttackRequest(req: e.Request, res: e.Response, next: e.NextFunction) {
+
+            if (me.checkConsumerRights(req, res, Action.ADD_ATTACK)) {
+                const attack: Attack = req.body;
+
+                Utils.setPrototypeInDepth(attack, Utils.attackPrototypeSample);
+        
+                Utils.setTimestampFromJSONParsedObject(attack, attack);
+        
+                me.addAttack(attack)
+                .then((result) => {
+                    res.status(201).send();                                
+                })
+                .catch((error) => {
+                    res.status(500).send(error.toString());                              
+                });
+            }
+        }
+    }
+
+    findAttacksRequestWrapper(): (req: e.Request, res: e.Response, next: e.NextFunction) => void {
+        const me = this;
+
+        return function findAttacksRequest(req: e.Request, res: e.Response, next: e.NextFunction) {
+            if (me.checkConsumerRights(req, res, Action.FIND_ATTACKS)) {
+                me.findAttacks(req.query.earliest as string)
+                .then((result) => {
+                    res.send(result);
+                })
+                .catch((error) => {
+                    res.status(500).send(error.toString());
+                });
+            }
+        }
+    }
+
+    getResponsesRequestWrapper(): (req: e.Request, res: e.Response, next: e.NextFunction) => void {
+        const me = this;
+
+        return function getResponsesRequest(req: e.Request, res: e.Response, next: e.NextFunction) {
+            if (me.checkConsumerRights(req, res, Action.GET_RESPONSES)) {
+                me.getResponses(new Date(req.query.earliest as string))
+                .then((result) => {
+                    res.send(result);
+                })
+                .catch((error) => {
+                    res.status(500).send(error.toString());
+                });
+            }
         }
     }
 
@@ -177,6 +245,34 @@ class RestRequestHandler extends RestServer implements RequestHandler {
 
             return Promise.reject(error);
         }
+    }
+
+    findAttacks(earliest: string): Promise<Attack[]> {
+		Logger.getServerLogger().trace('RestRequestHandler.findAttacks:');
+        Logger.getServerLogger().trace(`earliest: ${earliest}`);
+
+        const criteria = new SearchCriteria();
+        criteria.setEarliest(new Date(earliest));
+
+        //error to the service consumer 
+        //it doesn't need to be detailed since this is an internal server error
+        //it is detailed in the server log
+        const internalError = "Internal Server Error"; 
+
+        try {
+            const attackStore = this.appSensorServer.getAttackStore();
+            if (attackStore) {
+                return attackStore.findAttacks(criteria);
+            } else {
+                Logger.getServerLogger().error("RestRequestHandler.findAttacks: Internal Error: AttackStore cannot be undefined!");
+                return Promise.reject(internalError);
+            }
+        } catch (error) {
+			Logger.getServerLogger().error(error);
+
+			return Promise.reject(internalError);
+        }
+        
     }
 
     async getResponses(earliest: Date): Promise<Response[]> {

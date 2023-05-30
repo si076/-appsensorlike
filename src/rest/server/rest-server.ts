@@ -1,6 +1,8 @@
 import e from 'express';
 import cors from 'cors';
 
+import morgan from 'morgan';
+
 import net from 'net';
 import tls from 'tls';
 import http from 'http';
@@ -9,10 +11,10 @@ import http2 from 'http2';
 import fs from 'fs';
 import path from 'path';
 
-import { ServerConfiguration } from '../../core/configuration/server/server_configuration';
-import { IPAddress } from '../../core/core';
-import { AccessController, Action, Context } from '../../core/accesscontrol/accesscontrol';
-import { Logger } from '../../logging/logging';
+import { ServerConfiguration } from '../../core/configuration/server/server_configuration.js';
+import { IPAddress } from '../../core/core.js';
+import { AccessController, Action, Context } from '../../core/accesscontrol/accesscontrol.js';
+import { Logger } from '../../logging/logging.js';
 
 enum PROTOCOLS {
     HTTP  = 'http',
@@ -70,21 +72,37 @@ class RestServer {
     protected server: http.Server | https.Server | http2.Http2Server | null = null;
 
     constructor(config: RestServerConfig) {
+        
         this.expressApp  = e(); 
 
         this.expressApp.use(cors());
         this.expressApp.use(e.json());
         
-        this.setEndpoints();
+        this.setRequestLogging();
 
+        this.setEndpoints();
+    
         this.setStaticContent(config);
 
         this.setOnNotFoundResource();
 
         this.startServer(config);
     }
+    
+    setRequestLogging() {
+        this.expressApp.use(
+            morgan('dev', 
+                    {
+                        stream: { 
+                            write(str: string) {
+                                Logger.getServerLogger().trace(str);
+                            }
+                        }
+                    }));
+    }
 
     protected setEndpoints() {
+
         //your code in a subclass goes here
     }
     
@@ -97,14 +115,16 @@ class RestServer {
 
         let basePath = config.basePath ? config.basePath : '';
 
-        if (!config.langs || config.langs.length === 0) {
-            this.expressApp.use(e.static(basePath, staticOptions));
-        } else {
-            for (let i = 0; i < config.langs.length; i++) {
-                const lang = config.langs[i];
-                this.expressApp.use(e.static(path.join(basePath, lang), staticOptions));
-            }
-        }        
+        if (basePath.trim().length > 0) {
+            if (!config.langs || config.langs.length === 0) {
+                this.expressApp.use(e.static(basePath, staticOptions));
+            } else {
+                for (let i = 0; i < config.langs.length; i++) {
+                    const lang = config.langs[i];
+                    this.expressApp.use(e.static(path.join(basePath, lang), staticOptions));
+                }
+            }        
+        }
     }
 
     protected setOnNotFoundResource() {
@@ -157,7 +177,7 @@ class RestServer {
             const listenOptions = config.listenOptions ? config.listenOptions: {};
             const serverSelf = this.server;
             this.server.listen(listenOptions, () => {
-                Logger.getServerLogger().info('RestServer.startServer: ', `Listening on port: ${serverSelf.address} .`);
+                Logger.getServerLogger().info('RestServer.startServer: ', `Listening on port: ${serverSelf.address()} .`);
             });
         }
 

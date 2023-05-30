@@ -1,9 +1,10 @@
-import { AppSensorEvent, Attack, Response } from "../../../../core/core";
-import { EventManager } from "../../../../core/event/event";
-import { RestClientConfig } from "../../../../rest/client/rest-client";
-import { JSONConfigReadValidate } from "../../../../utils/Utils";
+import { AppSensorEvent, Attack, Response } from "../../../../core/core.js";
+import { EventManager } from "../../../../core/event/event.js";
+import { RestClientConfig } from "../../../../rest/client/rest-client.js";
+import { JSONConfigReadValidate } from "../../../../utils/Utils.js";
 
 import fetch from 'cross-fetch';
+import { Logger } from "../../../../logging/logging.js";
 
 class RestEventManagerConfigReader extends JSONConfigReadValidate {
     constructor() {
@@ -28,6 +29,8 @@ class RestEventManager implements EventManager {
     async addEvent(event: AppSensorEvent): Promise<void> {
         const endpoint = this.url + '/events';
 
+        Logger.getClientLogger().trace(`RestEventManager.addEvent: Request: ${endpoint}`);
+
         let error = undefined;
 
         await fetch(endpoint, 
@@ -39,7 +42,7 @@ class RestEventManager implements EventManager {
                 )
                 .then((res) => {
                     if (res.status !== 201) {
-                        error = `Server responded with status: ${res.status}`;
+                        error = new Error(`Server responded with status: ${res.status}`);
                     }
                 })
                 .catch((err) => {
@@ -47,7 +50,7 @@ class RestEventManager implements EventManager {
                 });
 
         if (error) {
-            console.error(error);
+            Logger.getClientLogger().error(`RestEventManager.addEvent: `, error);
 
             return Promise.reject(error);
         } else {
@@ -57,6 +60,8 @@ class RestEventManager implements EventManager {
 
     async addAttack(attack: Attack): Promise<void> {
         const endpoint = this.url + '/attacks';
+
+        Logger.getClientLogger().trace(`RestEventManager.addAttack: Request: ${endpoint}`);
 
         let error = undefined;
 
@@ -69,7 +74,7 @@ class RestEventManager implements EventManager {
                 )
                 .then((res) => {
                     if (res.status !== 201) {
-                        error = `Server responded with status: ${res.status}`;
+                        error = new Error(`Server responded with status: ${res.status}`);
                     }
                 })
                 .catch((err) => {
@@ -77,7 +82,7 @@ class RestEventManager implements EventManager {
                 });
 
         if (error) {
-            console.error(error);
+            Logger.getClientLogger().error(`RestEventManager.addAttack: `, error);
 
             return Promise.reject(error);
         } else {
@@ -88,13 +93,15 @@ class RestEventManager implements EventManager {
     async getResponses(earliest: Date): Promise<Response[]> {
         const endpoint = this.url + '/responses';
 
+        Logger.getClientLogger().trace(`RestEventManager.getResponses: Request: ${endpoint}`);
+
         let responses: Response[] = [];
         let error = undefined;
 
         await fetch(endpoint)
                 .then((res) => {
                     if (res.status !== 200) {
-                        error = `Server responded with status: ${res.status}`;
+                        error = new Error(`Server responded with status: ${res.status}`);
                     } else {
                         return res.json();
                     }
@@ -107,7 +114,7 @@ class RestEventManager implements EventManager {
                 });
 
         if (error) {
-            console.error(error);
+            Logger.getClientLogger().error(`RestEventManager.getResponses: `, error);
 
             return Promise.reject(error);
         } else {

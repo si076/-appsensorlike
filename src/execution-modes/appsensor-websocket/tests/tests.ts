@@ -1,6 +1,6 @@
 
 import * as readline from 'readline';
-import { runTests as test} from '../../tests/tests.js';
+import { EXEC_MODE, runTests as test} from '../../tests/tests.js';
 import { AppSensorWebsocketExecClient } from '../client/appsensor_websocket_client.js';
 import { AppSensorWebsocketExecServer } from '../server/appsensor_websocket_server.js';
 
@@ -13,7 +13,7 @@ async function runTests(readInf: readline.Interface | null = null) {
     await test(appSensorWebSocketServer.getAppSensorServer(), 
                appSensorWebSocketClient.getAppSensorClient(), 
                readInf,
-               false);
+               EXEC_MODE.EXEC_MODE_WEBSOCKET);
     
     appSensorWebSocketClient.closeWebSocket();
     appSensorWebSocketServer.closeWebSocketServer();
