@@ -884,11 +884,14 @@ class DetectionSystem extends AppsensorEntity {
 
 class User extends AppsensorEntity {
 
-	private username: string = '';
+	public static ANONYMOUS_USER = 'ANONYMOUS';
+	public static UNDEFINED_USER = '<<UNDEFINED>>' 
+
+	private username: string = User.ANONYMOUS_USER;
 	
 	private ipAddress: IPAddress | null = null;
 	
-	public constructor(username: string = '', ipAddress: IPAddress | null = null) {
+	public constructor(username: string = User.ANONYMOUS_USER, ipAddress: IPAddress | null = null) {
 		super();
 		//set ip first so the setUsername call to geolocate won't run if it's already explicitly set
 		this.setIPAddress(ipAddress);
@@ -1763,8 +1766,8 @@ class Utils {
 		return propertiesToCompare;
 	}
 
-	public static getUserName(user: User | null | undefined): string | undefined {
-		let userName = undefined;
+	public static getUserName(user: User | null | undefined): string {
+		let userName = User.UNDEFINED_USER;
         if (user) {
             userName = user.getUsername();
         }

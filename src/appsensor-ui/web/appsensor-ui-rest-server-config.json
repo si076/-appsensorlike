@@ -1,0 +1,8 @@
+{
+    "protocol": "http",
+    "basePath": "static",
+    
+    "listenOptions": {
+        "port": 8080
+    }
+}

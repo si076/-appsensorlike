@@ -71,10 +71,15 @@ class RestServer {
 
     protected server: http.Server | https.Server | http2.Http2Server | null = null;
 
-    constructor(config: RestServerConfig) {
-        
-        this.expressApp  = e(); 
+    protected config: RestServerConfig;
 
+    constructor(config: RestServerConfig) {
+        this.config = config;
+
+        this.expressApp  = e(); 
+    }
+    
+    init() {
         this.expressApp.use(cors());
         this.expressApp.use(e.json());
         
@@ -82,14 +87,12 @@ class RestServer {
 
         this.setEndpoints();
     
-        this.setStaticContent(config);
+        this.setStaticContent();
 
         this.setOnNotFoundResource();
-
-        this.startServer(config);
     }
-    
-    setRequestLogging() {
+
+    protected setRequestLogging() {
         this.expressApp.use(
             morgan('dev', 
                     {
@@ -107,20 +110,20 @@ class RestServer {
     }
     
     
-    protected setStaticContent(config: RestServerConfig) {
+    protected setStaticContent() {
         const staticOptions = {
             // fallthrough: false,
             redirect: false
         };
 
-        let basePath = config.basePath ? config.basePath : '';
+        let basePath = this.config.basePath ? this.config.basePath : '';
 
         if (basePath.trim().length > 0) {
-            if (!config.langs || config.langs.length === 0) {
+            if (!this.config.langs || this.config.langs.length === 0) {
                 this.expressApp.use(e.static(basePath, staticOptions));
             } else {
-                for (let i = 0; i < config.langs.length; i++) {
-                    const lang = config.langs[i];
+                for (let i = 0; i < this.config.langs.length; i++) {
+                    const lang = this.config.langs[i];
                     this.expressApp.use(e.static(path.join(basePath, lang), staticOptions));
                 }
             }        
@@ -133,16 +136,16 @@ class RestServer {
         });
     }
 
-    protected startServer(config: RestServerConfig) {
+    startServer() {
 
-        switch (config.protocol) {
+        switch (this.config.protocol) {
             case PROTOCOLS.HTTP: {
-                const options = config.http ? config.http : {};
+                const options = this.config.http ? this.config.http : {};
                 this.server = http.createServer(options, this.expressApp);
                 break;
             }
             case PROTOCOLS.HTTPS: {
-                const options = config.https ? config.https : {};
+                const options = this.config.https ? this.config.https : {};
                 if (!options.key) {
                     throw new Error("For https server: You have to set the name of the key file under config https.key!");
                 }
@@ -174,7 +177,7 @@ class RestServer {
                 Logger.getServerLogger().error('RestServer.startServer: ', err);
             });
         
-            const listenOptions = config.listenOptions ? config.listenOptions: {};
+            const listenOptions = this.config.listenOptions ? this.config.listenOptions: {};
             const serverSelf = this.server;
             this.server.listen(listenOptions, () => {
                 Logger.getServerLogger().info('RestServer.startServer: ', `Listening on port: ${serverSelf.address()} .`);
