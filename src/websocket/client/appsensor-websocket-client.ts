@@ -1,5 +1,5 @@
 
-import { ActionRequest, ActionResponse } from "../appsensor-websocket.js";
+import { ActionRequest, ActionResponse, UUID_QUERY_PARAM } from "../appsensor-websocket.js";
 import { Utils } from "../../utils/Utils.js";
 
 import { ClientRequestArgs } from "http";
@@ -22,6 +22,7 @@ class WebSocketClientConfig implements IWebSocketClientConfig {
 class AppSensorWebSocketClient {
 
     protected socket;
+    protected myUUID;
 
     constructor(address: string | URL = '', 
                 config: WebSocketClientConfig | null = null,
@@ -37,49 +38,50 @@ class AppSensorWebSocketClient {
             _options = config.options;
         }
 
+        this.myUUID = uuidv4();
+
+        _address += '?' + UUID_QUERY_PARAM + '=' + this.myUUID;
+
         this.socket = new WebSocket(_address, _options);
 
+        const _myUUID = this.myUUID;
+
         this.socket.on('open', function () {
-            Logger.getClientLogger().trace('AppSensorWebSocketClient.socket: ', 'open');
+            Logger.getClientLogger().trace(`AppSensorWebSocketClient.socket: ${_myUUID}:`, 'open');
         });
 
         this.socket.on('error', (error) => {
-            Logger.getClientLogger().trace('AppSensorWebSocketClient.socket: ', 'error ', error);
+            Logger.getClientLogger().trace(`AppSensorWebSocketClient.socket: ${_myUUID}:`, 'error ', error);
         });
 
-        const onServerResponseThunk = this.onServerResponseWrapper(this);
-
-        this.socket.on('message', onServerResponseThunk);
+        this.socket.on('message', this.onMessage.bind(this));
 
         this.socket.on('close', function close(this: WebSocket, code: number, reason: Buffer) {
-            Logger.getClientLogger().trace('AppSensorWebSocketClient.socket: ', 'close', 
+            Logger.getClientLogger().trace(`AppSensorWebSocketClient.socket: ${_myUUID}:`, 'close', 
                                            ' CODE: ', code, ' REASON: ', reason.toString());
         });
     }
 
-    protected onServerResponseWrapper(me: AppSensorWebSocketClient) {
+    onMessage(data: WebSocket.RawData, isBinary: boolean) {
+        Logger.getClientLogger().trace(`AppSensorWebSocketClient.socket: ${this.myUUID}:`, 'message');
 
-        return function onServerResponse(data: WebSocket.RawData, isBinary: boolean) {
-            Logger.getClientLogger().trace('AppSensorWebSocketClient.socket: ', 'message');
+        const response: ActionResponse = JSON.parse(data.toString());
+        Object.setPrototypeOf(response, ActionResponse.prototype);
 
-            const response: ActionResponse = JSON.parse(data.toString());
-            Object.setPrototypeOf(response, ActionResponse.prototype);
+        if (response.accessDenied) {
 
-            if (response.accessDenied) {
+            Logger.getClientLogger().warn('Access denied for this client application! Configure server!');
 
-                Logger.getClientLogger().warn('Access denied for this client application! Configure server!');
+        } else if (response.unauthorizedAction) {
 
-            } else if (response.unauthorizedAction) {
-
-                Logger.getClientLogger().warn(`This client application is not authorized to perform '${response.actionName}' on server! Configure server!`);
-                
-            } else {
-                me.onServerResponse(response);
-            }
-
+            Logger.getClientLogger().warn(`This client application is not authorized to perform '${response.actionName}' on server! Configure server!`);
+            
+        } else {
+            this.onServerResponse(response);
         }
-    }
 
+    }
+    
     protected onServerResponse(response: ActionResponse) {
         //your code goes here
     }

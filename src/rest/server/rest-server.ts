@@ -180,10 +180,18 @@ class RestServer {
             const listenOptions = this.config.listenOptions ? this.config.listenOptions: {};
             const serverSelf = this.server;
             this.server.listen(listenOptions, () => {
-                Logger.getServerLogger().info('RestServer.startServer: ', `Listening on port: ${serverSelf.address()} .`);
+                let address: string | net.AddressInfo | null = serverSelf.address();
+                if (this.instanceofAddressInfo(address)) {
+                    address = address.address + ':' + address.port;
+                }
+                Logger.getServerLogger().info('RestServer.startServer: ', `Listening on: ${address}`);
             });
         }
 
+    }
+
+    private instanceofAddressInfo(obj: any): obj is net.AddressInfo {
+        return 'address' in obj && 'family' in obj && 'port' in obj;
     }
 
     protected stopServer() {

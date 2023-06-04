@@ -1,5 +1,6 @@
 import { Instant, LocalDateTime } from "@js-joda/core";
 import {Interval} from '@js-joda/extra';
+import { AppSensorEvent, Attack } from "../../core/core";
 
 enum TimeUnit { 
     MONTH, 
@@ -133,6 +134,69 @@ class ViewObject<VALUE> {
     
 }
 
+class CategoryItem {
+		
+    private category: string;
+    private eventCount: number;
+    private attackCount: number;
+    
+    private countByLabel: string;//Table<string, Type, number>;
+    
+    private recentEvents: AppSensorEvent[];
+    private recentAttacks: Attack[];
+    
+    public static of(
+            category: string, 
+            eventCount: number, 
+            attackCount: number, 
+            countByLabel: Table<string, Type, number>,
+            recentEvents: AppSensorEvent[],
+            recentAttacks: Attack[]): CategoryItem {
+        return new CategoryItem(category, eventCount, attackCount, countByLabel, recentEvents, recentAttacks);
+    }
+    
+    private constructor(
+            category: string, 
+            eventCount: number, 
+            attackCount: number, 
+            countByLabel: Table<string, Type, number>,
+            recentEvents: AppSensorEvent[],
+            recentAttacks: Attack[]) {
+        this.category = category;
+        this.eventCount = eventCount;
+        this.attackCount = attackCount;
+        this.countByLabel = JSON.stringify(countByLabel);
+        this.recentEvents = recentEvents;
+        this.recentAttacks = recentAttacks;
+    }
+    
+    public getCategory(): string {
+        return this.category;
+    }
+
+    public getCountByLabel(): string {
+        return this.countByLabel;
+    }
+
+    public getRecentEvents(): AppSensorEvent[] {
+        return this.recentEvents;
+    }
+
+    public getRecentAttacks(): Attack[] {
+        return this.recentAttacks;
+    }
+
+    public getEventCount(): number {
+        return this.eventCount;
+    }
+    
+    public getAttackCount(): number {
+        return this.attackCount;
+    }
+    
+}
+
+
 class Dates {
 
 	public static splitRange(from: number, to: number, slices: number): Interval[] {
@@ -140,7 +204,7 @@ class Dates {
 		
 		const millisDifference = to - from;
 		
-		const rangeInMillis = millisDifference / slices;
+		const rangeInMillis = Math.floor(millisDifference / slices);
 		
         let startMillis = from;
 		for(let i = 0; i < slices; i++) {
@@ -159,4 +223,4 @@ class Dates {
 	
 }
 
-export {TimeUnit, Type, TimeFrameItem, Table, ViewObject, Dates}
+export {TimeUnit, Type, TimeFrameItem, Table, ViewObject, CategoryItem, Dates}

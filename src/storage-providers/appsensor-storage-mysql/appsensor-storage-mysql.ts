@@ -26,6 +26,8 @@ class MySQLAttackStore extends AttackStore {
 
 		const foundAttacks = await DOP.findObjects("Attack", propFilterFuncMap);
 
+        Logger.getServerLogger().trace(`MySQLAttackStore.findAttacks: count: ${foundAttacks.length}`);
+
         return foundAttacks as Attack[];
     }
 
@@ -35,6 +37,8 @@ class MySQLAttackStore extends AttackStore {
 
 		const attackCount = await DOP.countObjects("Attack", propFilterFuncMap);
         
+        Logger.getServerLogger().trace(`MySQLAttackStore.countAttacks: count: ${attackCount}`);
+
         return attackCount;
     }
 
@@ -112,6 +116,8 @@ class MySQLEventStore extends EventStore {
 
 		const foundEvents = await DOP.findObjects("AppSensorEvent", propFilterFuncMap);
 
+        Logger.getServerLogger().trace(`MySQLEventStore.findEvents: count: ${foundEvents.length}`);
+
         return foundEvents as AppSensorEvent[];
     }
 
@@ -120,6 +126,8 @@ class MySQLEventStore extends EventStore {
         const propFilterFuncMap = this.prepareFilterFuncMap(criteria);
 
 		const eventCount = await DOP.countObjects("AppSensorEvent", propFilterFuncMap);
+
+        Logger.getServerLogger().trace(`MySQLEventStore.countEvents: count: ${eventCount}`);
 
         return eventCount;
     }
@@ -194,6 +202,8 @@ class MySQLResponseStore extends ResponseStore {
 
 		const foundResponses = await DOP.findObjects("Response", propFilterFuncMap);
 
+        Logger.getServerLogger().trace(`MySQLResponseStore.findResponses: count: ${foundResponses.length}`);
+
         return foundResponses as Response[];
     }
 
@@ -202,6 +212,8 @@ class MySQLResponseStore extends ResponseStore {
         const propFilterFuncMap = this.prepareFilterFuncMap(criteria);
 
 		const responseCount = await DOP.countObjects("Response", propFilterFuncMap);
+
+        Logger.getServerLogger().trace(`MySQLResponseStore.countResponses: count: ${responseCount}`);
 
         return responseCount;
     }

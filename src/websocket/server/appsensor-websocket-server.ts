@@ -1,8 +1,9 @@
 import { IncomingMessage } from "http";
 import WebSocket, { PerMessageDeflateOptions, WebSocketServer } from "ws";
-import { AppSensorEvent, Attack, Response } from "../../core/core.js";
 import { Logger } from "../../logging/logging.js";
-import { AccessDeniedError, ActionRequest, ActionResponse, UnAuthorizedActionError } from "../appsensor-websocket.js";
+import { AccessDeniedError, ActionRequest, ActionResponse, UnAuthorizedActionError, UUID_QUERY_PARAM } from "../appsensor-websocket.js";
+
+import { URL } from 'node:url';
 
 interface IWebSocketServerConfig {
     options: {
@@ -25,6 +26,7 @@ class WebSocketServerConfig implements IWebSocketServerConfig {
 interface WebSocketAdditionalProperties {
     isAlive?: boolean;
     remoteAddress?: string;
+    uuid?: string;
 }
 
 type WebSocketExt = WebSocket.WebSocket & WebSocketAdditionalProperties;
@@ -52,11 +54,9 @@ class AppSensorWebSocketServer {
 
         this.server = new WebSocketServer(servOptions);
 
-        const pingThunk = this.ping(this);
+        const interval = setInterval(this.ping.bind(this), 30000);
 
-        const interval = setInterval(pingThunk, 30000);
-
-        const onClientRequestThunk = this.onClientRequestWrapper(this);
+        const onMessageThunk = this.onMessageWrapper(this);
 
         const isConnectionAllowedThunk = this.isConnectionAllowedWrapper(this);
 
@@ -66,15 +66,20 @@ class AppSensorWebSocketServer {
                     ws.remoteAddress = req.headers['x-forwarded-for'].split(',')[0].trim();
                 }
             } catch (error) {
-                Logger.getServerLogger().trace('AppSensorWebSocketServer.server: ', error);
+                Logger.getServerLogger().trace('AppSensorWebSocketServer.server:', error);
             }
             
             if (!ws.remoteAddress) {
                 ws.remoteAddress = req.socket.remoteAddress;
             }
 
-            Logger.getServerLogger().trace('AppSensorWebSocketServer.server: ', 'connection', 
-                                           ' IP address: ', ws.remoteAddress);
+            const url = new URL(req.url!, `ws://${req.headers.host}`);
+            console.log(url);
+            ws.uuid = url.searchParams.get(UUID_QUERY_PARAM)!;
+
+            Logger.getServerLogger().trace('AppSensorWebSocketServer.server:', 'connection', 
+                                           'IP address:', ws.remoteAddress, 'client uuid:', ws.uuid);
+
 
 
             if (!isConnectionAllowedThunk(ws)) {
@@ -89,20 +94,20 @@ class AppSensorWebSocketServer {
 
             ws.isAlive = true;
             ws.on('error', (error) => {
-                Logger.getServerLogger().trace('AppSensorWebSocketServer.server: ', 'error ', error);
+                Logger.getServerLogger().trace('AppSensorWebSocketServer.server:', 'client uuid:', ws.uuid, ': error', error);
             });
 
-            ws.on('message', onClientRequestThunk);
+            ws.on('message', onMessageThunk);
             
             ws.on('pong', function(this:  WebSocketExt) {
-                Logger.getServerLogger().trace('AppSensorWebSocketServer.server: ', 'pong');
+                Logger.getServerLogger().trace('AppSensorWebSocketServer.server:', 'client uuid:', ws.uuid, ': pong');
 
                 this.isAlive = true;
             });
         });
 
         this.server.on('close', function close() {
-            Logger.getServerLogger().trace('AppSensorWebSocketServer.server: ', 'close');
+            Logger.getServerLogger().trace('AppSensorWebSocketServer.server:', 'close');
 
             clearInterval(interval);
         });
@@ -124,28 +129,26 @@ class AppSensorWebSocketServer {
         return true;
     }
 
-    private ping(me: AppSensorWebSocketServer) {
-
-        return function ping() {
-            me.server.clients.forEach(function each(ws:  WebSocketExt) {
-              if (ws.isAlive === false) return ws.terminate();
-          
-              ws.isAlive = false;
-              ws.ping();
-            });
-        }
+    private ping() {
+        this.server.clients.forEach(function each(ws:  WebSocketExt) {
+          if (ws.isAlive === false) return ws.terminate();
+      
+          ws.isAlive = false;
+          ws.ping();
+        });
     }
-
-    protected onClientRequestWrapper(me: AppSensorWebSocketServer) {
+    
+    protected onMessageWrapper(me: AppSensorWebSocketServer) {
 
         return function onClientRequest(this:  WebSocketExt, data: WebSocket.RawData, isBinary: boolean) {
-            Logger.getServerLogger().trace('AppSensorWebSocketServer.server: ', 'message');
 
             const request: ActionRequest = JSON.parse(data.toString());
             Object.setPrototypeOf(request, ActionRequest.prototype);
 
+            Logger.getServerLogger().trace('AppSensorWebSocketServer.server:', 'client uuid:', this.uuid, `: message: (action:${request.actionName})`);
+
             if (!me.isActionAuthorized(this, request)) {
-                Logger.getServerLogger().warn(`AppSensorWebSocketServer.onClientRequestWrapper:`+ 
+                Logger.getServerLogger().warn(`AppSensorWebSocketServer.onMessageWrapper:`+ 
                                               ` client application with IP address: ${this.remoteAddress}` + 
                                               ` is trying to perform unauthorized action: ${request.actionName}`);
 
