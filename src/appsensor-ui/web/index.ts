@@ -6,6 +6,7 @@ import { DashboardController } from "./controller/DashboardController.js";
 import { Logger } from "../../logging/logging.js";
 
 import morgan from 'morgan';
+import { DetectionPointController } from "./controller/DetectionPointController.js";
 
 class AppsensorUIRestServerConfigReader extends JSONConfigReadValidate {
     constructor() {
@@ -20,6 +21,7 @@ class AppsensorUIRestServer extends RestServer {
     
     private userController: UserController;
     private dashboardController: DashboardController;
+    private detectionPointController: DetectionPointController;
 
     private wsClient: AppSensorReportingWebSocketClient;
 
@@ -29,7 +31,8 @@ class AppsensorUIRestServer extends RestServer {
         this.wsClient = new AppSensorReportingWebSocketClient();
 
         this.userController = new UserController(this.wsClient);
-        this.dashboardController = new DashboardController(this.wsClient)
+        this.dashboardController = new DashboardController(this.wsClient);
+        this.detectionPointController = new DetectionPointController(this.wsClient);
     }
 
 
@@ -56,7 +59,17 @@ class AppsensorUIRestServer extends RestServer {
         this.expressApp.get('/api/dashboard/by-category', this.dashboardController.byCategory.bind(this.dashboardController));
         this.expressApp.get('/api/events/grouped', this.dashboardController.groupedEvents.bind(this.dashboardController));
 
-        // this.expressApp.get();
+        //detection points endpoints
+        this.expressApp.get('/api/detection-points/:category/:label/all', this.detectionPointController.allContent.bind(this.detectionPointController));
+        this.expressApp.get('/api/detection-points/:category/:label/by-time-frame', this.detectionPointController.byTimeFrame.bind(this.detectionPointController));
+        this.expressApp.get('/api/detection-points/:label/configuration', this.detectionPointController.configuration.bind(this.detectionPointController));
+        this.expressApp.get('/api/detection-points/:label/latest-events', this.detectionPointController.recentEvents.bind(this.detectionPointController));
+        this.expressApp.get('/api/detection-points/:label/latest-attacks', this.detectionPointController.recentAttacks.bind(this.detectionPointController));
+        this.expressApp.get('/api/detection-points/:label/by-client-application', this.detectionPointController.byClientApplication.bind(this.detectionPointController));
+        this.expressApp.get('/api/detection-points/:label/top-users', this.detectionPointController.topUsers.bind(this.detectionPointController));
+        this.expressApp.get('/api/detection-points/:label/grouped', this.detectionPointController.groupedDetectionPoints.bind(this.detectionPointController));
+        this.expressApp.get('/api/detection-points/top', this.detectionPointController.topDetectionPoints.bind(this.detectionPointController));
+
         // this.expressApp.get();
 
         //user endpoints

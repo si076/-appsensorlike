@@ -3,9 +3,10 @@ import { Interval } from "@js-joda/extra";
 
 import { AppSensorEvent, Attack, Response, Utils } from "../../core/core.js";
 import {ReportingEngineExt} from "../../reporting-engines/reporting-engines.js"
+import { BaseReport } from "./BaseReport.js";
 import { Dates, Table, TimeFrameItem, TimeUnit, Type, ViewObject } from "./Reports.js";
 
-class UserReport {
+class UserReport extends BaseReport {
 
     // private final Gson gson = new Gson();
 
@@ -18,10 +19,8 @@ class UserReport {
 
     // private static final String DATE_FORMAT_STR = "YYYY-MM-dd HH:mm:ss";
 
-    private reportingEngine: ReportingEngineExt;
-
     constructor(reportingEngine: ReportingEngineExt) {
-        this.reportingEngine = reportingEngine;
+        super(reportingEngine);
     }
 
     // // @PreAuthorize("hasAnyRole('VIEW_DATA')")
@@ -126,22 +125,7 @@ class UserReport {
     // public Collection<Event> recentEvents(@PathVariable("username") String username, @RequestParam("earliest") String rfc3339Timestamp, @RequestParam("limit") Long limit) {
     public async recentEvents(username: string, earliest: string, limit: number): Promise<AppSensorEvent[]> {
         
-        let events = await this.reportingEngine.findEvents(earliest);
-        events = events.filter(el => {
-            const user = el.getUser();
-            if (user && user.getUsername() === username) {
-                return el;
-            }
-        });
-
-        events.sort((a: AppSensorEvent, b: AppSensorEvent) => {
-            const aT = a.getTimestamp();
-            const bT = b.getTimestamp();
-
-            return (aT && bT) ? (aT.getTime() - bT.getTime()) * -1 : 0;
-        });
-            
-        return events.slice(0, limit);
+        return super.recentEvents(username, earliest, limit, this.filterByUser(username));
     }
 
     // @PreAuthorize("hasAnyRole('VIEW_DATA')")
@@ -150,22 +134,7 @@ class UserReport {
     // public Collection<Attack> recentAttacks(@PathVariable("username") String username, @RequestParam("earliest") String rfc3339Timestamp, @RequestParam("limit") Long limit) {
     public async recentAttacks(username: string, earliest: string, limit: number): Promise<Attack[]> {
         
-        let attacks = await this.reportingEngine.findAttacks(earliest);
-        attacks = attacks.filter(el => {
-            const user = el.getUser();
-            if (user && user.getUsername() === username) {
-                return el;
-            }
-        });
-
-        attacks.sort((a: Attack, b: Attack) => {
-            const aT = a.getTimestamp();
-            const bT = b.getTimestamp();
-
-            return (aT && bT) ? (aT.getTime() - bT.getTime()) * -1 : 0;
-        });
-            
-        return attacks.slice(0, limit);
+        return super.recentAttacks(username, earliest, limit, this.filterByUser(username));
     }
 
     // @PreAuthorize("hasAnyRole('VIEW_DATA')")
@@ -174,34 +143,7 @@ class UserReport {
     // public Collection<Response> recentResponses(@PathVariable("username") String username, @RequestParam("earliest") String rfc3339Timestamp, @RequestParam("limit") Long limit) {
     public async recentResponses(username: string, earliest: string, limit: number): Promise<Response[]> {
         
-        let responses = await this.reportingEngine.findResponses(earliest);
-        responses = responses.filter(el => {
-            const user = el.getUser();
-            if (user && user.getUsername() === username) {
-                return el;
-            }
-        });
-
-        responses.sort((a: Response, b: Response) => {
-            const aT = a.getTimestamp();
-            const bT = b.getTimestamp();
-
-            return (aT && bT) ? (aT.getTime() - bT.getTime()) * -1 : 0;
-        });
-            
-        return responses.slice(0, limit);
-    }
-
-    getDetectionSystemId(obj: AppSensorEvent | Attack | Response): string {
-        let result = "unknown";
-
-        const detSystem = obj.getDetectionSystem();
-
-        if (detSystem) {
-            result = detSystem.getDetectionSystemId();
-        }
-
-        return result;
+        return super.recentResponses(username, earliest, limit, this.filterByUser(username));
     }
 
     // seen by these client apps
@@ -212,73 +154,73 @@ class UserReport {
     public async byClientApplication(username: string, earliest: string): Promise<string> {
         const table = new Table<string,Type,number>();
 
-        let events = await this.reportingEngine.findEvents(earliest);
-        events = events.filter(el => {
-            const user = el.getUser();
-            if (user && user.getUsername() === username) {
-                return el;
-            }
-        });
+        // let events = await this.reportingEngine.findEvents(earliest);
+        // events = events.filter(this.filterByUser(username));
 
-        let attacks = await this.reportingEngine.findAttacks(earliest);
-        attacks = attacks.filter(el => {
-            const user = el.getUser();
-            if (user && user.getUsername() === username) {
-                return el;
-            }
-        });
+        // let attacks = await this.reportingEngine.findAttacks(earliest);
+        // attacks = attacks.filter(this.filterByUser(username));
 
-        let responses = await this.reportingEngine.findResponses(earliest);
-        responses = responses.filter(el => {
-            const user = el.getUser();
-            if (user && user.getUsername() === username) {
-                return el;
-            }
-        });
+        // let responses = await this.reportingEngine.findResponses(earliest);
+        // responses = responses.filter(this.filterByUser(username));
         
-        for(const event of events) {
-            const detSystemId = this.getDetectionSystemId(event);
+        // for(const event of events) {
+        //     const detSystemId = this.getDetectionSystemId(event);
 
-            let count = table.get(detSystemId, Type.EVENTS);
+        //     let count = table.get(detSystemId, Type.EVENTS);
             
-            if (count === undefined) {
-                count = 0;
-            }
+        //     if (count === undefined) {
+        //         count = 0;
+        //     }
             
-            count++;
+        //     count++;
             
-            table.put(detSystemId, Type.EVENTS, count);
-        }
+        //     table.put(detSystemId, Type.EVENTS, count);
+        // }
         
-        for(const attack of attacks) {
-            const detSystemId = this.getDetectionSystemId(attack);
+        // for(const attack of attacks) {
+        //     const detSystemId = this.getDetectionSystemId(attack);
 
-            let count = table.get(detSystemId, Type.ATTACKS);
+        //     let count = table.get(detSystemId, Type.ATTACKS);
             
-            if (count === undefined) {
-                count = 0;
-            }
+        //     if (count === undefined) {
+        //         count = 0;
+        //     }
             
-            count++;
+        //     count++;
             
-            table.put(detSystemId, Type.ATTACKS, count);
-        }
+        //     table.put(detSystemId, Type.ATTACKS, count);
+        // }
         
-        for(const response of responses) {
-            const detSystemId = this.getDetectionSystemId(response);
+        // for(const response of responses) {
+        //     const detSystemId = this.getDetectionSystemId(response);
 
-            let count = table.get(detSystemId, Type.RESPONSES);
+        //     let count = table.get(detSystemId, Type.RESPONSES);
             
-            if (count === undefined) {
-                count = 0;
-            }
+        //     if (count === undefined) {
+        //         count = 0;
+        //     }
             
-            count++;
+        //     count++;
             
-            table.put(detSystemId, Type.RESPONSES, count);
-        }
+        //     table.put(detSystemId, Type.RESPONSES, count);
+        // }
+
+        await this.filterAndCount(username, earliest, Type.EVENTS, 
+                                  this.filterByUser(username), 
+                                  this.getDetectionSystemId,
+                                  table);
+
+        await this.filterAndCount(username, earliest, Type.ATTACKS, 
+                                  this.filterByUser(username), 
+                                  this.getDetectionSystemId,
+                                  table);
+
+        await this.filterAndCount(username, earliest, Type.RESPONSES, 
+                                  this.filterByUser(username), 
+                                  this.getDetectionSystemId,
+                                  table);
         
-        return JSON.stringify(table.getAsMorrisData());
+        return JSON.stringify(table);
     }
 
     // @PreAuthorize("hasAnyRole('VIEW_DATA')")
@@ -289,28 +231,13 @@ class UserReport {
         const startingTime = new Date(earliest).getTime(); 
 
         let events = await this.reportingEngine.findEvents(earliest);
-        events = events.filter(el => {
-            const user = el.getUser();
-            if (user && user.getUsername() === username) {
-                return el;
-            }
-        });
+        events = events.filter(this.filterByUser(username));
 
         let attacks = await this.reportingEngine.findAttacks(earliest);
-        attacks = attacks.filter(el => {
-            const user = el.getUser();
-            if (user && user.getUsername() === username) {
-                return el;
-            }
-        });
+        attacks = attacks.filter(this.filterByUser(username));
 
         let responses = await this.reportingEngine.findResponses(earliest);
-        responses = responses.filter(el => {
-            const user = el.getUser();
-            if (user && user.getUsername() === username) {
-                return el;
-            }
-        });    
+        responses = responses.filter(this.filterByUser(username));    
 
         const now = new Date().getTime();
         
@@ -335,19 +262,26 @@ class UserReport {
         
         const events = await this.reportingEngine.findEvents(earliest);
         
-        for (const event of events) {
-            const username = Utils.getUserName(event.getUser());
+        // for (const event of events) {
+        //     const username = Utils.getUserName(event.getUser());
             
-            let count = map.get(username);
+        //     let count = map.get(username);
             
-            if (count === undefined) {
-                count = 0;
-            }
+        //     if (count === undefined) {
+        //         count = 0;
+        //     }
             
-            count++;
+        //     count++;
             
-            map.set(username, count);
-        }
+        //     map.set(username, count);
+        // }
+
+        const keyFunc = (value: AppSensorEvent | Attack | Response) => {
+            return Utils.getUserName(value.getUser());
+        };
+
+        this.countStoreInMap(events, keyFunc, map);
+
 
         // Comparator<Entry<String, Long>> byValue = (entry1, entry2) -> entry1.getValue().compareTo(entry2.getValue());
         
@@ -388,7 +322,10 @@ class UserReport {
         return filtered;
     }
 
-    private generateTimestampCounts(ranges: Interval[], events: AppSensorEvent[], attacks: Attack[], responses: Response[]): Table<string, string, number> {
+    private generateTimestampCounts(ranges: Interval[], 
+                                    events: AppSensorEvent[], 
+                                    attacks: Attack[], 
+                                    responses: Response[]): Table<string, string, number> {
 
         const table = new Table<string, string, number>();
 
@@ -399,65 +336,69 @@ class UserReport {
             table.put(timestampStr, Type.ATTACKS, 0);
             table.put(timestampStr, Type.RESPONSES, 0);
         });
+
+        this.countInRangeStoreInTable(events, Type.EVENTS, ranges, table);
+        this.countInRangeStoreInTable(attacks, Type.ATTACKS, ranges, table);
+        this.countInRangeStoreInTable(responses, Type.RESPONSES, ranges, table);
         
-        for (const event of events) {
-            const eventDate = event.getTimestamp().getTime();
+        // for (const event of events) {
+        //     const eventDate = event.getTimestamp().getTime();
             
-            intervalLoop: for(const range of ranges) {
-                if (range.contains(Instant.ofEpochMilli(eventDate))) {
-                    const timestampStr = range.end().toString();
+        //     intervalLoop: for(const range of ranges) {
+        //         if (range.contains(Instant.ofEpochMilli(eventDate))) {
+        //             const timestampStr = range.end().toString();
 
-                    let count = table.get(timestampStr, Type.EVENTS)!;
+        //             let count = table.get(timestampStr, Type.EVENTS)!;
                     
-                    count++;
+        //             count++;
                     
-                    table.put(timestampStr, Type.EVENTS, count);
+        //             table.put(timestampStr, Type.EVENTS, count);
                     
-                    break intervalLoop;
-                }
-            }
-        }
+        //             break intervalLoop;
+        //         }
+        //     }
+        // }
         
-        for (const attack of attacks) {
-            const attackDate = attack.getTimestamp().getTime();
+        // for (const attack of attacks) {
+        //     const attackDate = attack.getTimestamp().getTime();
             
-            intervalLoop: for(const range of ranges) {
-                if (range.contains(Instant.ofEpochMilli(attackDate))) {
-                    const timestampStr = range.end().toString();
+        //     intervalLoop: for(const range of ranges) {
+        //         if (range.contains(Instant.ofEpochMilli(attackDate))) {
+        //             const timestampStr = range.end().toString();
 
-                    let count = table.get(timestampStr, Type.ATTACKS)!;
+        //             let count = table.get(timestampStr, Type.ATTACKS)!;
                     
-                    count++;
+        //             count++;
                     
-                    table.put(timestampStr, Type.ATTACKS, count);
+        //             table.put(timestampStr, Type.ATTACKS, count);
                     
-                    break intervalLoop;
-                }
-            }
-        }
+        //             break intervalLoop;
+        //         }
+        //     }
+        // }
         
-        for (const response of responses) {
-            const timestamp = response.getTimestamp();
-            if (!timestamp) {
-                break;
-            }
+        // for (const response of responses) {
+        //     const timestamp = response.getTimestamp();
+        //     if (!timestamp) {
+        //         break;
+        //     }
 
-            const responseDate = timestamp.getTime();
+        //     const responseDate = timestamp.getTime();
             
-            intervalLoop: for(const range of ranges) {
-                if (range.contains(Instant.ofEpochMilli(responseDate))) {
-                    const timestampStr = range.end().toString();
+        //     intervalLoop: for(const range of ranges) {
+        //         if (range.contains(Instant.ofEpochMilli(responseDate))) {
+        //             const timestampStr = range.end().toString();
 
-                    let count = table.get(timestampStr, Type.RESPONSES)!;
+        //             let count = table.get(timestampStr, Type.RESPONSES)!;
                     
-                    count++;
+        //             count++;
                     
-                    table.put(timestampStr, Type.RESPONSES, count);
+        //             table.put(timestampStr, Type.RESPONSES, count);
                     
-                    break intervalLoop;
-                }
-            }
-        }
+        //             break intervalLoop;
+        //         }
+        //     }
+        // }
         
         return table;
     }

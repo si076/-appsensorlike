@@ -467,7 +467,7 @@ class AppSensorReportingWebSocketServer extends AppSensorWebSocketServer impleme
     }
 
     getServerConfigurationAsJson(): Promise<string> {
-        return Promise.resolve(JSON.stringify(new JSONServerConfigurationReader().read()));
+        return Promise.resolve(JSON.stringify(this.appSensorServer.getConfiguration()));
     }
 
     getBase64EncodedServerConfigurationFileContent(): KeyValuePair {

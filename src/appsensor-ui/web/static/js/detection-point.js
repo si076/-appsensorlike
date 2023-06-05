@@ -90,9 +90,10 @@ var DetectionPointDetail = React.createClass({
 		  	
 		  	var timestamp = getTimestamp(selectedTimeSpan);
 		  	var detectionPointLabel = this.props.detectionPointLabel;
+			var detectionPointCategory = this.props.detectionPointCategory;
 		  
 		    $.ajax({
-		      url: apiBaseUrl + '/api/detection-points/' + detectionPointLabel + '/all?earliest=' + encodeURIComponent(timestamp) + '&limit=10&slices=10',
+		      url: apiBaseUrl + '/api/detection-points/' + detectionPointCategory + '/' + detectionPointLabel + '/all?earliest=' + encodeURIComponent(timestamp) + '&limit=10&slices=10',
 		      success: function(data) {
 		    	this.setState({data: data});
 		        
@@ -103,7 +104,7 @@ var DetectionPointDetail = React.createClass({
 		        
 		      }.bind(this),
 		      error: function(xhr, status, err) {
-		        console.error(apiBaseUrl + '/api/detection-points/{detectionPointLabel}/all?earliest=' + timestamp + '&limit=10&slices=10', status, err.toString());
+		        console.error(apiBaseUrl + '/api/detection-points/${detectionPointCategory}/{detectionPointLabel}/all?earliest=' + timestamp + '&limit=10&slices=10', status, err.toString());
 		      }.bind(this)
 		    });
 	  },
@@ -508,10 +509,11 @@ $(function() {
 	keepalive();
 
 	var detectionPointLabel = $("#detection-point-label").text();
+	var detectionPointCategory = $("#detection-point-category").text();
 
 	// on first load of the page, find the shortest time frame that has events and load it, defaulting to month if none are found
 	$.ajax({
-	      url: apiBaseUrl + '/api/detection-points/' + detectionPointLabel + '/by-time-frame',
+	      url: apiBaseUrl + '/api/detection-points/' + detectionPointCategory + '/' + detectionPointLabel + '/by-time-frame',
 	      
 	      success: function(data) {
 
