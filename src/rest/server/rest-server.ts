@@ -109,6 +109,9 @@ class RestServer {
         //your code in a subclass goes here
     }
     
+    protected getStaticContentDir(): string {
+        return '';
+    }
     
     protected setStaticContent() {
         const staticOptions = {
@@ -119,12 +122,14 @@ class RestServer {
         let basePath = this.config.basePath ? this.config.basePath : '';
 
         if (basePath.trim().length > 0) {
+            let staticContentDir = path.join(basePath, this.getStaticContentDir());
+
             if (!this.config.langs || this.config.langs.length === 0) {
-                this.expressApp.use(e.static(basePath, staticOptions));
+                this.expressApp.use(e.static(staticContentDir, staticOptions));
             } else {
                 for (let i = 0; i < this.config.langs.length; i++) {
                     const lang = this.config.langs[i];
-                    this.expressApp.use(e.static(path.join(basePath, lang), staticOptions));
+                    this.expressApp.use(e.static(path.join(staticContentDir, lang), staticOptions));
                 }
             }        
         }

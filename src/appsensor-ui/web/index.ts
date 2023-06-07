@@ -4,9 +4,23 @@ import { JSONConfigReadValidate } from "../../utils/Utils.js";
 import { UserController } from "./controller/UserController.js";
 import { DashboardController } from "./controller/DashboardController.js";
 import { Logger } from "../../logging/logging.js";
-
-import morgan from 'morgan';
 import { DetectionPointController } from "./controller/DetectionPointController.js";
+import { DashboardReport } from "../reports/DashboardReport.js";
+import { DetectionPointReport } from "../reports/DetectionPointReport.js";
+import { UserReport } from "../reports/UserReport.js";
+
+import e from 'express';
+import morgan from 'morgan';
+import hbs from 'hbs';
+import path from 'path';
+
+import fs from 'node:fs';
+
+
+type TEMPLATE_VARIABLES = {
+    CONTEXT_PATH: string,
+    LOGGED_IN_USERNAME: string
+} & {[key: string]: string};
 
 class AppsensorUIRestServerConfigReader extends JSONConfigReadValidate {
     constructor() {
@@ -16,23 +30,106 @@ class AppsensorUIRestServerConfigReader extends JSONConfigReadValidate {
     }
 }
 
-
 class AppsensorUIRestServer extends RestServer {
     
+    private static TEMPLATES_DIR          = 'templates';
+    private static TEMPLATES_PARTIALS_DIR = 'common';
+    private static STATIC_CONTENT_DIR     = 'static'; 
+
+    private static ACTIVE_PATH_SECTION_PART = "ACTIVE_PATH";
+    private static USERNAME_DETAIL_VAR      = "USERNAME_DETAIL";
+
+    private static ACTIVE_PATHS = ['dashboard', 'detection-point', 
+                                   'user', 'trends-dashboard', 
+                                   'configuration', 'about', 'geo-map'];
+
     private userController: UserController;
     private dashboardController: DashboardController;
     private detectionPointController: DetectionPointController;
 
     private wsClient: AppSensorReportingWebSocketClient;
 
+    private templatesMap = new Map<string, string>();
+
+    private templateVariables: TEMPLATE_VARIABLES;
+
     constructor(restServerConfig: string = 'appsensor-ui-rest-server-config.json') {
         super(new AppsensorUIRestServerConfigReader().read(restServerConfig));
 
         this.wsClient = new AppSensorReportingWebSocketClient();
 
-        this.userController = new UserController(this.wsClient);
-        this.dashboardController = new DashboardController(this.wsClient);
-        this.detectionPointController = new DetectionPointController(this.wsClient);
+        const userReport = new UserReport(this.wsClient);
+        const detectionPointReport = new DetectionPointReport(this.wsClient);
+        const dashboardReport = new DashboardReport(this.wsClient, userReport, detectionPointReport);
+
+        this.userController = new UserController(userReport);
+        this.detectionPointController = new DetectionPointController(detectionPointReport);
+        this.dashboardController = new DashboardController(dashboardReport);
+
+        this.templateVariables = {
+            CONTEXT_PATH: '',
+            LOGGED_IN_USERNAME: 'Test'
+        };
+
+        const basePath = this.config.basePath ? this.config.basePath : '';
+        const templatesPath = path.join(basePath, AppsensorUIRestServer.TEMPLATES_DIR);
+
+        this.expressApp.set('views', templatesPath);
+        // this.expressApp.set('view engine', 'hbs');
+        this.expressApp.set('view engine', 'html');
+        this.expressApp.engine('html', hbs.__express);
+
+        hbs.registerPartials(path.join(templatesPath, AppsensorUIRestServer.TEMPLATES_PARTIALS_DIR));
+
+        console.log("Working dir: " + process.cwd());
+    }
+
+    prepareTemplateVariables(req: e.Request, res: e.Response, next: e.NextFunction) {
+        let path = '';
+        const pathToCompare = req.path.trim().toLowerCase();
+        if (pathToCompare.includes("/")) {
+            path = req.path.substring(req.path.lastIndexOf("/") + 1, req.path.length);
+        } else {
+            path = req.path;
+        }
+        
+        //special handler for dashboard
+        if (path.length === 0) {
+            path = "dashboard";
+        }
+        
+        //special handler for detection point
+        if (pathToCompare.includes("/detection-points/")) {
+            path = "detection-point";
+        }
+        
+        //special handler for users
+        if (pathToCompare.includes("/users/")) {
+            path = "user";
+        }
+        
+
+        if (AppsensorUIRestServer.ACTIVE_PATHS.indexOf(path) > -1) {
+
+            const keys = Object.keys(this.templateVariables);
+            keys.forEach(key => {
+                if (key.startsWith(AppsensorUIRestServer.ACTIVE_PATH_SECTION_PART)) {
+                    //delete not active path keys
+                    delete this.templateVariables[key];
+                }
+            });
+    
+            const key = AppsensorUIRestServer.ACTIVE_PATH_SECTION_PART + "_" + path;
+            this.templateVariables[key] = path;
+        }
+
+        console.log(this.templateVariables);
+
+        next();
+    }
+
+    protected override getStaticContentDir(): string {
+        return AppsensorUIRestServer.STATIC_CONTENT_DIR;
     }
 
 
@@ -51,7 +148,34 @@ class AppsensorUIRestServer extends RestServer {
         super.setRequestLogging();
     }
 
+    renderPage(pageName: string) {
+        const self = this;
+        
+        return function(req: e.Request, res: e.Response, next: e.NextFunction) {
+            res.render(pageName, self.templateVariables)
+        }
+    }
+
+    renderUserPage(req: e.Request, res: e.Response, next: e.NextFunction) {
+        const user = req.params.user;
+
+        this.templateVariables[AppsensorUIRestServer.USERNAME_DETAIL_VAR] = user;
+
+        res.render('user.html', this.templateVariables);
+    }
+
     protected setEndpoints(): void {
+        this.expressApp.use(this.prepareTemplateVariables.bind(this));
+
+        //render pages
+        this.expressApp.get('/', this.renderPage('dashboard.html'));
+        this.expressApp.get('/trends-dashboard', this.renderPage('trends-dashboard.html'));
+        this.expressApp.get('/configuration', this.renderPage('configuration.html'));
+        this.expressApp.get('/about', this.renderPage('about.html'));
+        this.expressApp.get('/geo-map', this.renderPage('geo-map.html'));
+        //'/logout'
+        this.expressApp.get('/users/:user', this.renderUserPage.bind(this));
+
         //dashboard endpoints
         this.expressApp.get('/api/dashboard/all', this.dashboardController.allContent.bind(this.dashboardController));
         this.expressApp.get('/api/responses/active', this.dashboardController.activeResponses.bind(this.dashboardController));

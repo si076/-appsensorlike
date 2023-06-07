@@ -4,22 +4,23 @@ import { JSONServerConfigurationReader } from "../../configuration-modes/appsens
 import { ServerConfiguration } from "../../core/configuration/server/server_configuration.js";
 import { AppSensorEvent, Attack, DetectionPoint, Response } from "../../core/core.js";
 import { ReportingEngineExt } from "../../reporting-engines/reporting-engines.js";
+import { DetectionPointReport } from "./DetectionPointReport.js";
 import { CategoryItem, Dates, Table, TimeFrameItem, TimeUnit, Type, ViewObject } from "./Reports.js";
 import { UserReport } from "./UserReport.js";
 
 class DashboardReport {
 
 	private userReport: UserReport;
-
-	// @Autowired
-	// private DetectionPointController detectionPointController;
+	private detectionPointReport: DetectionPointReport;
 
     private reportingEngine: ReportingEngineExt;
 
     constructor(reportingEngine: ReportingEngineExt,
-                userController: UserReport) {
-        this.userReport = userController;
+                userReport: UserReport,
+				detectionPointReport: DetectionPointReport) {
+        this.userReport = userReport;
         this.reportingEngine = reportingEngine;
+		this.detectionPointReport = detectionPointReport;
     }
 
 	// @PreAuthorize("hasAnyRole('VIEW_DATA')")
@@ -44,10 +45,10 @@ class DashboardReport {
         const topUsers = await this.userReport.topUsers(earliest, limit)
 		allContent.set("topUsers", topUsers);
 
-        //TODO
-		// allContent.set("topDetectionPoints", detectionPointController.topDetectionPoints(earliest, limit));
+		const topDetectionPoints = await this.detectionPointReport.topDetectionPoints(earliest, limit)
+		allContent.set("topDetectionPoints", topDetectionPoints);
 		
-		return allContent;
+		return allContent; 
 	}
 	
 	// @PreAuthorize("hasAnyRole('VIEW_DATA')")

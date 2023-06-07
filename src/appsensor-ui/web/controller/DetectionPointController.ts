@@ -7,8 +7,8 @@ class DetectionPointController {
 
     private report: DetectionPointReport;
 
-    constructor(reportingEngine: ReportingEngineExt) {
-        this.report = new DetectionPointReport(reportingEngine);
+    constructor(report: DetectionPointReport) {
+        this.report = report;
     }
 
     allContent(req: e.Request, res: e.Response, next: e.NextFunction) {

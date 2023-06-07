@@ -8,8 +8,8 @@ class DashboardController {
 
     private report: DashboardReport;
 
-    constructor(reportingEngine: ReportingEngineExt) {
-        this.report = new DashboardReport(reportingEngine, new UserReport(reportingEngine));
+    constructor(report: DashboardReport) {
+        this.report = report;
     }
 
     allContent(req: e.Request, res: e.Response, next: e.NextFunction) {

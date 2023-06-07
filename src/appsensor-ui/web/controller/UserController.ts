@@ -7,8 +7,8 @@ class UserController {
 
     private userReport: UserReport;
 
-    constructor(reportingEngine: ReportingEngineExt) {
-        this.userReport = new UserReport(reportingEngine);
+    constructor(userReport: UserReport) {
+        this.userReport = userReport;
     }
 
     allContent(req: e.Request, res: e.Response, next: e.NextFunction) {
