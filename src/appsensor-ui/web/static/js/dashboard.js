@@ -313,7 +313,7 @@ var RecentItemsPanelContent = React.createClass({
 		var recentItemsRender = recentItems.map(function (item) {
 			return (
 		    	<tr>
-		    	  <td><a href={[apiBaseUrl + '/detection-points/' + item.detectionPoint.label]}>{item.detectionPoint.label}</a></td>
+		    	  <td><a href={[apiBaseUrl + '/detection-points/' + item.detectionPoint.category + '/' + item.detectionPoint.label]}>{item.detectionPoint.label}</a></td>
 		    	  <td><a href={[apiBaseUrl + '/users/' + item.user.username]}>{item.user.username}</a></td>
 		    	  <td>{item.detectionSystem.detectionSystemId}</td>
 		    	  <td>{item.timestamp}</td>
@@ -582,7 +582,7 @@ var TopDetectionPointsContent = React.createClass({
 		      return (
 		    	<tr>
 		    	  <td>
-		    	  	<a href={[apiBaseUrl + '/detection-points/' + label]}>{label}</a> ({category}) ({count} events)
+		    	  	<a href={[apiBaseUrl + '/detection-points/' + category + '/'  + label]}>{label}</a> ({category}) ({count} events)
 		    	  </td>
 		    	</tr>
 		      );

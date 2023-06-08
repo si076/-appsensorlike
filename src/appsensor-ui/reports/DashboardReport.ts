@@ -93,16 +93,16 @@ class DashboardReport {
         const shiftAgoResponseCount = await this.reportingEngine.countResponses(shiftAgo.toString());
         const hourAgoResponseCount = await this.reportingEngine.countResponses(hourAgo.toString());
 
-        items.push(TimeFrameItem.of(monthAgoEventCount, TimeUnit.MONTH, Type.EVENTS));
-        items.push(TimeFrameItem.of(monthAgoResponseCount, TimeUnit.MONTH, Type.RESPONSES));
-        items.push(TimeFrameItem.of(weekAgoEventCount,  TimeUnit.WEEK, Type.EVENTS));
-        items.push(TimeFrameItem.of(weekAgoResponseCount,  TimeUnit.WEEK, Type.RESPONSES));
-        items.push(TimeFrameItem.of(dayAgoEventCount,   TimeUnit.DAY, Type.EVENTS));
-        items.push(TimeFrameItem.of(dayAgoResponseCount,   TimeUnit.DAY, Type.RESPONSES));
-        items.push(TimeFrameItem.of(shiftAgoEventCount, TimeUnit.SHIFT, Type.EVENTS));
-        items.push(TimeFrameItem.of(shiftAgoResponseCount, TimeUnit.SHIFT, Type.RESPONSES));
-        items.push(TimeFrameItem.of(hourAgoEventCount,  TimeUnit.HOUR, Type.EVENTS));
-        items.push(TimeFrameItem.of(hourAgoResponseCount,  TimeUnit.HOUR, Type.RESPONSES));
+        items.push(TimeFrameItem.of(monthAgoEventCount, TimeUnit.MONTH, Type.EVENT));
+        items.push(TimeFrameItem.of(monthAgoResponseCount, TimeUnit.MONTH, Type.RESPONSE));
+        items.push(TimeFrameItem.of(weekAgoEventCount,  TimeUnit.WEEK, Type.EVENT));
+        items.push(TimeFrameItem.of(weekAgoResponseCount,  TimeUnit.WEEK, Type.RESPONSE));
+        items.push(TimeFrameItem.of(dayAgoEventCount,   TimeUnit.DAY, Type.EVENT));
+        items.push(TimeFrameItem.of(dayAgoResponseCount,   TimeUnit.DAY, Type.RESPONSE));
+        items.push(TimeFrameItem.of(shiftAgoEventCount, TimeUnit.SHIFT, Type.EVENT));
+        items.push(TimeFrameItem.of(shiftAgoResponseCount, TimeUnit.SHIFT, Type.RESPONSE));
+        items.push(TimeFrameItem.of(hourAgoEventCount,  TimeUnit.HOUR, Type.EVENT));
+        items.push(TimeFrameItem.of(hourAgoResponseCount,  TimeUnit.HOUR, Type.RESPONSE));
 
         return items;
 	}
@@ -134,7 +134,7 @@ class DashboardReport {
                     label = event.getDetectionPoint()!.getLabel()!;
                 }
 				
-				let count = countByLabel.get(label, Type.EVENTS);
+				let count = countByLabel.get(label, Type.EVENT);
 				
 				if (count === undefined) {
 					count = 0;
@@ -142,7 +142,7 @@ class DashboardReport {
 				
 				count++;
 				
-				countByLabel.put(label, Type.EVENTS, count);
+				countByLabel.put(label, Type.EVENT, count);
 			}
 			
 			for (const attack of attacks) {
@@ -152,7 +152,7 @@ class DashboardReport {
                     label = attack.getDetectionPoint()!.getLabel()!;
                 }
 				
-				let count = countByLabel.get(label, Type.ATTACKS);
+				let count = countByLabel.get(label, Type.ATTACK);
 				
 				if (count === undefined) {
 					count = 0;
@@ -160,7 +160,7 @@ class DashboardReport {
 				
 				count++;
 				
-				countByLabel.put(label, Type.ATTACKS, count);
+				countByLabel.put(label, Type.ATTACK, count);
 			}
 			
 			events = this.latest<AppSensorEvent>(events, maxItems);
@@ -255,18 +255,6 @@ class DashboardReport {
 		
 		return table;
 	}
-	
-	// private Map<String, String> generateCategoryKeyMappings() {
-	// 	Map<String, String> categoryKeyMappings = new HashMap<>();
-		
-	// 	int i = 1;
-	// 	for (String category : this.reportingEngine.getConfiguredDetectionPointCategories()) {
-	// 		categoryKeyMappings.put(category, "a" + String.valueOf(i));
-	// 		i++;
-	// 	}
-		
-	// 	return categoryKeyMappings;
-	// }
 	
 	private async getConfiguredDetectionPointCategories(): Promise<string[]> {
 		const categories: string[] = [];

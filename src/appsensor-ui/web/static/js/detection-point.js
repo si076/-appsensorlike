@@ -10,8 +10,9 @@ function activateSlider(selectedTimeSpan) {
 		  var selectedTimeSpan = items[ui.value - 1].toUpperCase();
 		  
 		  var detectionPointLabel = $("#detection-point-label").text();
+		  var detectionPointCategory = $("#detection-point-category").text();
 		  
-		  initReact(selectedTimeSpan, detectionPointLabel);
+		  initReact(selectedTimeSpan, detectionPointLabel, detectionPointCategory);
       }
 	});
 
@@ -490,7 +491,7 @@ var EmptyTable = React.createClass({
 
 var setIntervals = [];
 
-function initReact(selectedTimeSpan, detectionPointLabel) {
+function initReact(selectedTimeSpan, detectionPointLabel, detectionPointCategory) {
 	
 	// remove any previous reset intervals
 	$.each( setIntervals, function( i, val ) {
@@ -502,7 +503,7 @@ function initReact(selectedTimeSpan, detectionPointLabel) {
 		});
 	
 	React.unmountComponentAtNode(document.getElementById('react_container'));
-	React.render(<DetectionPointDetail selectedTimeSpan={selectedTimeSpan} detectionPointLabel={detectionPointLabel} />, document.getElementById('react_container'));
+	React.render(<DetectionPointDetail selectedTimeSpan={selectedTimeSpan} detectionPointLabel={detectionPointLabel} detectionPointCategory={detectionPointCategory}/>, document.getElementById('react_container'));
 }
 
 $(function() {
@@ -539,7 +540,7 @@ $(function() {
 	    	  		span = 'MONTH';
 	    	  	}
 	    	  	
-		  		initReact(span, detectionPointLabel);
+		  		initReact(span, detectionPointLabel, detectionPointCategory);
 	      },
 	      error: function(data) {
 	    	  console.log('Failure contacting appsensor service for loading updateSlider.');

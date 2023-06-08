@@ -8,17 +8,6 @@ import { Dates, Table, TimeFrameItem, TimeUnit, Type, ViewObject } from "./Repor
 
 class UserReport extends BaseReport {
 
-    // private final Gson gson = new Gson();
-
-    // private final static String MORRIS_EVENTS_ID = "events1";
-    // private final static String MORRIS_ATTACKS_ID = "attacks1";
-    // private final static String MORRIS_RESPONSES_ID = "responses1";
-    // private final static String EVENTS_LABEL = "Events";
-    // private final static String ATTACKS_LABEL = "Attacks";
-    // private final static String RESPONSES_LABEL = "Responses";
-
-    // private static final String DATE_FORMAT_STR = "YYYY-MM-dd HH:mm:ss";
-
     constructor(reportingEngine: ReportingEngineExt) {
         super(reportingEngine);
     }
@@ -105,16 +94,16 @@ class UserReport extends BaseReport {
         const shiftAgoResponseCount = await this.reportingEngine.countResponsesByUser(shiftAgo.toString(), username);
         const hourAgoResponseCount = await this.reportingEngine.countResponsesByUser(hourAgo.toString(), username);
 
-        items.push(TimeFrameItem.of(monthAgoEventCount, TimeUnit.MONTH, Type.EVENTS));
-        items.push(TimeFrameItem.of(monthAgoResponseCount, TimeUnit.MONTH, Type.RESPONSES));
-        items.push(TimeFrameItem.of(weekAgoEventCount,  TimeUnit.WEEK, Type.EVENTS));
-        items.push(TimeFrameItem.of(weekAgoResponseCount,  TimeUnit.WEEK, Type.RESPONSES));
-        items.push(TimeFrameItem.of(dayAgoEventCount,   TimeUnit.DAY, Type.EVENTS));
-        items.push(TimeFrameItem.of(dayAgoResponseCount,   TimeUnit.DAY, Type.RESPONSES));
-        items.push(TimeFrameItem.of(shiftAgoEventCount, TimeUnit.SHIFT, Type.EVENTS));
-        items.push(TimeFrameItem.of(shiftAgoResponseCount, TimeUnit.SHIFT, Type.RESPONSES));
-        items.push(TimeFrameItem.of(hourAgoEventCount,  TimeUnit.HOUR, Type.EVENTS));
-        items.push(TimeFrameItem.of(hourAgoResponseCount,  TimeUnit.HOUR, Type.RESPONSES));
+        items.push(TimeFrameItem.of(monthAgoEventCount, TimeUnit.MONTH, Type.EVENT));
+        items.push(TimeFrameItem.of(monthAgoResponseCount, TimeUnit.MONTH, Type.RESPONSE));
+        items.push(TimeFrameItem.of(weekAgoEventCount,  TimeUnit.WEEK, Type.EVENT));
+        items.push(TimeFrameItem.of(weekAgoResponseCount,  TimeUnit.WEEK, Type.RESPONSE));
+        items.push(TimeFrameItem.of(dayAgoEventCount,   TimeUnit.DAY, Type.EVENT));
+        items.push(TimeFrameItem.of(dayAgoResponseCount,   TimeUnit.DAY, Type.RESPONSE));
+        items.push(TimeFrameItem.of(shiftAgoEventCount, TimeUnit.SHIFT, Type.EVENT));
+        items.push(TimeFrameItem.of(shiftAgoResponseCount, TimeUnit.SHIFT, Type.RESPONSE));
+        items.push(TimeFrameItem.of(hourAgoEventCount,  TimeUnit.HOUR, Type.EVENT));
+        items.push(TimeFrameItem.of(hourAgoResponseCount,  TimeUnit.HOUR, Type.RESPONSE));
 
         return items;
     }
@@ -154,68 +143,17 @@ class UserReport extends BaseReport {
     public async byClientApplication(username: string, earliest: string): Promise<string> {
         const table = new Table<string,Type,number>();
 
-        // let events = await this.reportingEngine.findEvents(earliest);
-        // events = events.filter(this.filterByUser(username));
-
-        // let attacks = await this.reportingEngine.findAttacks(earliest);
-        // attacks = attacks.filter(this.filterByUser(username));
-
-        // let responses = await this.reportingEngine.findResponses(earliest);
-        // responses = responses.filter(this.filterByUser(username));
-        
-        // for(const event of events) {
-        //     const detSystemId = this.getDetectionSystemId(event);
-
-        //     let count = table.get(detSystemId, Type.EVENTS);
-            
-        //     if (count === undefined) {
-        //         count = 0;
-        //     }
-            
-        //     count++;
-            
-        //     table.put(detSystemId, Type.EVENTS, count);
-        // }
-        
-        // for(const attack of attacks) {
-        //     const detSystemId = this.getDetectionSystemId(attack);
-
-        //     let count = table.get(detSystemId, Type.ATTACKS);
-            
-        //     if (count === undefined) {
-        //         count = 0;
-        //     }
-            
-        //     count++;
-            
-        //     table.put(detSystemId, Type.ATTACKS, count);
-        // }
-        
-        // for(const response of responses) {
-        //     const detSystemId = this.getDetectionSystemId(response);
-
-        //     let count = table.get(detSystemId, Type.RESPONSES);
-            
-        //     if (count === undefined) {
-        //         count = 0;
-        //     }
-            
-        //     count++;
-            
-        //     table.put(detSystemId, Type.RESPONSES, count);
-        // }
-
-        await this.filterAndCount(username, earliest, Type.EVENTS, 
+        await this.filterAndCount(username, earliest, Type.EVENT, 
                                   this.filterByUser(username), 
                                   this.getDetectionSystemId,
                                   table);
 
-        await this.filterAndCount(username, earliest, Type.ATTACKS, 
+        await this.filterAndCount(username, earliest, Type.ATTACK, 
                                   this.filterByUser(username), 
                                   this.getDetectionSystemId,
                                   table);
 
-        await this.filterAndCount(username, earliest, Type.RESPONSES, 
+        await this.filterAndCount(username, earliest, Type.RESPONSE, 
                                   this.filterByUser(username), 
                                   this.getDetectionSystemId,
                                   table);
@@ -257,24 +195,10 @@ class UserReport extends BaseReport {
     // @RequestMapping(value="/api/users/top", method = RequestMethod.GET)
     // @ResponseBody
     // public Map<String, Long> topUsers(@RequestParam("earliest") String rfc3339Timestamp, @RequestParam("limit") Long limit) {
-    public async topUsers(earliest: string, limit: number): Promise<Map<string, number> > {
+    public async topUsers(earliest: string, limit: number): Promise<{[key: string]: number}> {
         const map = new Map<string, number>();
         
         const events = await this.reportingEngine.findEvents(earliest);
-        
-        // for (const event of events) {
-        //     const username = Utils.getUserName(event.getUser());
-            
-        //     let count = map.get(username);
-            
-        //     if (count === undefined) {
-        //         count = 0;
-        //     }
-            
-        //     count++;
-            
-        //     map.set(username, count);
-        // }
 
         const keyFunc = (value: AppSensorEvent | Attack | Response) => {
             return Utils.getUserName(value.getUser());
@@ -282,21 +206,6 @@ class UserReport extends BaseReport {
 
         this.countStoreInMap(events, keyFunc, map);
 
-
-        // Comparator<Entry<String, Long>> byValue = (entry1, entry2) -> entry1.getValue().compareTo(entry2.getValue());
-        
-        // Map<String, Long> filtered = 
-        //         map
-        //         .entrySet()
-        //         .stream()
-        //         .sorted(byValue.reversed())
-        //         .limit(limit)
-        //         .collect(
-        //             Collectors.toMap(
-        //                 entry -> entry.getKey(),
-        //                 entry -> entry.getValue()
-        //             )
-        //         );
 
         const mapEntries = map.entries();
         let toArray: [string, number][] = [];
@@ -310,15 +219,11 @@ class UserReport extends BaseReport {
 
         toArray = toArray.slice(0, limit);
 
-        const filtered = new Map<string, number>();
+        const filtered: {[key: string]: number} = {};
         toArray.forEach(el => {
-            filtered.set(el[0], el[1]);
+            filtered[el[0]] = el[1];
         });
         
-        
-        // Map<String, Long> sorted = Maps.sortStringsByValue(filtered);
-        
-        // return sorted;
         return filtered;
     }
 
@@ -340,65 +245,6 @@ class UserReport extends BaseReport {
         this.countInRangeStoreInTable(events, Type.EVENTS, ranges, table);
         this.countInRangeStoreInTable(attacks, Type.ATTACKS, ranges, table);
         this.countInRangeStoreInTable(responses, Type.RESPONSES, ranges, table);
-        
-        // for (const event of events) {
-        //     const eventDate = event.getTimestamp().getTime();
-            
-        //     intervalLoop: for(const range of ranges) {
-        //         if (range.contains(Instant.ofEpochMilli(eventDate))) {
-        //             const timestampStr = range.end().toString();
-
-        //             let count = table.get(timestampStr, Type.EVENTS)!;
-                    
-        //             count++;
-                    
-        //             table.put(timestampStr, Type.EVENTS, count);
-                    
-        //             break intervalLoop;
-        //         }
-        //     }
-        // }
-        
-        // for (const attack of attacks) {
-        //     const attackDate = attack.getTimestamp().getTime();
-            
-        //     intervalLoop: for(const range of ranges) {
-        //         if (range.contains(Instant.ofEpochMilli(attackDate))) {
-        //             const timestampStr = range.end().toString();
-
-        //             let count = table.get(timestampStr, Type.ATTACKS)!;
-                    
-        //             count++;
-                    
-        //             table.put(timestampStr, Type.ATTACKS, count);
-                    
-        //             break intervalLoop;
-        //         }
-        //     }
-        // }
-        
-        // for (const response of responses) {
-        //     const timestamp = response.getTimestamp();
-        //     if (!timestamp) {
-        //         break;
-        //     }
-
-        //     const responseDate = timestamp.getTime();
-            
-        //     intervalLoop: for(const range of ranges) {
-        //         if (range.contains(Instant.ofEpochMilli(responseDate))) {
-        //             const timestampStr = range.end().toString();
-
-        //             let count = table.get(timestampStr, Type.RESPONSES)!;
-                    
-        //             count++;
-                    
-        //             table.put(timestampStr, Type.RESPONSES, count);
-                    
-        //             break intervalLoop;
-        //         }
-        //     }
-        // }
         
         return table;
     }

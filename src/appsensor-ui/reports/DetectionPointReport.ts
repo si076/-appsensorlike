@@ -69,16 +69,16 @@ class DetectionPointReport extends BaseReport {
 		const shiftAgoResponseCount = await this.reportingEngine.countAttacksByCategoryLabel(shiftAgo.toString(), category, label);
 		const hourAgoResponseCount = await this.reportingEngine.countAttacksByCategoryLabel(hourAgo.toString(), category, label);
 	
-		items.push(TimeFrameItem.of(monthAgoEventCount, TimeUnit.MONTH, Type.EVENTS));
-		items.push(TimeFrameItem.of(monthAgoResponseCount, TimeUnit.MONTH, Type.ATTACKS));
-		items.push(TimeFrameItem.of(weekAgoEventCount,  TimeUnit.WEEK, Type.EVENTS));
-		items.push(TimeFrameItem.of(weekAgoResponseCount,  TimeUnit.WEEK, Type.ATTACKS));
-		items.push(TimeFrameItem.of(dayAgoEventCount,   TimeUnit.DAY, Type.EVENTS));
-		items.push(TimeFrameItem.of(dayAgoResponseCount,   TimeUnit.DAY, Type.ATTACKS));
-		items.push(TimeFrameItem.of(shiftAgoEventCount, TimeUnit.SHIFT, Type.EVENTS));
-		items.push(TimeFrameItem.of(shiftAgoResponseCount, TimeUnit.SHIFT, Type.ATTACKS));
-		items.push(TimeFrameItem.of(hourAgoEventCount,  TimeUnit.HOUR, Type.EVENTS));
-		items.push(TimeFrameItem.of(hourAgoResponseCount,  TimeUnit.HOUR, Type.ATTACKS));
+		items.push(TimeFrameItem.of(monthAgoEventCount, TimeUnit.MONTH, Type.EVENT));
+		items.push(TimeFrameItem.of(monthAgoResponseCount, TimeUnit.MONTH, Type.ATTACK));
+		items.push(TimeFrameItem.of(weekAgoEventCount,  TimeUnit.WEEK, Type.EVENT));
+		items.push(TimeFrameItem.of(weekAgoResponseCount,  TimeUnit.WEEK, Type.ATTACK));
+		items.push(TimeFrameItem.of(dayAgoEventCount,   TimeUnit.DAY, Type.EVENT));
+		items.push(TimeFrameItem.of(dayAgoResponseCount,   TimeUnit.DAY, Type.ATTACK));
+		items.push(TimeFrameItem.of(shiftAgoEventCount, TimeUnit.SHIFT, Type.EVENT));
+		items.push(TimeFrameItem.of(shiftAgoResponseCount, TimeUnit.SHIFT, Type.ATTACK));
+		items.push(TimeFrameItem.of(hourAgoEventCount,  TimeUnit.HOUR, Type.EVENT));
+		items.push(TimeFrameItem.of(hourAgoResponseCount,  TimeUnit.HOUR, Type.ATTACK));
 
 		return items;
 	}
@@ -118,41 +118,13 @@ class DetectionPointReport extends BaseReport {
 	// public String byClientApplication(@PathVariable("label") String label, @RequestParam("earliest") String rfc3339Timestamp) {
     public async byClientApplication(label: string, earliest: string): Promise<string> {
         const table = new Table<string,Type,number>();
-
-
-		// Collection<Event> events = this.reportingEngine.findEvents(rfc3339Timestamp).stream().filter(e -> label.equals(e.getDetectionPoint().getLabel())).collect(Collectors.toList());
-		// Collection<Attack> attacks = this.reportingEngine.findAttacks(rfc3339Timestamp).stream().filter(a -> label.equals(a.getDetectionPoint().getLabel())).collect(Collectors.toList());
-		
-		// for(Event event : events) {
-		// 	Long count = table.get(event.getDetectionSystem().getDetectionSystemId(), Type.EVENT);
-			
-		// 	if (count == null) {
-		// 		count = 0L;
-		// 	}
-			
-		// 	count = count + 1L;
-			
-		// 	table.put(event.getDetectionSystem().getDetectionSystemId(), Type.EVENT, count);
-		// }
-		
-		// for(Attack attack : attacks) {
-		// 	Long count = table.get(attack.getDetectionSystem().getDetectionSystemId(), Type.ATTACK);
-			
-		// 	if (count == null) {
-		// 		count = 0L;
-		// 	}
-			
-		// 	count = count + 1L;
-			
-		// 	table.put(attack.getDetectionSystem().getDetectionSystemId(), Type.ATTACK, count);
-		// }
-		
-        await this.filterAndCount(label, earliest, Type.EVENTS, 
+	
+        await this.filterAndCount(label, earliest, Type.EVENT, 
                                   this.filterByDetectionPointLabel(label), 
                                   this.getDetectionSystemId,
                                   table);
 
-        await this.filterAndCount(label, earliest, Type.ATTACKS, 
+        await this.filterAndCount(label, earliest, Type.ATTACK, 
                                   this.filterByDetectionPointLabel(label), 
                                   this.getDetectionSystemId,
                                   table);
@@ -164,49 +136,20 @@ class DetectionPointReport extends BaseReport {
 	// @RequestMapping(value="/api/detection-points/{label}/top-users", method = RequestMethod.GET)
 	// @ResponseBody
 	// public Map<String, Long> topUsers(@PathVariable("label") String label, @RequestParam("earliest") String rfc3339Timestamp, @RequestParam("limit") Long limit) {
-    public async topUsers(label: string, earliest: string, limit: number): Promise<Map<string, number>> {
+    public async topUsers(label: string, earliest: string, limit: number): Promise<{[key: string]: number}> {
         const map = new Map<string, number>();
         
         let events = await this.reportingEngine.findEvents(earliest);
         events = events.filter(this.filterByDetectionPointLabel(label));
 	    
-		// for (Event event : events) {
-		// 	String username = event.getUser().getUsername();
-			
-		// 	Long count = map.get(username);
-			
-		// 	if (count == null) {
-		// 		count = 0L;
-		// 	}
-			
-		// 	count = count + 1L;
-			
-		// 	map.put(username, count);
-		// }
-
         const keyFunc = (value: AppSensorEvent | Attack | Response) => {
             return Utils.getUserName(value.getUser());
         };
 
         this.countStoreInMap(events, keyFunc, map);
 
-		
-		// Comparator<Entry<String, Long>> byValue = (entry1, entry2) -> entry1.getValue().compareTo(entry2.getValue());
 
-		// Map<String, Long> filtered = 
-		// 		map
-		// 		.entrySet()
-		// 		.stream()
-		// 		.sorted(byValue.reversed())
-		// 		.limit(limit)
-		// 		.collect(
-		// 			Collectors.toMap(
-		// 				entry -> entry.getKey(),
-		// 				entry -> entry.getValue()
-		// 			)
-		// 		);
-		
-        const mapEntries = map.entries();
+		const mapEntries = map.entries();
         let toArray: [string, number][] = [];
         for (const entry of mapEntries) {
             toArray.push(entry);
@@ -218,14 +161,11 @@ class DetectionPointReport extends BaseReport {
 
         toArray = toArray.slice(0, limit);
 
-        const filtered = new Map<string, number>();
+		const filtered: {[key: string]: number} = {};
         toArray.forEach(el => {
-            filtered.set(el[0], el[1]);
+            filtered[el[0]] = el[1];
         });
 
-		// Map<String, Long> sorted = Maps.sortStringsByValue(filtered);
-		
-		// return sorted;
         return filtered;
 	}
 	
@@ -246,10 +186,6 @@ class DetectionPointReport extends BaseReport {
 		
 		const ranges = Dates.splitRange(startingTime, now, slices);
 
-		// Map<String, String> categoryKeyMappings = new HashMap<>();
-		// categoryKeyMappings.put(EVENTS_LABEL, MORRIS_EVENTS_ID);
-		// categoryKeyMappings.put(ATTACKS_LABEL, MORRIS_ATTACKS_ID);
-
         const categories = [Type.EVENTS, Type.ATTACKS];
 		
 		// timestamp, category, count
@@ -264,24 +200,10 @@ class DetectionPointReport extends BaseReport {
 	// @RequestMapping(value="/api/detection-points/top", method = RequestMethod.GET)
 	// @ResponseBody
 	// public Map<String, Long> topDetectionPoints(@RequestParam("earliest") String rfc3339Timestamp, @RequestParam("limit") Long limit) {
-    public async topDetectionPoints(earliest: string, limit: number): Promise<Map<string, number>> {
+    public async topDetectionPoints(earliest: string, limit: number): Promise<{[key: string]: number}> {
         const map = new Map<DetectionPoint, number>();
 		
 		let events = await this.reportingEngine.findEvents(earliest);
-
-		// for (Event event : events) {
-		// 	DetectionPoint detectionPoint = event.getDetectionPoint();
-			
-		// 	Long count = map.get(detectionPoint);
-			
-		// 	if (count == null) {
-		// 		count = 0L;
-		// 	}
-			
-		// 	count = count + 1L;
-			
-		// 	map.put(detectionPoint, count);
-		// }
 
         const keyFunc = (value: AppSensorEvent | Attack | Response) => {
             return value.getDetectionPoint();
@@ -289,21 +211,6 @@ class DetectionPointReport extends BaseReport {
 
 	    this.countStoreInMap(events, keyFunc, map);
 
-		
-		// Comparator<Entry<DetectionPoint, Long>> byValue = (entry1, entry2) -> entry1.getValue().compareTo(entry2.getValue());
-
-		// Map<DetectionPoint, Long> filtered = 
-		// 		map
-		// 		.entrySet()
-		// 		.stream()
-		// 		.sorted(byValue.reversed())
-		// 		.limit(limit)
-		// 		.collect(
-		// 			Collectors.toMap(
-		// 				entry -> entry.getKey(),
-		// 				entry -> entry.getValue()
-		// 			)
-		// 		);
 		
         const mapEntries = map.entries();
         let toArray: [DetectionPoint, number][] = [];
@@ -317,22 +224,12 @@ class DetectionPointReport extends BaseReport {
 
         toArray = toArray.slice(0, limit);
 
-		// Map<String, Long> stringFiltered = new HashMap<>();
-		
-		// for(DetectionPoint detectionPoint : filtered.keySet()) {
-		// 	stringFiltered.put(gson.toJson(detectionPoint), filtered.get(detectionPoint));
-		// }
-
-        const filtered = new Map<string, number>();
+		const filtered: {[key: string]: number} = {};
         toArray.forEach(el => {
-            filtered.set(JSON.stringify(el[0]), el[1]);
+            filtered[JSON.stringify(el[0])] = el[1];
         });
 
-		
-		// Map<String, Long> sorted = Maps.sortStringsByValue(stringFiltered);
-		
-		// return sorted;
-        return filtered;
+		return filtered;
 	}
 	
 	private generateTimestampCounts(ranges: Interval[], 
@@ -351,42 +248,6 @@ class DetectionPointReport extends BaseReport {
         this.countInRangeStoreInTable(events, Type.EVENTS, ranges, table);
         this.countInRangeStoreInTable(attacks, Type.ATTACKS, ranges, table);
 
-		// for (Event event : events) {
-		// 	DateTime eventDate = DateUtils.fromString(event.getTimestamp());
-			
-		// 	intervalLoop: for(Interval range : ranges) {
-		// 		if (range.contains(eventDate)) {
-		// 			String timestamp = range.getEnd().toString(DATE_FORMAT_STR);
-
-		// 			Long count = table.get(timestamp, EVENTS_LABEL);
-					
-		// 			count = count + 1L;
-					
-		// 			table.put(timestamp, EVENTS_LABEL, count);
-					
-		// 			break intervalLoop;
-		// 		}
-		// 	}
-		// }
-		
-		// for (Attack attack : attacks) {
-		// 	DateTime attackDate = DateUtils.fromString(attack.getTimestamp());
-			
-		// 	intervalLoop: for(Interval range : ranges) {
-		// 		if (range.contains(attackDate)) {
-		// 			String timestamp = range.getEnd().toString(DATE_FORMAT_STR);
-
-		// 			Long count = table.get(timestamp, ATTACKS_LABEL);
-					
-		// 			count = count + 1L;
-					
-		// 			table.put(timestamp, ATTACKS_LABEL, count);
-					
-		// 			break intervalLoop;
-		// 		}
-		// 	}
-		// }
-		
 		return table;
 	}
 

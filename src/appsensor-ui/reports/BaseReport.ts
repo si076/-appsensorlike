@@ -88,34 +88,35 @@ class BaseReport {
         let objects: AppSensorEvent[] | Attack[] |  Response[] = [];
         
         switch (type) {
-            case Type.EVENTS: {
+            case Type.EVENT: {
                 objects = await this.reportingEngine.findEvents(earliest);
                 objects = objects.filter(filterFunc); //here instead of below because TS complain
                 break;
             }
-            case Type.ATTACKS: {
+            case Type.ATTACK: {
                 objects = await this.reportingEngine.findAttacks(earliest);
                 objects = objects.filter(filterFunc); //here instead of below because TS complain
                 break;
             }
-            case Type.RESPONSES: {
+            case Type.RESPONSE: {
                 objects = await this.reportingEngine.findResponses(earliest);
                 objects = objects.filter(filterFunc); //here instead of below because TS complain
                 break;
             }
         }
         
-        this.countStoreInTable(objects, rowKeyFunc, table);
+        this.countStoreInTable(objects, type, rowKeyFunc, table);
     }
 
     protected countStoreInTable(objects: AppSensorEvent[] | Attack[] |  Response[],
+                                type: Type,
                                 rowKeyFunc: (value: AppSensorEvent | Attack | Response) => string,
                                 table: Table<string,Type,number>) {
 
         for(const object of objects) {
             const rowKey = rowKeyFunc(object);
 
-            let count = table.get(rowKey, Type.EVENTS);
+            let count = table.get(rowKey, type);
             
             if (count === undefined) {
                 count = 0;
@@ -123,7 +124,7 @@ class BaseReport {
             
             count++;
             
-            table.put(rowKey, Type.EVENTS, count);
+            table.put(rowKey, type, count);
         }
     }
 

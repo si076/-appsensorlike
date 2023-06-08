@@ -15,6 +15,8 @@ import hbs from 'hbs';
 import path from 'path';
 
 import fs from 'node:fs';
+import { TrendsDashboardReport } from "../reports/TrendsDashboardReport.js";
+import { TrendsDashboardController } from "./controller/TrendsDashboardController.js";
 
 
 type TEMPLATE_VARIABLES = {
@@ -36,8 +38,12 @@ class AppsensorUIRestServer extends RestServer {
     private static TEMPLATES_PARTIALS_DIR = 'common';
     private static STATIC_CONTENT_DIR     = 'static'; 
 
-    private static ACTIVE_PATH_SECTION_PART = "ACTIVE_PATH";
-    private static USERNAME_DETAIL_VAR      = "USERNAME_DETAIL";
+    private static ACTIVE_PATH_SECTION_PART            = "ACTIVE_PATH";
+    private static USERNAME_DETAIL_VAR                 = "USERNAME_DETAIL";
+    private static DETECTION_POINT_CATEGORY_DETAIL_VAR = 
+                    "DETECTION_POINT_CATEGORY_DETAIL";
+    private static DETECTION_POINT_LABEL_DETAIL_VAR    = 
+                    "DETECTION_POINT_LABEL_DETAIL";
 
     private static ACTIVE_PATHS = ['dashboard', 'detection-point', 
                                    'user', 'trends-dashboard', 
@@ -46,6 +52,7 @@ class AppsensorUIRestServer extends RestServer {
     private userController: UserController;
     private dashboardController: DashboardController;
     private detectionPointController: DetectionPointController;
+    private trendsController: TrendsDashboardController;
 
     private wsClient: AppSensorReportingWebSocketClient;
 
@@ -61,10 +68,12 @@ class AppsensorUIRestServer extends RestServer {
         const userReport = new UserReport(this.wsClient);
         const detectionPointReport = new DetectionPointReport(this.wsClient);
         const dashboardReport = new DashboardReport(this.wsClient, userReport, detectionPointReport);
+        const trendsReport = new TrendsDashboardReport(this.wsClient);
 
         this.userController = new UserController(userReport);
         this.detectionPointController = new DetectionPointController(detectionPointReport);
         this.dashboardController = new DashboardController(dashboardReport);
+        this.trendsController = new TrendsDashboardController(trendsReport);
 
         this.templateVariables = {
             CONTEXT_PATH: '',
@@ -164,6 +173,16 @@ class AppsensorUIRestServer extends RestServer {
         res.render('user.html', this.templateVariables);
     }
 
+    renderDetectionPointPage(req: e.Request, res: e.Response, next: e.NextFunction) {
+        const category = req.params.category;
+        const label    = req.params.label;
+
+        this.templateVariables[AppsensorUIRestServer.DETECTION_POINT_CATEGORY_DETAIL_VAR] = category;
+        this.templateVariables[AppsensorUIRestServer.DETECTION_POINT_LABEL_DETAIL_VAR] = label;
+
+        res.render('detection-point.html', this.templateVariables);
+    }
+
     protected setEndpoints(): void {
         this.expressApp.use(this.prepareTemplateVariables.bind(this));
 
@@ -175,6 +194,7 @@ class AppsensorUIRestServer extends RestServer {
         this.expressApp.get('/geo-map', this.renderPage('geo-map.html'));
         //'/logout'
         this.expressApp.get('/users/:user', this.renderUserPage.bind(this));
+        this.expressApp.get('/detection-points/:category/:label', this.renderDetectionPointPage.bind(this));
 
         //dashboard endpoints
         this.expressApp.get('/api/dashboard/all', this.dashboardController.allContent.bind(this.dashboardController));
@@ -194,8 +214,6 @@ class AppsensorUIRestServer extends RestServer {
         this.expressApp.get('/api/detection-points/:label/grouped', this.detectionPointController.groupedDetectionPoints.bind(this.detectionPointController));
         this.expressApp.get('/api/detection-points/top', this.detectionPointController.topDetectionPoints.bind(this.detectionPointController));
 
-        // this.expressApp.get();
-
         //user endpoints
         this.expressApp.get('/api/users/:username/all', this.userController.allContent.bind(this.userController));
         this.expressApp.get('/api/users/:username/active-responses',  this.userController.activeResponses.bind(this.userController));
@@ -206,6 +224,11 @@ class AppsensorUIRestServer extends RestServer {
         this.expressApp.get('/api/users/:username/by-client-application',  this.userController.byClientApplication.bind(this.userController));
         this.expressApp.get('/api/users/:username/grouped',  this.userController.groupedUsers.bind(this.userController));
         this.expressApp.get('/api/users/top',  this.userController.topUsers.bind(this.userController));
+
+        //trends endpoints
+        this.expressApp.get('/api/trends/by-time-frame', this.trendsController.byTimeFrame.bind(this.trendsController));
+
+
     }
 }
 

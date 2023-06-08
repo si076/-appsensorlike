@@ -3,18 +3,54 @@ import {Interval} from '@js-joda/extra';
 import { AppSensorEvent, Attack } from "../../core/core";
 
 enum TimeUnit { 
-    MONTH, 
-    WEEK, 
-    DAY, 
-    SHIFT, 
-    HOUR
+    MONTH = "MONTH", 
+    WEEK  = "WEEK", 
+    DAY   = "DAY", 
+    SHIFT = "SHIFT", 
+    HOUR  = "HOUR"
 }; 
 
-enum Type { 
-    EVENTS = "Events", 
-    ATTACKS = "Attacks", 
+enum Type {
+    EVENT     = "EVENT",
+    ATTACK    = "ATTACK",
+    RESPONSE  = "RESPONSE",
+    EVENTS    = "Events", 
+    ATTACKS   = "Attacks", 
     RESPONSES = "Responses"
 }; 
+
+enum TrendDirection {
+    HIGHER = "Higher", 
+    LOWER  = "Lower", 
+    SAME   = "Same" 
+}
+
+class TimeUnitUtil { 
+        
+    public static toHours(timeUnit: TimeUnit): number {
+        let hours = 0;
+        
+        switch (timeUnit) {
+        case TimeUnit.MONTH:
+            hours = 30 * 24;
+            break;
+        case TimeUnit.WEEK:
+            hours = 7 * 24;
+            break;
+        case TimeUnit.DAY:
+            hours = 24;
+            break;
+        case TimeUnit.SHIFT:
+            hours = 8;
+            break;
+        case TimeUnit.HOUR:
+            hours = 1;
+            break;
+        }
+        
+        return hours;
+    }
+} 
 
 class TimeFrameItem {
 		
@@ -47,6 +83,8 @@ class TimeFrameItem {
 
 class Table<ROW_KEY, COLUMN_KEY, VALUE> {
 
+    private backingMap: {[k: string]: {[k: string]: string | VALUE}} = {};
+
     private data = new Map<ROW_KEY, Map<COLUMN_KEY, VALUE>>();
 
     get(rowKey: ROW_KEY, columnKey: COLUMN_KEY): VALUE | undefined {
@@ -68,6 +106,17 @@ class Table<ROW_KEY, COLUMN_KEY, VALUE> {
         }
 
         row.set(columnKey, value); 
+
+        //update the "backingMap" needed for pages' js files
+        const rowKeyStr = new String(rowKey).toString();
+        let colValueObj: {[k: string]: string | VALUE} | undefined = this.backingMap[rowKeyStr];
+        if (!colValueObj) {
+            colValueObj = {};
+        }
+        const colKeyStr = new String(columnKey).toString();
+        colValueObj[colKeyStr] = value;
+
+        this.backingMap[rowKeyStr] = colValueObj;
     }
 
     getAsMorrisData(): {[k: string]: string | VALUE}[] {
@@ -196,6 +245,105 @@ class CategoryItem {
     
 }
 
+class TrendDirectionUtil {
+    
+    private static DEFAULT_TREND_DELTA_PERCENTAGE = 20.0;
+
+    public static of(base: number, variation: number): TrendDirection {
+        let direction = TrendDirection.SAME;
+        
+        if (base === variation) {
+            direction = TrendDirection.SAME;
+        } else if (base > variation && variation === 0) {
+            direction = TrendDirection.LOWER;
+        } else if (base < variation && base === 0) {
+            direction = TrendDirection.HIGHER;
+        } else {
+            
+            // actually calculate difference %
+            // const baseDbl = Double.valueOf(base);
+            // const variationDbl = Double.valueOf(variation);
+            const difference = base - variation;
+            const percentageDifference = Math.abs(difference / variation) * 100.0;
+            
+            if (percentageDifference < TrendDirectionUtil.DEFAULT_TREND_DELTA_PERCENTAGE) {
+                direction = TrendDirection.SAME;
+            } else if (base > variation) {
+                direction = TrendDirection.LOWER;
+            } else if (base < variation) {
+                direction = TrendDirection.HIGHER;
+            }
+        }
+        
+        return direction;
+    }
+    
+}
+
+class TrendItem {
+    
+    private direction: TrendDirection; 
+    private unit: TimeUnit;
+    private count: number;
+    private type: Type;
+    
+    public static of(countOverTimeUnit: number, unit: TimeUnit, type: Type): TrendItem {
+        const count = TrendItem.countPerHour(countOverTimeUnit, unit);
+
+        const toFixedPrec = Number.parseFloat(new Number(count).toFixed(4));
+
+        return new TrendItem(toFixedPrec, TrendDirection.SAME, unit, type);
+    }
+    
+    // denominator is always a month, so this would be events/responses in a day compared to a month 
+    public static compute(countVariation: number, unitVariation: TimeUnit, 
+                          countBase: number, unitBase: TimeUnit, 
+                          type: Type): TrendItem {
+        
+        const countVariationPerHour = TrendItem.countPerHour(countVariation, unitVariation);
+        const countBasePerHour = TrendItem.countPerHour(countBase, unitBase);
+        
+        const direction = TrendDirectionUtil.of(countBasePerHour, countVariationPerHour);
+
+        const toFixedPrec = Number.parseFloat(new Number(countVariationPerHour).toFixed(4));
+
+        return new TrendItem(toFixedPrec , direction, unitVariation, type);
+    }
+    
+    private static countPerHour(count: number, unit: TimeUnit): number {
+        let perHour = 0;
+        
+        if (count > 0) {
+            perHour = count / TimeUnitUtil.toHours(unit);
+        }
+        
+        return perHour;
+    }
+    
+    private constructor(count: number, direction: TrendDirection, unit: TimeUnit, type: Type) {
+        this.count = count;
+        this.direction = direction;
+        this.unit = unit;
+        this.type = type;
+    }
+
+    public getDirection(): TrendDirection {
+        return this.direction;
+    }
+
+    public getUnit(): TimeUnit {
+        return this.unit;
+    }
+
+    public getCount(): number {
+        return this.count;
+    }
+    
+    public getType(): Type {
+        return this.type;
+    }
+    
+}
 
 class Dates {
 
@@ -223,4 +371,5 @@ class Dates {
 	
 }
 
-export {TimeUnit, Type, TimeFrameItem, Table, ViewObject, CategoryItem, Dates}
+export {TimeUnit, Type, TimeFrameItem, Table, ViewObject, CategoryItem, Dates,
+        TrendItem}
