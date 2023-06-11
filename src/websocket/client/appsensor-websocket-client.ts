@@ -1,28 +1,41 @@
 
 import { ActionRequest, ActionResponse, UUID_QUERY_PARAM } from "../appsensor-websocket.js";
 import { Utils } from "../../utils/Utils.js";
+import { Logger } from "../../logging/logging.js";
 
 import { ClientRequestArgs } from "http";
 
 import WebSocket from "ws";
 import { v4 as uuidv4 } from 'uuid';
-import { Logger } from "../../logging/logging.js";
+import { IValidateInitialize } from "../../core/core.js";
 
-interface IWebSocketClientConfig {
-    address: string | URL;
-    options?: WebSocket.ClientOptions | ClientRequestArgs;
-}
+class WebSocketClientConfig implements IValidateInitialize {
+    public static DEFAULT_RETRY_INTERVAL = 20000;
 
-class WebSocketClientConfig implements IWebSocketClientConfig {
     address: string | URL = '';
     options?: WebSocket.ClientOptions | ClientRequestArgs | undefined;
+    reconnectOnConnectionLost?: boolean = true;
+    reconnectRetryInterval?: number = WebSocketClientConfig.DEFAULT_RETRY_INTERVAL;
+
+    checkValidInitialize(): void {
+        if (this.reconnectOnConnectionLost === true) {//mind undefined value
+            if (!this.reconnectRetryInterval) {
+                this.reconnectRetryInterval = WebSocketClientConfig.DEFAULT_RETRY_INTERVAL;
+            }
+        }
+    }
 
 }
 
 class AppSensorWebSocketClient {
 
-    protected socket;
-    protected myUUID;
+    protected socket: WebSocket | null = null;
+    protected myUUID: string;
+
+    protected reconnectAddress: string | URL;
+    protected reconnectConfig: WebSocketClientConfig | null;
+    protected reconnectOptions: WebSocket.ClientOptions | ClientRequestArgs | undefined;
+    protected reconnectTimer: NodeJS.Timer | null = null;
 
     constructor(address: string | URL = '', 
                 config: WebSocketClientConfig | null = null,
@@ -42,24 +55,60 @@ class AppSensorWebSocketClient {
 
         _address += '?' + UUID_QUERY_PARAM + '=' + this.myUUID;
 
-        this.socket = new WebSocket(_address, _options);
+        this.reconnectAddress = _address;   
+        this.reconnectConfig = config;
+        this.reconnectOptions = _options;
+
+        this.connect(_address, config, _options);
+    }
+
+    protected connect(address: string | URL, 
+                      config: WebSocketClientConfig | null = null,
+                      options?: WebSocket.ClientOptions | ClientRequestArgs) {
+        
+
+        this.socket = new WebSocket(address, options);
 
         const _myUUID = this.myUUID;
 
-        this.socket.on('open', function () {
-            Logger.getClientLogger().trace(`AppSensorWebSocketClient.socket: ${_myUUID}:`, 'open');
-        });
+        
+        this.socket.on('open', this.onOpen.bind(this));
 
-        this.socket.on('error', (error) => {
-            Logger.getClientLogger().trace(`AppSensorWebSocketClient.socket: ${_myUUID}:`, 'error ', error);
-        });
+        this.socket.on('error', this.onError.bind(this));
 
         this.socket.on('message', this.onMessage.bind(this));
 
-        this.socket.on('close', function close(this: WebSocket, code: number, reason: Buffer) {
-            Logger.getClientLogger().trace(`AppSensorWebSocketClient.socket: ${_myUUID}:`, 'close', 
-                                           ' CODE: ', code, ' REASON: ', reason.toString());
-        });
+        this.socket.on('close', this.onClose.bind(this));
+    }
+
+    protected onOpen() {
+        if (this.reconnectTimer) {
+            clearInterval(this.reconnectTimer);
+            this.reconnectTimer = null;
+
+            Logger.getClientLogger().info('AppSensorWebSocketClient.onOpen:', 'Reconnected');
+        }
+        
+        Logger.getClientLogger().trace(`AppSensorWebSocketClient.socket: ${this.myUUID}:`, 'open');
+    }
+
+    protected onError(error: Error) {
+        Logger.getClientLogger().trace(`AppSensorWebSocketClient.socket: ${this.myUUID}:`, 'error ', error);
+    }
+
+    protected onClose(code: number, reason: Buffer) {
+        Logger.getClientLogger().trace(`AppSensorWebSocketClient.socket: ${this.myUUID}:`, 'close', 
+                                        ' CODE: ', code, ' REASON: ', reason.toString());
+        
+        if (this.reconnectConfig && this.reconnectConfig.reconnectOnConnectionLost &&
+            !this.reconnectTimer) {
+            this.reconnectTimer = setInterval(this.reconnect.bind(this), this.reconnectConfig.reconnectRetryInterval);
+        }
+    }
+
+    protected reconnect() {
+        Logger.getClientLogger().info('AppSensorWebSocketClient.reconnect:', 'Retry reconnect...');
+        return this.connect(this.reconnectAddress, this.reconnectConfig, this.reconnectOptions);
     }
 
     onMessage(data: WebSocket.RawData, isBinary: boolean) {
@@ -79,7 +128,6 @@ class AppSensorWebSocketClient {
         } else {
             this.onServerResponse(response);
         }
-
     }
     
     protected onServerResponse(response: ActionResponse) {
@@ -95,6 +143,11 @@ class AppSensorWebSocketClient {
     protected async sendRequest(request: ActionRequest, cb: (err?: Error) => void) {
         let waited = 0;
         const timeout = 500;
+
+        if (!this.socket) {
+            return;
+        }
+
         while (this.socket.readyState === WebSocket.CONNECTING && waited < 5000) {
             await Utils.sleep(timeout);
             waited += timeout;
@@ -120,9 +173,11 @@ class AppSensorWebSocketClient {
     }
 
     protected closeSocket() {
-        this.socket.close();
+        if (this.socket) {
+            this.socket.close();
+        }
     }
 
 } 
 
-export {AppSensorWebSocketClient, WebSocketClientConfig, IWebSocketClientConfig};
+export {AppSensorWebSocketClient, WebSocketClientConfig};

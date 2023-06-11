@@ -1,4 +1,5 @@
 import e from 'express';
+import * as serveStatic from 'serve-static';
 import cors from 'cors';
 
 import morgan from 'morgan';
@@ -112,12 +113,16 @@ class RestServer {
     protected getStaticContentDir(): string {
         return '';
     }
-    
-    protected setStaticContent() {
-        const staticOptions = {
+
+    protected getStaticOption<R extends http.ServerResponse>(): serveStatic.ServeStaticOptions<R> {
+        return  {
             // fallthrough: false,
             redirect: false
         };
+    }
+    
+    protected setStaticContent() {
+        const staticOptions = this.getStaticOption();
 
         let basePath = this.config.basePath ? this.config.basePath : '';
 
@@ -146,7 +151,7 @@ class RestServer {
         switch (this.config.protocol) {
             case PROTOCOLS.HTTP: {
                 const options = this.config.http ? this.config.http : {};
-                this.server = http.createServer(options, this.expressApp);
+                this.server = http.createServer(options);
                 break;
             }
             case PROTOCOLS.HTTPS: {
@@ -163,24 +168,29 @@ class RestServer {
                 options.key = serviceKey;
                 options.cert = certificate;
 
-                this.server = https.createServer(options, this.expressApp);
+                this.server = https.createServer(options);
                 break;
             }
             case PROTOCOLS.HTTP2: {
                 //not supported yet in express
                 throw new Error("Not supported yet in the current version of Express!");
                 // const options = config.http2 ? config.http2 : {};
-                // this.server = http2.createServer(options, this.expressApp);
+                // this.server = http2.createServer(options);
                 break;
             }
         }
 
         if (this.server) {
+
             this.server.on('error', (err: Error) => {
                 Logger.getServerLogger().error('RestServer.startServer: ', err);
             }).on('tlsClientError', (err: Error, tlsSocket: tls.TLSSocket) => {
                 Logger.getServerLogger().error('RestServer.startServer: ', err);
             });
+
+            this.attachToServer();
+
+            this.server.addListener('request', this.expressApp);
         
             const listenOptions = this.config.listenOptions ? this.config.listenOptions: {};
             const serverSelf = this.server;
@@ -193,6 +203,10 @@ class RestServer {
             });
         }
 
+    }
+
+    protected attachToServer() {
+        //allow sharing of the same http server
     }
 
     private instanceofAddressInfo(obj: any): obj is net.AddressInfo {

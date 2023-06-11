@@ -1,184 +1,398 @@
 var socket;
-var client;
+var reconnectIntervalID;
+// var client;
 
-function subscribeOnSuccess(frame) {
-	  client.subscribe("/events", function(message) {
-		    var event = JSON.parse(message.body);
-		    
-		    var user = event.user;
-		    var detectionPoint = event.detectionPoint;
-		    var detectionSystem = event.detectionSystem;
-		    
-		    var composed = {};
-		    
-		    composed.type = 'Event';
-		    composed.category = detectionPoint.label + ' (' + detectionPoint.category + ')' ;
-		    composed.timestamp = event.timestamp;
-		    
-		    var fromIpAddress = (user.ipAddress) ? ' (' + user.ipAddress.address + ')' : ' (no IP Address)';
-	    	var fromGeo = (user.ipAddress && user.ipAddress.geoLocation) ? 
-	    			' (' + user.ipAddress.geoLocation.latitude + ' / ' + user.ipAddress.geoLocation.longitude + ')' : 
-	    				' (no geo)';
-	    	var toIpAddress = (detectionSystem.ipAddress) ? ' (' + detectionSystem.ipAddress.address + ')' : ' (no IP Address)';
-	    	var toGeo = (detectionSystem.ipAddress && detectionSystem.ipAddress.geoLocation) ? 
-	    			' (' + detectionSystem.ipAddress.geoLocation.latitude + ' / ' + detectionSystem.ipAddress.geoLocation.longitude + ')' : 
-	    				' (no geo)';
-	    	
-	    	composed.from = user.username + fromIpAddress + fromGeo;
-		    composed.to = detectionSystem.detectionSystemId + toIpAddress + toGeo;
-		    
-		    if ('ipAddress' in user && user.ipAddress && 
-		    		'geoLocation' in user.ipAddress && user.ipAddress.geoLocation &&
-		    		'ipAddress' in detectionSystem && detectionSystem.ipAddress && 
-		    		'geoLocation' in detectionSystem.ipAddress && detectionSystem.ipAddress.geoLocation) {
-		    	composed.origin = {};
-		    	composed.origin.latitude = user.ipAddress.geoLocation.latitude;
-		    	composed.origin.longitude = user.ipAddress.geoLocation.longitude;
-		    	composed.destination = {};
-		    	composed.destination.latitude = detectionSystem.ipAddress.geoLocation.latitude;
-		    	composed.destination.longitude = detectionSystem.ipAddress.geoLocation.longitude;
-		    	composed.options = {};
-		    	composed.options.strokeColor = 'yellow';
-		    	composed.name = 'Event received of type "' + composed.category + '"<br /> from user "' + composed.from + '"<br /> to detection system "' + composed.to + '"<br />';
-		    	composed.radius = 10;
-		    	composed.fillKey = 'eventFill';
-		    	composed.latitude = detectionSystem.ipAddress.geoLocation.latitude;
-		    	composed.longitude = detectionSystem.ipAddress.geoLocation.longitude;
-		    	
-		    	add(composed, events, bubbleEvents);
-		    } else {
-		    	composed.type = 'Unmapped Event';
-		    	
-		    	addActivityMessage(composed);
-		    }
-		    
-	  });
+function onEvent(message) {
+	var event = message;//JSON.parse(message.body);
 	
-	  client.subscribe("/attacks", function(message) {
-		  	var attack = JSON.parse(message.body);
-		    
-		    var user = attack.user;
-		    var detectionPoint = attack.detectionPoint;
-		    var detectionSystem = attack.detectionSystem;
-		    
-		    var composed = {};
-		    
-		    composed.type = 'Attack';
-		    composed.category = detectionPoint.label + ' (' + detectionPoint.category + ')' ;
-		    composed.timestamp = event.timestamp;
-		    
-		    var fromIpAddress = (user.ipAddress) ? ' (' + user.ipAddress.address + ')' : ' (no IP Address)';
-	    	var fromGeo = (user.ipAddress && user.ipAddress.geoLocation) ? 
-	    			' (' + user.ipAddress.geoLocation.latitude + ' / ' + user.ipAddress.geoLocation.longitude + ')' : 
-	    				' (no geo)';
-	    	var toIpAddress = (detectionSystem.ipAddress) ? ' (' + detectionSystem.ipAddress.address + ')' : ' (no IP Address)';
-	    	var toGeo = (detectionSystem.ipAddress && detectionSystem.ipAddress.geoLocation) ? 
-	    			' (' + detectionSystem.ipAddress.geoLocation.latitude + ' / ' + detectionSystem.ipAddress.geoLocation.longitude + ')' : 
-	    				' (no geo)';
-	    	
-	    	composed.from = user.username + fromIpAddress + fromGeo;
-		    composed.to = detectionSystem.detectionSystemId + toIpAddress + toGeo;
-		    
-		    if ('ipAddress' in user && user.ipAddress && 
-		    		'geoLocation' in user.ipAddress && user.ipAddress.geoLocation &&
-		    		'ipAddress' in detectionSystem && detectionSystem.ipAddress && 
-		    		'geoLocation' in detectionSystem.ipAddress && detectionSystem.ipAddress.geoLocation) {
-		    	composed.origin = {};
-		    	composed.origin.latitude = user.ipAddress.geoLocation.latitude;
-		    	composed.origin.longitude = user.ipAddress.geoLocation.longitude;
-		    	composed.destination = {};
-		    	composed.destination.latitude = detectionSystem.ipAddress.geoLocation.latitude;
-		    	composed.destination.longitude = detectionSystem.ipAddress.geoLocation.longitude;
-		    	composed.options = {};
-		    	composed.options.strokeColor = 'red';
-		    	composed.name = 'Attack received of type "' + composed.category + '"<br /> from user "' + composed.from + '"<br /> to detection system "' + composed.to + '"<br />';
-		    	composed.radius = 10;
-		    	composed.fillKey = 'attackFill';
-		    	composed.latitude = detectionSystem.ipAddress.geoLocation.latitude;
-		    	composed.longitude = detectionSystem.ipAddress.geoLocation.longitude;
-		    	
-		    	add(composed, attacks, bubbleAttacks);
-		    } else {
-		    	composed.type = 'Unmapped Attack';
-		    	
-		    	addActivityMessage(composed);
-		    }
-		  
-	  });
-	  
-	  client.subscribe("/responses", function(message) {
-		  	var response = JSON.parse(message.body);
-		  	
-		    var user = response.user;
-		    var detectionSystem = response.detectionSystem;
-		    
-		    var composed = {};
-		    
-		    composed.type = 'Response';
-		    
-		    var responseInterval = (response.interval) ? ' ( effective for ' + response.interval.duration + ' ' + response.interval.unit + ')' : ''
-		    var responseDescription = response.action + responseInterval;
-		    
-		    composed.category = responseDescription;	
-		    composed.timestamp = event.timestamp;
-		    
-		    // for a response, to/from are reversed
-		    var toIpAddress = (user.ipAddress) ? ' (' + user.ipAddress.address + ')' : ' (no IP Address)';
-	    	var toGeo = (user.ipAddress && user.ipAddress.geoLocation) ? 
-	    			' (' + user.ipAddress.geoLocation.latitude + ' / ' + user.ipAddress.geoLocation.longitude + ')' : 
-	    				' (no geo)';
-	    	var fromIpAddress = (detectionSystem.ipAddress) ? ' (' + detectionSystem.ipAddress.address + ')' : ' (no IP Address)';
-	    	var fromGeo = (detectionSystem.ipAddress && detectionSystem.ipAddress.geoLocation) ? 
-	    			' (' + detectionSystem.ipAddress.geoLocation.latitude + ' / ' + detectionSystem.ipAddress.geoLocation.longitude + ')' : 
-	    				' (no geo)';
-	    	
-	    	composed.from = detectionSystem.detectionSystemId + fromIpAddress + fromGeo;
-		    composed.to = user.username + toIpAddress + toGeo;
-		    
-		    if ('ipAddress' in user && user.ipAddress && 
-		    		'geoLocation' in user.ipAddress && user.ipAddress.geoLocation &&
-		    		'ipAddress' in detectionSystem && detectionSystem.ipAddress && 
-		    		'geoLocation' in detectionSystem.ipAddress && detectionSystem.ipAddress.geoLocation) {
-		    	composed.destination = {};
-		    	composed.destination.latitude = user.ipAddress.geoLocation.latitude;
-		    	composed.destination.longitude = user.ipAddress.geoLocation.longitude;
-		    	composed.origin = {};
-		    	composed.origin.latitude = detectionSystem.ipAddress.geoLocation.latitude;
-		    	composed.origin.longitude = detectionSystem.ipAddress.geoLocation.longitude;
-		    	composed.options = {};
-		    	composed.options.strokeColor = 'green';
-		    	composed.name = 'Response received of type "' + composed.category + '"<br /> from detection system "' + composed.from + '"<br /> to user "' + composed.to + '"<br />';
-		    	composed.radius = 10;
-		    	composed.fillKey = 'responseFill';
-		    	composed.latitude = user.ipAddress.geoLocation.latitude;
-		    	composed.longitude = user.ipAddress.geoLocation.longitude;
-		    	
-		    	add(composed, responses, bubbleResponses);
-		    } else {
-		    	composed.type = 'Unmapped Response';
-		    	
-		    	addActivityMessage(composed);
-		    }
-	  });
+	var user = event.user;
+	var detectionPoint = event.detectionPoint;
+	var detectionSystem = event.detectionSystem;
+	
+	var composed = {};
+	
+	composed.type = 'Event';
+	composed.category = detectionPoint.label + ' (' + detectionPoint.category + ')' ;
+	composed.timestamp = event.timestamp;
+	
+	var fromIpAddress = (user.ipAddress) ? ' (' + user.ipAddress.address + ')' : ' (no IP Address)';
+	var fromGeo = (user.ipAddress && user.ipAddress.geoLocation) ? 
+			' (' + user.ipAddress.geoLocation.latitude + ' / ' + user.ipAddress.geoLocation.longitude + ')' : 
+				' (no geo)';
+	var toIpAddress = (detectionSystem.ipAddress) ? ' (' + detectionSystem.ipAddress.address + ')' : ' (no IP Address)';
+	var toGeo = (detectionSystem.ipAddress && detectionSystem.ipAddress.geoLocation) ? 
+			' (' + detectionSystem.ipAddress.geoLocation.latitude + ' / ' + detectionSystem.ipAddress.geoLocation.longitude + ')' : 
+				' (no geo)';
+	
+	composed.from = user.username + fromIpAddress + fromGeo;
+	composed.to = detectionSystem.detectionSystemId + toIpAddress + toGeo;
+	
+	if ('ipAddress' in user && user.ipAddress && 
+			'geoLocation' in user.ipAddress && user.ipAddress.geoLocation &&
+			'ipAddress' in detectionSystem && detectionSystem.ipAddress && 
+			'geoLocation' in detectionSystem.ipAddress && detectionSystem.ipAddress.geoLocation) {
+		composed.origin = {};
+		composed.origin.latitude = user.ipAddress.geoLocation.latitude;
+		composed.origin.longitude = user.ipAddress.geoLocation.longitude;
+		composed.destination = {};
+		composed.destination.latitude = detectionSystem.ipAddress.geoLocation.latitude;
+		composed.destination.longitude = detectionSystem.ipAddress.geoLocation.longitude;
+		composed.options = {};
+		composed.options.strokeColor = 'yellow';
+		composed.name = 'Event received of type "' + composed.category + '"<br /> from user "' + composed.from + '"<br /> to detection system "' + composed.to + '"<br />';
+		composed.radius = 10;
+		composed.fillKey = 'eventFill';
+		composed.latitude = detectionSystem.ipAddress.geoLocation.latitude;
+		composed.longitude = detectionSystem.ipAddress.geoLocation.longitude;
+		
+		add(composed, events, bubbleEvents);
+	} else {
+		composed.type = 'Unmapped Event';
+		
+		addActivityMessage(composed);
+	}
+	
 }
 
-function reconnectOnFailure(error) {
-    console.log('STOMP: ' + error);
-    setTimeout(stompConnect, 10000);
-    console.log('STOMP: Reconecting in 10 seconds');
-};
+function onAttack(message) {
+	var attack = message;//JSON.parse(message.body);
+  
+  var user = attack.user;
+  var detectionPoint = attack.detectionPoint;
+  var detectionSystem = attack.detectionSystem;
+  
+  var composed = {};
+  
+  composed.type = 'Attack';
+  composed.category = detectionPoint.label + ' (' + detectionPoint.category + ')' ;
+  composed.timestamp = event.timestamp;
+  
+  var fromIpAddress = (user.ipAddress) ? ' (' + user.ipAddress.address + ')' : ' (no IP Address)';
+  var fromGeo = (user.ipAddress && user.ipAddress.geoLocation) ? 
+		  ' (' + user.ipAddress.geoLocation.latitude + ' / ' + user.ipAddress.geoLocation.longitude + ')' : 
+			  ' (no geo)';
+  var toIpAddress = (detectionSystem.ipAddress) ? ' (' + detectionSystem.ipAddress.address + ')' : ' (no IP Address)';
+  var toGeo = (detectionSystem.ipAddress && detectionSystem.ipAddress.geoLocation) ? 
+		  ' (' + detectionSystem.ipAddress.geoLocation.latitude + ' / ' + detectionSystem.ipAddress.geoLocation.longitude + ')' : 
+			  ' (no geo)';
+  
+  composed.from = user.username + fromIpAddress + fromGeo;
+  composed.to = detectionSystem.detectionSystemId + toIpAddress + toGeo;
+  
+  if ('ipAddress' in user && user.ipAddress && 
+		  'geoLocation' in user.ipAddress && user.ipAddress.geoLocation &&
+		  'ipAddress' in detectionSystem && detectionSystem.ipAddress && 
+		  'geoLocation' in detectionSystem.ipAddress && detectionSystem.ipAddress.geoLocation) {
+	  composed.origin = {};
+	  composed.origin.latitude = user.ipAddress.geoLocation.latitude;
+	  composed.origin.longitude = user.ipAddress.geoLocation.longitude;
+	  composed.destination = {};
+	  composed.destination.latitude = detectionSystem.ipAddress.geoLocation.latitude;
+	  composed.destination.longitude = detectionSystem.ipAddress.geoLocation.longitude;
+	  composed.options = {};
+	  composed.options.strokeColor = 'red';
+	  composed.name = 'Attack received of type "' + composed.category + '"<br /> from user "' + composed.from + '"<br /> to detection system "' + composed.to + '"<br />';
+	  composed.radius = 10;
+	  composed.fillKey = 'attackFill';
+	  composed.latitude = detectionSystem.ipAddress.geoLocation.latitude;
+	  composed.longitude = detectionSystem.ipAddress.geoLocation.longitude;
+	  
+	  add(composed, attacks, bubbleAttacks);
+  } else {
+	  composed.type = 'Unmapped Attack';
+	  
+	  addActivityMessage(composed);
+  }
 
-function stompConnect() {
-    console.log('STOMP: Attempting connection');
-    // recreate the stompClient to use a new WebSocket
-    socket = new SockJS('/appsensor-websocket');
-    client = Stomp.over(socket);
-    client.connect('unused_user', 'unused_password', subscribeOnSuccess, reconnectOnFailure);
+}
+
+function onResponse(message) {
+	var response = message;//JSON.parse(message.body);
+	
+  var user = response.user;
+  var detectionSystem = response.detectionSystem;
+  
+  var composed = {};
+  
+  composed.type = 'Response';
+  
+  var responseInterval = (response.interval) ? ' ( effective for ' + response.interval.duration + ' ' + response.interval.unit + ')' : ''
+  var responseDescription = response.action + responseInterval;
+  
+  composed.category = responseDescription;	
+  composed.timestamp = event.timestamp;
+  
+  // for a response, to/from are reversed
+  var toIpAddress = (user.ipAddress) ? ' (' + user.ipAddress.address + ')' : ' (no IP Address)';
+  var toGeo = (user.ipAddress && user.ipAddress.geoLocation) ? 
+		  ' (' + user.ipAddress.geoLocation.latitude + ' / ' + user.ipAddress.geoLocation.longitude + ')' : 
+			  ' (no geo)';
+  var fromIpAddress = (detectionSystem.ipAddress) ? ' (' + detectionSystem.ipAddress.address + ')' : ' (no IP Address)';
+  var fromGeo = (detectionSystem.ipAddress && detectionSystem.ipAddress.geoLocation) ? 
+		  ' (' + detectionSystem.ipAddress.geoLocation.latitude + ' / ' + detectionSystem.ipAddress.geoLocation.longitude + ')' : 
+			  ' (no geo)';
+  
+  composed.from = detectionSystem.detectionSystemId + fromIpAddress + fromGeo;
+  composed.to = user.username + toIpAddress + toGeo;
+  
+  if ('ipAddress' in user && user.ipAddress && 
+		  'geoLocation' in user.ipAddress && user.ipAddress.geoLocation &&
+		  'ipAddress' in detectionSystem && detectionSystem.ipAddress && 
+		  'geoLocation' in detectionSystem.ipAddress && detectionSystem.ipAddress.geoLocation) {
+	  composed.destination = {};
+	  composed.destination.latitude = user.ipAddress.geoLocation.latitude;
+	  composed.destination.longitude = user.ipAddress.geoLocation.longitude;
+	  composed.origin = {};
+	  composed.origin.latitude = detectionSystem.ipAddress.geoLocation.latitude;
+	  composed.origin.longitude = detectionSystem.ipAddress.geoLocation.longitude;
+	  composed.options = {};
+	  composed.options.strokeColor = 'green';
+	  composed.name = 'Response received of type "' + composed.category + '"<br /> from detection system "' + composed.from + '"<br /> to user "' + composed.to + '"<br />';
+	  composed.radius = 10;
+	  composed.fillKey = 'responseFill';
+	  composed.latitude = user.ipAddress.geoLocation.latitude;
+	  composed.longitude = user.ipAddress.geoLocation.longitude;
+	  
+	  add(composed, responses, bubbleResponses);
+  } else {
+	  composed.type = 'Unmapped Response';
+	  
+	  addActivityMessage(composed);
+  }
+}
+
+// function subscribeOnSuccess(frame) {
+// 	  client.subscribe("/events", function(message) {
+// 		    var event = JSON.parse(message.body);
+		    
+// 		    var user = event.user;
+// 		    var detectionPoint = event.detectionPoint;
+// 		    var detectionSystem = event.detectionSystem;
+		    
+// 		    var composed = {};
+		    
+// 		    composed.type = 'Event';
+// 		    composed.category = detectionPoint.label + ' (' + detectionPoint.category + ')' ;
+// 		    composed.timestamp = event.timestamp;
+		    
+// 		    var fromIpAddress = (user.ipAddress) ? ' (' + user.ipAddress.address + ')' : ' (no IP Address)';
+// 	    	var fromGeo = (user.ipAddress && user.ipAddress.geoLocation) ? 
+// 	    			' (' + user.ipAddress.geoLocation.latitude + ' / ' + user.ipAddress.geoLocation.longitude + ')' : 
+// 	    				' (no geo)';
+// 	    	var toIpAddress = (detectionSystem.ipAddress) ? ' (' + detectionSystem.ipAddress.address + ')' : ' (no IP Address)';
+// 	    	var toGeo = (detectionSystem.ipAddress && detectionSystem.ipAddress.geoLocation) ? 
+// 	    			' (' + detectionSystem.ipAddress.geoLocation.latitude + ' / ' + detectionSystem.ipAddress.geoLocation.longitude + ')' : 
+// 	    				' (no geo)';
+	    	
+// 	    	composed.from = user.username + fromIpAddress + fromGeo;
+// 		    composed.to = detectionSystem.detectionSystemId + toIpAddress + toGeo;
+		    
+// 		    if ('ipAddress' in user && user.ipAddress && 
+// 		    		'geoLocation' in user.ipAddress && user.ipAddress.geoLocation &&
+// 		    		'ipAddress' in detectionSystem && detectionSystem.ipAddress && 
+// 		    		'geoLocation' in detectionSystem.ipAddress && detectionSystem.ipAddress.geoLocation) {
+// 		    	composed.origin = {};
+// 		    	composed.origin.latitude = user.ipAddress.geoLocation.latitude;
+// 		    	composed.origin.longitude = user.ipAddress.geoLocation.longitude;
+// 		    	composed.destination = {};
+// 		    	composed.destination.latitude = detectionSystem.ipAddress.geoLocation.latitude;
+// 		    	composed.destination.longitude = detectionSystem.ipAddress.geoLocation.longitude;
+// 		    	composed.options = {};
+// 		    	composed.options.strokeColor = 'yellow';
+// 		    	composed.name = 'Event received of type "' + composed.category + '"<br /> from user "' + composed.from + '"<br /> to detection system "' + composed.to + '"<br />';
+// 		    	composed.radius = 10;
+// 		    	composed.fillKey = 'eventFill';
+// 		    	composed.latitude = detectionSystem.ipAddress.geoLocation.latitude;
+// 		    	composed.longitude = detectionSystem.ipAddress.geoLocation.longitude;
+		    	
+// 		    	add(composed, events, bubbleEvents);
+// 		    } else {
+// 		    	composed.type = 'Unmapped Event';
+		    	
+// 		    	addActivityMessage(composed);
+// 		    }
+		    
+// 	  });
+	
+// 	  client.subscribe("/attacks", function(message) {
+// 		  	var attack = JSON.parse(message.body);
+		    
+// 		    var user = attack.user;
+// 		    var detectionPoint = attack.detectionPoint;
+// 		    var detectionSystem = attack.detectionSystem;
+		    
+// 		    var composed = {};
+		    
+// 		    composed.type = 'Attack';
+// 		    composed.category = detectionPoint.label + ' (' + detectionPoint.category + ')' ;
+// 		    composed.timestamp = event.timestamp;
+		    
+// 		    var fromIpAddress = (user.ipAddress) ? ' (' + user.ipAddress.address + ')' : ' (no IP Address)';
+// 	    	var fromGeo = (user.ipAddress && user.ipAddress.geoLocation) ? 
+// 	    			' (' + user.ipAddress.geoLocation.latitude + ' / ' + user.ipAddress.geoLocation.longitude + ')' : 
+// 	    				' (no geo)';
+// 	    	var toIpAddress = (detectionSystem.ipAddress) ? ' (' + detectionSystem.ipAddress.address + ')' : ' (no IP Address)';
+// 	    	var toGeo = (detectionSystem.ipAddress && detectionSystem.ipAddress.geoLocation) ? 
+// 	    			' (' + detectionSystem.ipAddress.geoLocation.latitude + ' / ' + detectionSystem.ipAddress.geoLocation.longitude + ')' : 
+// 	    				' (no geo)';
+	    	
+// 	    	composed.from = user.username + fromIpAddress + fromGeo;
+// 		    composed.to = detectionSystem.detectionSystemId + toIpAddress + toGeo;
+		    
+// 		    if ('ipAddress' in user && user.ipAddress && 
+// 		    		'geoLocation' in user.ipAddress && user.ipAddress.geoLocation &&
+// 		    		'ipAddress' in detectionSystem && detectionSystem.ipAddress && 
+// 		    		'geoLocation' in detectionSystem.ipAddress && detectionSystem.ipAddress.geoLocation) {
+// 		    	composed.origin = {};
+// 		    	composed.origin.latitude = user.ipAddress.geoLocation.latitude;
+// 		    	composed.origin.longitude = user.ipAddress.geoLocation.longitude;
+// 		    	composed.destination = {};
+// 		    	composed.destination.latitude = detectionSystem.ipAddress.geoLocation.latitude;
+// 		    	composed.destination.longitude = detectionSystem.ipAddress.geoLocation.longitude;
+// 		    	composed.options = {};
+// 		    	composed.options.strokeColor = 'red';
+// 		    	composed.name = 'Attack received of type "' + composed.category + '"<br /> from user "' + composed.from + '"<br /> to detection system "' + composed.to + '"<br />';
+// 		    	composed.radius = 10;
+// 		    	composed.fillKey = 'attackFill';
+// 		    	composed.latitude = detectionSystem.ipAddress.geoLocation.latitude;
+// 		    	composed.longitude = detectionSystem.ipAddress.geoLocation.longitude;
+		    	
+// 		    	add(composed, attacks, bubbleAttacks);
+// 		    } else {
+// 		    	composed.type = 'Unmapped Attack';
+		    	
+// 		    	addActivityMessage(composed);
+// 		    }
+		  
+// 	  });
+	  
+// 	  client.subscribe("/responses", function(message) {
+// 		  	var response = JSON.parse(message.body);
+		  	
+// 		    var user = response.user;
+// 		    var detectionSystem = response.detectionSystem;
+		    
+// 		    var composed = {};
+		    
+// 		    composed.type = 'Response';
+		    
+// 		    var responseInterval = (response.interval) ? ' ( effective for ' + response.interval.duration + ' ' + response.interval.unit + ')' : ''
+// 		    var responseDescription = response.action + responseInterval;
+		    
+// 		    composed.category = responseDescription;	
+// 		    composed.timestamp = event.timestamp;
+		    
+// 		    // for a response, to/from are reversed
+// 		    var toIpAddress = (user.ipAddress) ? ' (' + user.ipAddress.address + ')' : ' (no IP Address)';
+// 	    	var toGeo = (user.ipAddress && user.ipAddress.geoLocation) ? 
+// 	    			' (' + user.ipAddress.geoLocation.latitude + ' / ' + user.ipAddress.geoLocation.longitude + ')' : 
+// 	    				' (no geo)';
+// 	    	var fromIpAddress = (detectionSystem.ipAddress) ? ' (' + detectionSystem.ipAddress.address + ')' : ' (no IP Address)';
+// 	    	var fromGeo = (detectionSystem.ipAddress && detectionSystem.ipAddress.geoLocation) ? 
+// 	    			' (' + detectionSystem.ipAddress.geoLocation.latitude + ' / ' + detectionSystem.ipAddress.geoLocation.longitude + ')' : 
+// 	    				' (no geo)';
+	    	
+// 	    	composed.from = detectionSystem.detectionSystemId + fromIpAddress + fromGeo;
+// 		    composed.to = user.username + toIpAddress + toGeo;
+		    
+// 		    if ('ipAddress' in user && user.ipAddress && 
+// 		    		'geoLocation' in user.ipAddress && user.ipAddress.geoLocation &&
+// 		    		'ipAddress' in detectionSystem && detectionSystem.ipAddress && 
+// 		    		'geoLocation' in detectionSystem.ipAddress && detectionSystem.ipAddress.geoLocation) {
+// 		    	composed.destination = {};
+// 		    	composed.destination.latitude = user.ipAddress.geoLocation.latitude;
+// 		    	composed.destination.longitude = user.ipAddress.geoLocation.longitude;
+// 		    	composed.origin = {};
+// 		    	composed.origin.latitude = detectionSystem.ipAddress.geoLocation.latitude;
+// 		    	composed.origin.longitude = detectionSystem.ipAddress.geoLocation.longitude;
+// 		    	composed.options = {};
+// 		    	composed.options.strokeColor = 'green';
+// 		    	composed.name = 'Response received of type "' + composed.category + '"<br /> from detection system "' + composed.from + '"<br /> to user "' + composed.to + '"<br />';
+// 		    	composed.radius = 10;
+// 		    	composed.fillKey = 'responseFill';
+// 		    	composed.latitude = user.ipAddress.geoLocation.latitude;
+// 		    	composed.longitude = user.ipAddress.geoLocation.longitude;
+		    	
+// 		    	add(composed, responses, bubbleResponses);
+// 		    } else {
+// 		    	composed.type = 'Unmapped Response';
+		    	
+// 		    	addActivityMessage(composed);
+// 		    }
+// 	  });
+// }
+
+// function reconnectOnFailure(error) {
+//     console.log('STOMP: ' + error);
+//     setTimeout(stompConnect, 10000);
+//     console.log('STOMP: Reconecting in 10 seconds');
+// };
+
+// function stompConnect() {
+//     console.log('STOMP: Attempting connection');
+//     // recreate the stompClient to use a new WebSocket
+//     socket = new SockJS('/appsensor-websocket');
+//     client = Stomp.over(socket);
+//     client.connect('unused_user', 'unused_password', subscribeOnSuccess, reconnectOnFailure);
+// }
+
+function wsConnect() {
+	socket = new WebSocket("ws://localhost:8080/appsensor-websocket");
+	socket.addEventListener("open", (event) => {
+		socket.send("Hello Server!");
+		if (reconnectIntervalID) {
+			clearInterval(reconnectIntervalID);
+			reconnectIntervalID = null;
+
+			console.log('Websocket reconnected.')
+		}
+    });
+	  
+	// Listen for messages
+	socket.addEventListener("message", (event) => {
+		// console.log("Message from server ", event.data);
+		const wsSocketJSONObject = JSON.parse(event.data);
+
+		switch(wsSocketJSONObject.dataType) {
+			case "event": {
+				onEvent(wsSocketJSONObject.dataValue);
+				break;
+			}
+			case "attack": {
+				onAttack(wsSocketJSONObject.dataValue);
+				break;
+			}
+			case "response": {
+				onResponse(wsSocketJSONObject.dataValue);
+				break;
+			}
+		}
+	
+	});	
+
+	socket.addEventListener("error", (event) => {
+		console.log("WebSocket error: ", event);
+	});	  
+
+	socket.addEventListener("close", (event) => {
+		console.log("The connection has been closed.");
+		if (!reconnectIntervalID) {
+			reconnectIntervalID = setInterval(reconnect, 10000);
+		}
+	});
+
+}
+
+function reconnect() {
+	console.log('Retry websocket reconnect...');
+	wsConnect();
 }
 
 $(function() {
-	stompConnect();
-	keepalive();
+	// stompConnect();
+	// keepalive();
+
+	wsConnect()
 });
 
 // end websockets, start mapping

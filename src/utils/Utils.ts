@@ -183,6 +183,10 @@ class JSONConfigReadValidate {
             Object.setPrototypeOf(config, this.prototypeOfConfigObj);
         }
 
+        if (Utils.isIValidateInitialize(config)) {
+            config.checkValidInitialize();
+        }
+
         return config;
     }
 
@@ -202,6 +206,10 @@ class JSONConfigReadValidate {
 
         if (config && this.prototypeOfConfigObj !== undefined) {
             Object.setPrototypeOf(config, this.prototypeOfConfigObj);
+        }
+
+        if (Utils.isIValidateInitialize(config)) {
+            config.checkValidInitialize();
         }
 
         return config;
@@ -386,7 +394,7 @@ class Utils {
         }
     }
 
-    private static isIValidateInitialize(obj: any): obj is IValidateInitialize {
+    public static isIValidateInitialize(obj: any): obj is IValidateInitialize {
         return (obj as IValidateInitialize).checkValidInitialize !== undefined;
     }
    

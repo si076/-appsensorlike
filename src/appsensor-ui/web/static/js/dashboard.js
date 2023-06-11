@@ -1,5 +1,6 @@
 var socket;
-var client;
+var reconnectIntervalID;
+// var client;
 
 function addActivityMessage(element) {
 	var tableRef = document.getElementById('dashboard-activity-log');
@@ -34,7 +35,7 @@ function addActivityMessage(element) {
 
 // helper since events and attacks look the same
 function logEventOrAttack(type, message) {
-	var data = JSON.parse(message.body);
+	var data = message;//JSON.parse(message.body);
     
     var user = data.user;
     var detectionPoint = data.detectionPoint;
@@ -61,61 +62,93 @@ function logEventOrAttack(type, message) {
 	addActivityMessage(composed);
 }
 
-function subscribeOnSuccess(frame) {
-	client.subscribe("/events", function(message) {
-		logEventOrAttack('Event', message);    
-	});
-
-	client.subscribe("/attacks", function(message) {
-		logEventOrAttack('Attack', message);
-	});
-  
-	client.subscribe("/responses", function(message) {
-	  	var response = JSON.parse(message.body);
+function logResponse(message) {
+	var response = message;//JSON.parse(message.body);
 	  	
-	    var user = response.user;
-	    var detectionSystem = response.detectionSystem;
+	var user = response.user;
+	var detectionSystem = response.detectionSystem;
+	
+	var composed = {};
+	
+	composed.type = 'Response';
+	
+	var responseInterval = (response.interval) ? ' ( effective for ' + response.interval.duration + ' ' + response.interval.unit + ')' : ''
+	var responseDescription = response.action + responseInterval;
+	
+	composed.category = responseDescription;	
+	composed.timestamp = event.timestamp;
+	
+	// for a response, to/from are reversed
+	var toIpAddress = (user.ipAddress) ? ' (' + user.ipAddress.address + ')' : ' (no IP Address)';
+	var toGeo = (user.ipAddress && user.ipAddress.geoLocation) ? 
+			' (' + user.ipAddress.geoLocation.latitude + ' / ' + user.ipAddress.geoLocation.longitude + ')' : 
+				' (no geo)';
+	var fromIpAddress = (detectionSystem.ipAddress) ? ' (' + detectionSystem.ipAddress.address + ')' : ' (no IP Address)';
+	var fromGeo = (detectionSystem.ipAddress && detectionSystem.ipAddress.geoLocation) ? 
+			' (' + detectionSystem.ipAddress.geoLocation.latitude + ' / ' + detectionSystem.ipAddress.geoLocation.longitude + ')' : 
+				' (no geo)';
+	
+	composed.from = detectionSystem.detectionSystemId + fromIpAddress + fromGeo;
+	composed.to = user.username + toIpAddress + toGeo;
+	
+	addActivityMessage(composed);
+}
+
+// function subscribeOnSuccess(frame) {
+// 	client.subscribe("/events", function(message) {
+// 		logEventOrAttack('Event', message);    
+// 	});
+
+// 	client.subscribe("/attacks", function(message) {
+// 		logEventOrAttack('Attack', message);
+// 	});
+  
+// 	client.subscribe("/responses", function(message) {
+// 	  	var response = JSON.parse(message.body);
+	  	
+// 	    var user = response.user;
+// 	    var detectionSystem = response.detectionSystem;
 	    
-	    var composed = {};
+// 	    var composed = {};
 	    
-	    composed.type = 'Response';
+// 	    composed.type = 'Response';
 	    
-	    var responseInterval = (response.interval) ? ' ( effective for ' + response.interval.duration + ' ' + response.interval.unit + ')' : ''
-	    var responseDescription = response.action + responseInterval;
+// 	    var responseInterval = (response.interval) ? ' ( effective for ' + response.interval.duration + ' ' + response.interval.unit + ')' : ''
+// 	    var responseDescription = response.action + responseInterval;
 	    
-	    composed.category = responseDescription;	
-	    composed.timestamp = event.timestamp;
+// 	    composed.category = responseDescription;	
+// 	    composed.timestamp = event.timestamp;
 	    
-	    // for a response, to/from are reversed
-	    var toIpAddress = (user.ipAddress) ? ' (' + user.ipAddress.address + ')' : ' (no IP Address)';
-    	var toGeo = (user.ipAddress && user.ipAddress.geoLocation) ? 
-    			' (' + user.ipAddress.geoLocation.latitude + ' / ' + user.ipAddress.geoLocation.longitude + ')' : 
-    				' (no geo)';
-    	var fromIpAddress = (detectionSystem.ipAddress) ? ' (' + detectionSystem.ipAddress.address + ')' : ' (no IP Address)';
-    	var fromGeo = (detectionSystem.ipAddress && detectionSystem.ipAddress.geoLocation) ? 
-    			' (' + detectionSystem.ipAddress.geoLocation.latitude + ' / ' + detectionSystem.ipAddress.geoLocation.longitude + ')' : 
-    				' (no geo)';
+// 	    // for a response, to/from are reversed
+// 	    var toIpAddress = (user.ipAddress) ? ' (' + user.ipAddress.address + ')' : ' (no IP Address)';
+//     	var toGeo = (user.ipAddress && user.ipAddress.geoLocation) ? 
+//     			' (' + user.ipAddress.geoLocation.latitude + ' / ' + user.ipAddress.geoLocation.longitude + ')' : 
+//     				' (no geo)';
+//     	var fromIpAddress = (detectionSystem.ipAddress) ? ' (' + detectionSystem.ipAddress.address + ')' : ' (no IP Address)';
+//     	var fromGeo = (detectionSystem.ipAddress && detectionSystem.ipAddress.geoLocation) ? 
+//     			' (' + detectionSystem.ipAddress.geoLocation.latitude + ' / ' + detectionSystem.ipAddress.geoLocation.longitude + ')' : 
+//     				' (no geo)';
     	
-    	composed.from = detectionSystem.detectionSystemId + fromIpAddress + fromGeo;
-	    composed.to = user.username + toIpAddress + toGeo;
+//     	composed.from = detectionSystem.detectionSystemId + fromIpAddress + fromGeo;
+// 	    composed.to = user.username + toIpAddress + toGeo;
 	    
-    	addActivityMessage(composed);
-	});
-}
+//     	addActivityMessage(composed);
+// 	});
+// }
 
-function reconnectOnFailure(error) {
-    console.log('STOMP: ' + error);
-    setTimeout(stompConnect, 10000);
-    console.log('STOMP: Reconecting in 10 seconds');
-};
+// function reconnectOnFailure(error) {
+//     console.log('STOMP: ' + error);
+//     setTimeout(stompConnect, 10000);
+//     console.log('STOMP: Reconecting in 10 seconds');
+// };
 
-function stompConnect() {
-    console.log('STOMP: Attempting connection');
-    // recreate the stompClient to use a new WebSocket
-    socket = new SockJS('/appsensor-websocket');
-    client = Stomp.over(socket);
-    client.connect('unused_user', 'unused_password', subscribeOnSuccess, reconnectOnFailure);
-}
+// function stompConnect() {
+//     console.log('STOMP: Attempting connection');
+//     // recreate the stompClient to use a new WebSocket
+//     socket = new SockJS('/appsensor-websocket');
+//     client = Stomp.over(socket);
+//     client.connect('unused_user', 'unused_password', subscribeOnSuccess, reconnectOnFailure);
+// }
 
 function activateSlider(selectedTimeSpan) {
 	var items =[ 'Month','Week','Day','Shift', 'Hour'];
@@ -582,7 +615,7 @@ var TopDetectionPointsContent = React.createClass({
 		      return (
 		    	<tr>
 		    	  <td>
-		    	  	<a href={[apiBaseUrl + '/detection-points/' + category + '/'  + label]}>{label}</a> ({category}) ({count} events)
+		    	  	<a href={[apiBaseUrl + '/detection-points/' + category + '/' + label]}>{label}</a> ({category}) ({count} events)
 		    	  </td>
 		    	</tr>
 		      );
@@ -752,9 +785,63 @@ function initReact(selectedTimeSpan) {
 	React.render(<Dashboard selectedTimeSpan={selectedTimeSpan} />, document.getElementById('react_dashboard_container'));
 }
 
+function wsConnect() {
+	socket = new WebSocket("ws://localhost:8080/appsensor-websocket");
+	socket.addEventListener("open", (event) => {
+		socket.send("Hello Server!");
+		if (reconnectIntervalID) {
+			clearInterval(reconnectIntervalID);
+			reconnectIntervalID = null;
+
+			console.log('Websocket reconnected.')
+		}
+	});
+	  
+	// Listen for messages
+	socket.addEventListener("message", (event) => {
+		// console.log("Message from server ", event.data);
+		const wsSocketJSONObject = JSON.parse(event.data);
+
+		switch(wsSocketJSONObject.dataType) {
+			case "event": {
+				logEventOrAttack('Event', wsSocketJSONObject.dataValue);
+				break;
+			}
+			case "attack": {
+				logEventOrAttack('Attack', wsSocketJSONObject.dataValue);
+				break;
+			}
+			case "response": {
+				logResponse(wsSocketJSONObject.dataValue);
+				break;
+			}
+		}
+	
+	});	
+
+	socket.addEventListener("error", (event) => {
+		console.log("WebSocket error: ", event);
+	});	  
+
+	socket.addEventListener("close", (event) => {
+		console.log("The connection has been closed.");
+		if (!reconnectIntervalID) {
+			reconnectIntervalID = setInterval(reconnect, 10000);
+		}
+	});
+
+}
+
+function reconnect() {
+	console.log('Retry websocket reconnect...');
+	wsConnect();
+}
+
 $(function() {
-	stompConnect();
-	keepalive();
+	// stompConnect();
+	// keepalive();
+
+	wsConnect();
 	
 	// on first load of the page, find the shortest time frame that has events and load it, defaulting to month if none are found
 	$.ajax({

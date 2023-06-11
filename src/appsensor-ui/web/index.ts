@@ -8,21 +8,34 @@ import { DetectionPointController } from "./controller/DetectionPointController.
 import { DashboardReport } from "../reports/DashboardReport.js";
 import { DetectionPointReport } from "../reports/DetectionPointReport.js";
 import { UserReport } from "../reports/UserReport.js";
+import { TrendsDashboardReport } from "../reports/TrendsDashboardReport.js";
+import { TrendsDashboardController } from "./controller/TrendsDashboardController.js";
+import { AppSensorEvent, Attack, Response } from "../../core/core.js";
+import { WebSocketJsonObject } from "./websocket/WebSocketJSONObject.js";
 
 import e from 'express';
+import * as serveStatic from 'serve-static';
 import morgan from 'morgan';
 import hbs from 'hbs';
 import path from 'path';
 
-import fs from 'node:fs';
-import { TrendsDashboardReport } from "../reports/TrendsDashboardReport.js";
-import { TrendsDashboardController } from "./controller/TrendsDashboardController.js";
+import http, { IncomingMessage } from 'http';
+import https from 'https';
+
+import WebSocket, { WebSocketServer } from "ws";
 
 
 type TEMPLATE_VARIABLES = {
     CONTEXT_PATH: string,
     LOGGED_IN_USERNAME: string
 } & {[key: string]: string};
+
+interface WebSocketAdditionalProperties {
+    isAlive?: boolean;
+    remoteAddress?: string;
+}
+
+type WebSocketExt = WebSocket.WebSocket & WebSocketAdditionalProperties;
 
 class AppsensorUIRestServerConfigReader extends JSONConfigReadValidate {
     constructor() {
@@ -54,9 +67,10 @@ class AppsensorUIRestServer extends RestServer {
     private detectionPointController: DetectionPointController;
     private trendsController: TrendsDashboardController;
 
+    //reporting client
     private wsClient: AppSensorReportingWebSocketClient;
-
-    private templatesMap = new Map<string, string>();
+    //websocket server to send coming AppSensorEvent, Attack and Responses to the browser
+    private websocketServer: WebSocketServer | null = null;
 
     private templateVariables: TEMPLATE_VARIABLES;
 
@@ -90,7 +104,97 @@ class AppsensorUIRestServer extends RestServer {
 
         hbs.registerPartials(path.join(templatesPath, AppsensorUIRestServer.TEMPLATES_PARTIALS_DIR));
 
-        console.log("Working dir: " + process.cwd());
+        // console.log("Working dir: " + process.cwd());
+    }
+
+    protected override attachToServer(): void {
+        if (this.server instanceof http.Server || 
+            this.server instanceof https.Server) {
+            
+            const self = this;
+
+            const interval = setInterval(this.ping.bind(this), 30000);
+
+            this.websocketServer = new WebSocketServer({ server: this.server, 
+                                                         path: '/appsensor-websocket',
+                                                         perMessageDeflate: false
+                                                        });
+            this.websocketServer.on('connection', function(ws:  WebSocketExt, req: IncomingMessage) {
+                try {
+                    if (typeof req.headers['x-forwarded-for'] === 'string') {
+                        ws.remoteAddress = req.headers['x-forwarded-for'].split(',')[0].trim();
+                    }
+                } catch (error) {
+                    Logger.getServerLogger().trace('AppSensorUI.websocketServer:', error);
+                }
+                
+                if (!ws.remoteAddress) {
+                    ws.remoteAddress = req.socket.remoteAddress;
+                }
+    
+                Logger.getServerLogger().info('AppSensorUI.websocketServer:', 'connection', 
+                                               'remote address:', ws.remoteAddress);
+
+                self.wsClient.addOnAddListener((obj: AppSensorEvent | Attack | Response) => {
+                    let type = '';
+                    if (obj instanceof AppSensorEvent) {
+                        type = "event";
+                    } else if (obj instanceof Attack) {
+                        type = "attack";
+                    } else if (obj instanceof Response) {
+                        type = "response";
+                    }
+                    const wsJSONObject = new WebSocketJsonObject(type, obj);
+                    const wsJSONObjectStr = JSON.stringify(wsJSONObject);
+
+                    ws.send(wsJSONObjectStr);
+                });    
+
+                ws.isAlive = true;
+
+                ws.on('error', (error) => {
+                    Logger.getServerLogger().trace('AppSensorUI.websocketServer:', ': error', error);
+                });
+
+                ws.on('message', function(this:  WebSocketExt, data: WebSocket.RawData, isBinary: boolean) {
+                    Logger.getServerLogger().trace('AppSensorUI.websocketServer:', 'message:', data.toString());
+                });
+
+                ws.on('pong', function(this:  WebSocketExt) {
+                    // console.log('pong');
+                    Logger.getServerLogger().trace('AppSensorUI.websocketServer:', ': pong');
+    
+                    this.isAlive = true;
+                });
+
+            });  
+
+            this.websocketServer.on("error", function(this: WebSocketServer, error: Error) {
+                Logger.getServerLogger().error('AppSensorUI.websocketServer:', 'error:', error);
+            });
+
+            this.websocketServer.on("headers", function(this: WebSocketServer, headers: string[], request: IncomingMessage) {
+                // console.log('WebSocketServer.headers', headers);
+            });
+
+            this.websocketServer.on('close', function close(this: WebSocketServer) {
+                Logger.getServerLogger().info('AppSensorUI.websocketServer:', 'close');
+
+                clearInterval(interval);
+            });
+
+        }
+    }
+
+    private ping() {
+        if (this.websocketServer) {
+            this.websocketServer.clients.forEach(function each(ws:  WebSocketExt) {
+                if (ws.isAlive === false) return ws.terminate();
+            
+                ws.isAlive = false;
+                ws.ping();
+            });
+        }
     }
 
     prepareTemplateVariables(req: e.Request, res: e.Response, next: e.NextFunction) {
@@ -132,7 +236,7 @@ class AppsensorUIRestServer extends RestServer {
             this.templateVariables[key] = path;
         }
 
-        console.log(this.templateVariables);
+        // console.log(this.templateVariables);
 
         next();
     }
@@ -141,6 +245,12 @@ class AppsensorUIRestServer extends RestServer {
         return AppsensorUIRestServer.STATIC_CONTENT_DIR;
     }
 
+    // protected override getStaticOption<R extends http.ServerResponse>(): serveStatic.ServeStaticOptions<R> {
+    //     return  {
+    //         fallthrough: true,
+    //         redirect: false
+    //     };
+    // }
 
     protected override setRequestLogging() {
         this.expressApp.use(

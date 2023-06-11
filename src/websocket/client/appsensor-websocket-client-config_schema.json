@@ -4,15 +4,27 @@
     "definitions": {
         "AbortSignal": {
             "additionalProperties": false,
-            "description": "A signal object that allows you to communicate with a DOM request (such as a Fetch) and abort it if required via an AbortController object.",
             "properties": {
                 "aborted": {
-                    "description": "Returns true if this AbortSignal's AbortController has signaled to abort, and false otherwise.",
                     "type": "boolean"
-                }
+                },
+                "onabort": {
+                    "anyOf": [
+                        {
+                            "additionalProperties": false,
+                            "type": "object"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "reason": {}
             },
             "required": [
-                "aborted"
+                "aborted",
+                "onabort",
+                "reason"
             ],
             "type": "object"
         },
@@ -58,7 +70,7 @@
         "ArrayBuffer": {
             "additionalProperties": false,
             "properties": {
-                "__@toStringTag@460": {
+                "__@toStringTag@533": {
                     "type": "string"
                 },
                 "byteLength": {
@@ -66,7 +78,7 @@
                 }
             },
             "required": [
-                "__@toStringTag@460",
+                "__@toStringTag@533",
                 "byteLength"
             ],
             "type": "object"
@@ -539,7 +551,7 @@
         "DataView": {
             "additionalProperties": false,
             "properties": {
-                "__@toStringTag@460": {
+                "__@toStringTag@533": {
                     "type": "string"
                 },
                 "buffer": {
@@ -553,7 +565,7 @@
                 }
             },
             "required": [
-                "__@toStringTag@460",
+                "__@toStringTag@533",
                 "buffer",
                 "byteLength",
                 "byteOffset"
@@ -645,6 +657,9 @@
                                     "type": "object"
                                 },
                                 {
+                                    "$ref": "#/definitions/DataView"
+                                },
+                                {
                                     "items": {
                                         "additionalProperties": false,
                                         "patternProperties": {
@@ -655,9 +670,6 @@
                                         "type": "object"
                                     },
                                     "type": "array"
-                                },
-                                {
-                                    "$ref": "#/definitions/DataView"
                                 }
                             ]
                         },
@@ -727,54 +739,41 @@
         },
         "URL": {
             "additionalProperties": false,
-            "description": "`URL` class is a global reference for `require('url').URL`\nhttps://nodejs.org/api/url.html#the-whatwg-url-api",
             "properties": {
                 "hash": {
-                    "description": "Gets and sets the fragment portion of the URL.\n\n```js\nconst myURL = new URL('https://example.org/foo#bar');\nconsole.log(myURL.hash);\n// Prints #bar\n\nmyURL.hash = 'baz';\nconsole.log(myURL.href);\n// Prints https://example.org/foo#baz\n```\n\nInvalid URL characters included in the value assigned to the `hash` property\nare `percent-encoded`. The selection of which characters to\npercent-encode may vary somewhat from what the {@link parse} and {@link format} methods would produce.",
                     "type": "string"
                 },
                 "host": {
-                    "description": "Gets and sets the host portion of the URL.\n\n```js\nconst myURL = new URL('https://example.org:81/foo');\nconsole.log(myURL.host);\n// Prints example.org:81\n\nmyURL.host = 'example.com:82';\nconsole.log(myURL.href);\n// Prints https://example.com:82/foo\n```\n\nInvalid host values assigned to the `host` property are ignored.",
                     "type": "string"
                 },
                 "hostname": {
-                    "description": "Gets and sets the host name portion of the URL. The key difference between`url.host` and `url.hostname` is that `url.hostname` does _not_ include the\nport.\n\n```js\nconst myURL = new URL('https://example.org:81/foo');\nconsole.log(myURL.hostname);\n// Prints example.org\n\n// Setting the hostname does not change the port\nmyURL.hostname = 'example.com:82';\nconsole.log(myURL.href);\n// Prints https://example.com:81/foo\n\n// Use myURL.host to change the hostname and port\nmyURL.host = 'example.org:82';\nconsole.log(myURL.href);\n// Prints https://example.org:82/foo\n```\n\nInvalid host name values assigned to the `hostname` property are ignored.",
                     "type": "string"
                 },
                 "href": {
-                    "description": "Gets and sets the serialized URL.\n\n```js\nconst myURL = new URL('https://example.org/foo');\nconsole.log(myURL.href);\n// Prints https://example.org/foo\n\nmyURL.href = 'https://example.com/bar';\nconsole.log(myURL.href);\n// Prints https://example.com/bar\n```\n\nGetting the value of the `href` property is equivalent to calling {@link toString}.\n\nSetting the value of this property to a new value is equivalent to creating a\nnew `URL` object using `new URL(value)`. Each of the `URL`object's properties will be modified.\n\nIf the value assigned to the `href` property is not a valid URL, a `TypeError`will be thrown.",
                     "type": "string"
                 },
                 "origin": {
-                    "description": "Gets the read-only serialization of the URL's origin.\n\n```js\nconst myURL = new URL('https://example.org/foo/bar?baz');\nconsole.log(myURL.origin);\n// Prints https://example.org\n```\n\n```js\nconst idnURL = new URL('https://測試');\nconsole.log(idnURL.origin);\n// Prints https://xn--g6w251d\n\nconsole.log(idnURL.hostname);\n// Prints xn--g6w251d\n```",
                     "type": "string"
                 },
                 "password": {
-                    "description": "Gets and sets the password portion of the URL.\n\n```js\nconst myURL = new URL('https://abc:xyz@example.com');\nconsole.log(myURL.password);\n// Prints xyz\n\nmyURL.password = '123';\nconsole.log(myURL.href);\n// Prints https://abc:123@example.com\n```\n\nInvalid URL characters included in the value assigned to the `password` property\nare `percent-encoded`. The selection of which characters to\npercent-encode may vary somewhat from what the {@link parse} and {@link format} methods would produce.",
                     "type": "string"
                 },
                 "pathname": {
-                    "description": "Gets and sets the path portion of the URL.\n\n```js\nconst myURL = new URL('https://example.org/abc/xyz?123');\nconsole.log(myURL.pathname);\n// Prints /abc/xyz\n\nmyURL.pathname = '/abcdef';\nconsole.log(myURL.href);\n// Prints https://example.org/abcdef?123\n```\n\nInvalid URL characters included in the value assigned to the `pathname`property are `percent-encoded`. The selection of which characters\nto percent-encode may vary somewhat from what the {@link parse} and {@link format} methods would produce.",
                     "type": "string"
                 },
                 "port": {
-                    "description": "Gets and sets the port portion of the URL.\n\nThe port value may be a number or a string containing a number in the range`0` to `65535` (inclusive). Setting the value to the default port of the`URL` objects given `protocol` will\nresult in the `port` value becoming\nthe empty string (`''`).\n\nThe port value can be an empty string in which case the port depends on\nthe protocol/scheme:\n\n<omitted>\n\nUpon assigning a value to the port, the value will first be converted to a\nstring using `.toString()`.\n\nIf that string is invalid but it begins with a number, the leading number is\nassigned to `port`.\nIf the number lies outside the range denoted above, it is ignored.\n\n```js\nconst myURL = new URL('https://example.org:8888');\nconsole.log(myURL.port);\n// Prints 8888\n\n// Default ports are automatically transformed to the empty string\n// (HTTPS protocol's default port is 443)\nmyURL.port = '443';\nconsole.log(myURL.port);\n// Prints the empty string\nconsole.log(myURL.href);\n// Prints https://example.org/\n\nmyURL.port = 1234;\nconsole.log(myURL.port);\n// Prints 1234\nconsole.log(myURL.href);\n// Prints https://example.org:1234/\n\n// Completely invalid port strings are ignored\nmyURL.port = 'abcd';\nconsole.log(myURL.port);\n// Prints 1234\n\n// Leading numbers are treated as a port number\nmyURL.port = '5678abcd';\nconsole.log(myURL.port);\n// Prints 5678\n\n// Non-integers are truncated\nmyURL.port = 1234.5678;\nconsole.log(myURL.port);\n// Prints 1234\n\n// Out-of-range numbers which are not represented in scientific notation\n// will be ignored.\nmyURL.port = 1e10; // 10000000000, will be range-checked as described below\nconsole.log(myURL.port);\n// Prints 1234\n```\n\nNumbers which contain a decimal point,\nsuch as floating-point numbers or numbers in scientific notation,\nare not an exception to this rule.\nLeading numbers up to the decimal point will be set as the URL's port,\nassuming they are valid:\n\n```js\nmyURL.port = 4.567e21;\nconsole.log(myURL.port);\n// Prints 4 (because it is the leading number in the string '4.567e21')\n```",
                     "type": "string"
                 },
                 "protocol": {
-                    "description": "Gets and sets the protocol portion of the URL.\n\n```js\nconst myURL = new URL('https://example.org');\nconsole.log(myURL.protocol);\n// Prints https:\n\nmyURL.protocol = 'ftp';\nconsole.log(myURL.href);\n// Prints ftp://example.org/\n```\n\nInvalid URL protocol values assigned to the `protocol` property are ignored.",
                     "type": "string"
                 },
                 "search": {
-                    "description": "Gets and sets the serialized query portion of the URL.\n\n```js\nconst myURL = new URL('https://example.org/abc?123');\nconsole.log(myURL.search);\n// Prints ?123\n\nmyURL.search = 'abc=xyz';\nconsole.log(myURL.href);\n// Prints https://example.org/abc?abc=xyz\n```\n\nAny invalid URL characters appearing in the value assigned the `search`property will be `percent-encoded`. The selection of which\ncharacters to percent-encode may vary somewhat from what the {@link parse} and {@link format} methods would produce.",
                     "type": "string"
                 },
                 "searchParams": {
-                    "$ref": "#/definitions/URLSearchParams",
-                    "description": "Gets the `URLSearchParams` object representing the query parameters of the\nURL. This property is read-only but the `URLSearchParams` object it provides\ncan be used to mutate the URL instance; to replace the entirety of query\nparameters of the URL, use the {@link search} setter. See `URLSearchParams` documentation for details.\n\nUse care when using `.searchParams` to modify the `URL` because,\nper the WHATWG specification, the `URLSearchParams` object uses\ndifferent rules to determine which characters to percent-encode. For\ninstance, the `URL` object will not percent encode the ASCII tilde (`~`)\ncharacter, while `URLSearchParams` will always encode it:\n\n```js\nconst myUrl = new URL('https://example.org/abc?foo=~bar');\n\nconsole.log(myUrl.search);  // prints ?foo=~bar\n\n// Modify the URL via searchParams...\nmyUrl.searchParams.sort();\n\nconsole.log(myUrl.search);  // prints ?foo=%7Ebar\n```"
+                    "$ref": "#/definitions/URLSearchParams"
                 },
                 "username": {
-                    "description": "Gets and sets the username portion of the URL.\n\n```js\nconst myURL = new URL('https://abc:xyz@example.com');\nconsole.log(myURL.username);\n// Prints abc\n\nmyURL.username = '123';\nconsole.log(myURL.href);\n// Prints https://123:xyz@example.com/\n```\n\nAny invalid URL characters appearing in the value assigned the `username`property will be `percent-encoded`. The selection of which\ncharacters to percent-encode may vary somewhat from what the {@link parse} and {@link format} methods would produce.",
                     "type": "string"
                 }
             },
@@ -796,7 +795,6 @@
         },
         "URLSearchParams": {
             "additionalProperties": false,
-            "description": "The `URLSearchParams` API provides read and write access to the query of a`URL`. The `URLSearchParams` class can also be used standalone with one of the\nfour following constructors.\nThe `URLSearchParams` class is also available on the global object.\n\nThe WHATWG `URLSearchParams` interface and the `querystring` module have\nsimilar purpose, but the purpose of the `querystring` module is more\ngeneral, as it allows the customization of delimiter characters (`&#x26;` and `=`).\nOn the other hand, this API is designed purely for URL query strings.\n\n```js\nconst myURL = new URL('https://example.org/?abc=123');\nconsole.log(myURL.searchParams.get('abc'));\n// Prints 123\n\nmyURL.searchParams.append('abc', 'xyz');\nconsole.log(myURL.href);\n// Prints https://example.org/?abc=123&#x26;abc=xyz\n\nmyURL.searchParams.delete('abc');\nmyURL.searchParams.set('a', 'b');\nconsole.log(myURL.href);\n// Prints https://example.org/?a=b\n\nconst newSearchParams = new URLSearchParams(myURL.searchParams);\n// The above is equivalent to\n// const newSearchParams = new URLSearchParams(myURL.search);\n\nnewSearchParams.append('a', 'c');\nconsole.log(myURL.href);\n// Prints https://example.org/?a=b\nconsole.log(newSearchParams.toString());\n// Prints a=b&#x26;a=c\n\n// newSearchParams.toString() is implicitly called\nmyURL.search = newSearchParams;\nconsole.log(myURL.href);\n// Prints https://example.org/?a=b&#x26;a=c\nnewSearchParams.delete('a');\nconsole.log(myURL.href);\n// Prints https://example.org/?a=b&#x26;a=c\n```",
             "type": "object"
         },
         "ZlibOptions": {
@@ -818,100 +816,100 @@
                             "type": "object"
                         },
                         {
-                            "$ref": "#/definitions/ArrayBuffer"
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
                         },
                         {
                             "$ref": "#/definitions/DataView"
                         },
                         {
-                            "additionalProperties": false,
-                            "patternProperties": {
-                                "^[0-9]+$": {
-                                    "type": "number"
-                                }
-                            },
-                            "type": "object"
-                        },
-                        {
-                            "additionalProperties": false,
-                            "patternProperties": {
-                                "^[0-9]+$": {
-                                    "type": "number"
-                                }
-                            },
-                            "type": "object"
-                        },
-                        {
-                            "additionalProperties": false,
-                            "patternProperties": {
-                                "^[0-9]+$": {
-                                    "type": "number"
-                                }
-                            },
-                            "type": "object"
-                        },
-                        {
-                            "additionalProperties": false,
-                            "patternProperties": {
-                                "^[0-9]+$": {
-                                    "type": "number"
-                                }
-                            },
-                            "type": "object"
-                        },
-                        {
-                            "additionalProperties": false,
-                            "patternProperties": {
-                                "^[0-9]+$": {
-                                    "type": "number"
-                                }
-                            },
-                            "type": "object"
-                        },
-                        {
-                            "additionalProperties": false,
-                            "patternProperties": {
-                                "^[0-9]+$": {
-                                    "type": "number"
-                                }
-                            },
-                            "type": "object"
-                        },
-                        {
-                            "additionalProperties": false,
-                            "patternProperties": {
-                                "^[0-9]+$": {
-                                    "type": "number"
-                                }
-                            },
-                            "type": "object"
-                        },
-                        {
-                            "additionalProperties": false,
-                            "patternProperties": {
-                                "^[0-9]+$": {
-                                    "type": "number"
-                                }
-                            },
-                            "type": "object"
-                        },
-                        {
-                            "additionalProperties": false,
-                            "patternProperties": {
-                                "^[0-9]+$": {
-                                    "type": "number"
-                                }
-                            },
-                            "type": "object"
-                        },
-                        {
-                            "additionalProperties": false,
-                            "patternProperties": {
-                                "^[0-9]+$": {
-                                    "type": "number"
-                                }
-                            },
-                            "type": "object"
+                            "$ref": "#/definitions/ArrayBuffer"
                         }
                     ]
                 },
@@ -954,7 +952,8 @@
                 {
                     "type": "string"
                 }
-            ]
+            ],
+            "default": ""
         },
         "options": {
             "anyOf": [
@@ -965,6 +964,13 @@
                     "$ref": "#/definitions/ClientRequestArgs"
                 }
             ]
+        },
+        "reconnectOnConnectionLost": {
+            "default": true,
+            "type": "boolean"
+        },
+        "reconnectRetryInterval": {
+            "type": "number"
         }
     },
     "required": [

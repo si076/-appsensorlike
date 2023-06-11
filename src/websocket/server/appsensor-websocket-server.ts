@@ -74,7 +74,7 @@ class AppSensorWebSocketServer {
             }
 
             const url = new URL(req.url!, `ws://${req.headers.host}`);
-            console.log(url);
+            // console.log(url);
             ws.uuid = url.searchParams.get(UUID_QUERY_PARAM)!;
 
             Logger.getServerLogger().trace('AppSensorWebSocketServer.server:', 'connection', 

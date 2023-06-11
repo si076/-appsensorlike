@@ -21,6 +21,8 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
 
     private static eventEmmiter: EventEmitter = new EventEmitter();
 
+    private static ON_ADD_EVENT = 'ON_ADD';
+
     constructor(address: string | URL = '', 
                 configLocation: string = 'appsensor-reporting-websocket-client-config.json',
                 options?: WebSocket.ClientOptions | ClientRequestArgs) {
@@ -51,11 +53,21 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
 
             this.onAdd(response.result as (AppSensorEvent | Attack | Response));
 
+            //also emit and event as well
+            AppSensorReportingWebSocketClient.eventEmmiter.emit(AppSensorReportingWebSocketClient.ON_ADD_EVENT, response.result as (AppSensorEvent | Attack | Response));
         } else {
 
             AppSensorReportingWebSocketClient.eventEmmiter.emit(response.id, response);
 
         }
+    }
+
+    public addOnAddListener(listener: (event: AppSensorEvent | Attack | Response) => void) {
+        AppSensorReportingWebSocketClient.eventEmmiter.addListener(AppSensorReportingWebSocketClient.ON_ADD_EVENT, listener);
+    }
+
+    public removeOnAddListener(listener: (event: AppSensorEvent | Attack | Response) => void) {
+        AppSensorReportingWebSocketClient.eventEmmiter.removeListener(AppSensorReportingWebSocketClient.ON_ADD_EVENT, listener);
     }
 
     private genSendCallback(reject: (reason?: any) => void) {
@@ -376,7 +388,7 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
     }
 
     onAdd(event: AppSensorEvent | Attack | Response): Promise<void> {
-        //your code in the subclass goes here
+        //your code in the subclass goes here or listner for the emited ON_ADD event as well
 
         return Promise.resolve();
     }

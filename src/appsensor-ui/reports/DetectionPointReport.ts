@@ -201,19 +201,19 @@ class DetectionPointReport extends BaseReport {
 	// @ResponseBody
 	// public Map<String, Long> topDetectionPoints(@RequestParam("earliest") String rfc3339Timestamp, @RequestParam("limit") Long limit) {
     public async topDetectionPoints(earliest: string, limit: number): Promise<{[key: string]: number}> {
-        const map = new Map<DetectionPoint, number>();
+        const map = new Map<string, number>();
 		
 		let events = await this.reportingEngine.findEvents(earliest);
 
         const keyFunc = (value: AppSensorEvent | Attack | Response) => {
-            return value.getDetectionPoint();
+            return JSON.stringify(value.getDetectionPoint());
         };
 
 	    this.countStoreInMap(events, keyFunc, map);
 
 		
         const mapEntries = map.entries();
-        let toArray: [DetectionPoint, number][] = [];
+        let toArray: [string, number][] = [];
         for (const entry of mapEntries) {
             toArray.push(entry);
         }
@@ -226,7 +226,7 @@ class DetectionPointReport extends BaseReport {
 
 		const filtered: {[key: string]: number} = {};
         toArray.forEach(el => {
-            filtered[JSON.stringify(el[0])] = el[1];
+            filtered[el[0]] = el[1];
         });
 
 		return filtered;

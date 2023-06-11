@@ -29,9 +29,10 @@ interface IEquals {
 interface IValidateInitialize {
 
 	/** 
-	 * Check the validity of object's fields' values 
-	 * after it has been loaded by JSON.parse (configuration file) or 
-	 * a db's table  
+	 * Context dependent checks and initialization.
+	 * Applied when: loading an object from DB's tabls, after JSON.parse.
+	 * This is an additional check and initialization to JSON schema validation,
+	 * in case of configuration object.
 	 */
 	 checkValidInitialize(): void;
 }

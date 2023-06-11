@@ -61,15 +61,15 @@
             },
             "APPSENSOR_CLIENT": { 
                 "appenders": ["out", "appsensor-client", "appsensor-client-errors"], 
-                "level": "trace"
+                "level": "info"
             },
             "APPSENSOR_SERVER": { 
                 "appenders": ["out", "appsensor-server", "appsensor-server-errors"], 
-                "level": "trace"
+                "level": "info"
             },
             "APPSENSOR_RESPONSES": { 
                 "appenders": ["out", "appsensor-responses"], 
-                "level": "trace"
+                "level": "info"
             }
         }
     }
