@@ -4,6 +4,7 @@ import { ClientApplication, DetectionPoint } from '../../../core/core.js';
 import { CorrelationSet } from '../../../core/correlation/correlation.js';
 import { JSONConfigReadValidate, Utils } from '../../../utils/Utils.js';
 
+import fs from 'fs';
 
 class JSONServerConfiguration extends ServerConfiguration {
 }
@@ -48,7 +49,7 @@ class JSONServerConfigurationReader extends JSONConfigReadValidate implements Se
 
         config = super.read(configurationLocation, validatorLocation, reload);
 
-        this.adjustConfig(config);
+        this.adjustConfig(config, configurationLocation);
 
         // console.log(JSON.stringify(config, null, 2));
         
@@ -67,7 +68,7 @@ class JSONServerConfigurationReader extends JSONConfigReadValidate implements Se
         return config;
     }
 
-    protected adjustConfig(config: ServerConfiguration | null) {
+    protected adjustConfig(config: ServerConfiguration | null, configurationLocation: string | null = null) {
         if (config) {
             Utils.setPrototypeInDepth(config, JSONServerConfigurationReader.configPrototypesSample);
 
@@ -80,6 +81,11 @@ class JSONServerConfigurationReader extends JSONConfigReadValidate implements Se
 
             this.adjustRulesMonitorPoints(config);
 
+            if (configurationLocation !== null) { //to distinguish when the config has been loaded from a file
+                const configLocation = this.getConfigLocation(configurationLocation);
+
+                config.setConfigurationFile(fs.realpathSync(configLocation));
+            }
         }
     }
 

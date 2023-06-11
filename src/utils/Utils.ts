@@ -137,11 +137,7 @@ class JSONConfigReadValidate {
         this.prototypeOfConfigObj = prototypeOfConfigObj;
     }
 
-    public read(configLocation: string | null = null, 
-                validatorLocation: string | null = null, 
-                reload: boolean  = false): any {
-        let config: any = null;
-
+    public getConfigLocation(configLocation: string | null = null): string {
         if (!configLocation) {
             configLocation = this.defaultConfigFile;
         } else {
@@ -150,6 +146,10 @@ class JSONConfigReadValidate {
             }
         }
 
+        return configLocation;
+    }
+
+    public getValidatorLocation(validatorLocation: string | null = null): string | null {
         if (!validatorLocation) {
             validatorLocation = this.defaultConfigSchemaFile;
         } else {
@@ -157,6 +157,18 @@ class JSONConfigReadValidate {
                 validatorLocation = this.defaultConfigSchemaFile;
             }
         }
+
+        return validatorLocation;
+    }
+
+    public read(configLocation: string | null = null, 
+                validatorLocation: string | null = null, 
+                reload: boolean  = false): any {
+        let config: any = null;
+
+        configLocation = this.getConfigLocation(configLocation);
+
+        validatorLocation = this.getValidatorLocation(validatorLocation);
 
         try {
             config = JSON.parse(fs.readFileSync(configLocation, 'utf8'));

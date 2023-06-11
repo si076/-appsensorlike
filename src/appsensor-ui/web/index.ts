@@ -23,6 +23,8 @@ import http, { IncomingMessage } from 'http';
 import https from 'https';
 
 import WebSocket, { WebSocketServer } from "ws";
+import { ConfigurationReport } from "../reports/ConfigurationReport.js";
+import { ConfigurationController } from "./controller/ConfigurationController.js";
 
 
 type TEMPLATE_VARIABLES = {
@@ -66,6 +68,7 @@ class AppsensorUIRestServer extends RestServer {
     private dashboardController: DashboardController;
     private detectionPointController: DetectionPointController;
     private trendsController: TrendsDashboardController;
+    private configController: ConfigurationController;
 
     //reporting client
     private wsClient: AppSensorReportingWebSocketClient;
@@ -83,11 +86,13 @@ class AppsensorUIRestServer extends RestServer {
         const detectionPointReport = new DetectionPointReport(this.wsClient);
         const dashboardReport = new DashboardReport(this.wsClient, userReport, detectionPointReport);
         const trendsReport = new TrendsDashboardReport(this.wsClient);
+        const configReport = new ConfigurationReport(this.wsClient);
 
         this.userController = new UserController(userReport);
         this.detectionPointController = new DetectionPointController(detectionPointReport);
         this.dashboardController = new DashboardController(dashboardReport);
         this.trendsController = new TrendsDashboardController(trendsReport);
+        this.configController = new ConfigurationController(configReport);
 
         this.templateVariables = {
             CONTEXT_PATH: '',
@@ -338,7 +343,8 @@ class AppsensorUIRestServer extends RestServer {
         //trends endpoints
         this.expressApp.get('/api/trends/by-time-frame', this.trendsController.byTimeFrame.bind(this.trendsController));
 
-
+        //configuration endpoints
+        this.expressApp.get('/api/configuration/server-config', this.configController.getServerConfiguration.bind(this.configController));
     }
 }
 

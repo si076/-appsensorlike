@@ -8,7 +8,7 @@ var Configuration = React.createClass({
         this.setState({data: data});
       }.bind(this),
       error: function(xhr, status, err) {
-        console.error(apiBaseUrl + "/api/configuration/server-config-base64", status, err.toString());
+        console.error(apiBaseUrl + "/api/configuration/server-config", status, err.toString());
       }.bind(this)
     });
   },
@@ -197,7 +197,7 @@ var DetectionPointsContent = React.createClass({
   render: function() {
 	var detectionPoints = this.props.detectionPoints;
 	
-	var detectionPointRender = detectionPoints.map(function (detectionPoint) {
+	var detectionPointRender = detectionPoints.detectionPoints.map(function (detectionPoint) {
 		  var threshold = detectionPoint.threshold;
 		  var interval = threshold.interval;
 		  var thresholdRender = threshold.count + 'x in ' + interval.duration + ' ' + interval.unit;
@@ -276,35 +276,35 @@ var ResponsesContent = React.createClass({
 React.render(<Configuration />, document.getElementById('react_configuration_container'));
 
 // ace editor for xml
-var AceEditor = React.createClass({
-  loadXmlFromServer: function() {
-	  $.ajax({
-		    url: apiBaseUrl + "/api/configuration/server-config-base64",
-		    success:function(result){
-		    	var editor = ace.edit("editor");
-		    	editor.setTheme("ace/theme/monokai");
-		    	editor.getSession().setMode("ace/mode/xml");
-		    	var base64value = result.value;
-		    	var decoded = atob(base64value);
-		    	editor.setValue(decoded);
-		    	// editor.setReadOnly(true);
-		    },
-		    error:function(result){
-		    	console.log('had an ajax error: ' + JSON.stringify(result));
-		    }
-		}); 
-  },
-  getInitialState: function() {
-    return {data: []};
-  },
-  componentDidMount: function() {
-    this.loadXmlFromServer();
-  },
-  render: function() {
-    return (
-      <div></div>
-    );
-  }
-});
+// var AceEditor = React.createClass({
+//   loadXmlFromServer: function() {
+// 	  $.ajax({
+// 		    url: apiBaseUrl + "/api/configuration/server-config-base64",
+// 		    success:function(result){
+// 		    	var editor = ace.edit("editor");
+// 		    	editor.setTheme("ace/theme/monokai");
+// 		    	editor.getSession().setMode("ace/mode/xml");
+// 		    	var base64value = result.value;
+// 		    	var decoded = atob(base64value);
+// 		    	editor.setValue(decoded);
+// 		    	// editor.setReadOnly(true);
+// 		    },
+// 		    error:function(result){
+// 		    	console.log('had an ajax error: ' + JSON.stringify(result));
+// 		    }
+// 		}); 
+//   },
+//   getInitialState: function() {
+//     return {data: []};
+//   },
+//   componentDidMount: function() {
+//     this.loadXmlFromServer();
+//   },
+//   render: function() {
+//     return (
+//       <div></div>
+//     );
+//   }
+// });
 
-React.render(<AceEditor />, document.getElementById('react_xml_container'));
+// React.render(<AceEditor />, document.getElementById('react_xml_container'));
