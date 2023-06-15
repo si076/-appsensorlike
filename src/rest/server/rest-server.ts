@@ -183,9 +183,9 @@ class RestServer {
         if (this.server) {
 
             this.server.on('error', (err: Error) => {
-                Logger.getServerLogger().error('RestServer.startServer: ', err);
+                Logger.getServerLogger().error('RestServer.startServer:', 'error:', err);
             }).on('tlsClientError', (err: Error, tlsSocket: tls.TLSSocket) => {
-                Logger.getServerLogger().error('RestServer.startServer: ', err);
+                Logger.getServerLogger().error('RestServer.startServer:', 'tlsClientError:', err);
             });
 
             this.attachToServer();

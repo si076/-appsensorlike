@@ -337,7 +337,13 @@ function onResponse(message) {
 // }
 
 function wsConnect() {
-	socket = new WebSocket("ws://localhost:8080/appsensor-websocket");
+	let url = `wss://${window.location.host}/appsensor-websocket`;
+	if (window.location.protocol.toLowerCase() === 'http:' && (
+	    window.location.hostname.toLowerCase() === "localhost" ||
+		window.location.hostname.toLowerCase() === "127.0.0.1")) {
+		url = `ws://${window.location.host}/appsensor-websocket`;
+	}
+	socket = new WebSocket(url);
 	socket.addEventListener("open", (event) => {
 		socket.send("Hello Server!");
 		if (reconnectIntervalID) {

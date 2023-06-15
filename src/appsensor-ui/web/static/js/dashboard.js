@@ -786,7 +786,13 @@ function initReact(selectedTimeSpan) {
 }
 
 function wsConnect() {
-	socket = new WebSocket("ws://localhost:8080/appsensor-websocket");
+	let url = `wss://${window.location.host}/appsensor-websocket`;
+	if (window.location.protocol.toLowerCase() === 'http:' && (
+	    window.location.hostname.toLowerCase() === "localhost" ||
+		window.location.hostname.toLowerCase() === "127.0.0.1")) {
+		url = `ws://${window.location.host}/appsensor-websocket`;
+	}
+	socket = new WebSocket(url);
 	socket.addEventListener("open", (event) => {
 		socket.send("Hello Server!");
 		if (reconnectIntervalID) {
@@ -824,7 +830,7 @@ function wsConnect() {
 	});	  
 
 	socket.addEventListener("close", (event) => {
-		console.log("The connection has been closed.");
+		console.log("The connection has been closed.", event);
 		if (!reconnectIntervalID) {
 			reconnectIntervalID = setInterval(reconnect, 10000);
 		}
