@@ -19,8 +19,11 @@ import MySQLStore from 'express-mysql-session';
 
 import morgan from 'morgan';
 import hbs from 'hbs';
+
 import passport from 'passport';
 import {Strategy as LocalStrategy, IVerifyOptions} from 'passport-local';
+
+import csurf from 'csurf';
 
 
 import http, { IncomingMessage } from 'http';
@@ -34,6 +37,8 @@ import { ConfigurationController } from "./controller/ConfigurationController.js
 import { ConnectionManager } from "../security/mysql/connection_manager.js";
 import { UserDetails, UserDetailsService } from "../security/UserDetailsService.js";
 import { MySQLUserDetailsService } from "../security/mysql/MySQLUserDetailsService.js";
+import { ParamsDictionary } from "express-serve-static-core";
+import { ParsedQs } from "qs";
 
 
 type TEMPLATE_VARIABLES = {
@@ -76,6 +81,10 @@ class AppsensorUIRestServer extends RestServer {
                     "DETECTION_POINT_CATEGORY_DETAIL";
     private static DETECTION_POINT_LABEL_DETAIL_VAR    = 
                     "DETECTION_POINT_LABEL_DETAIL";
+    private static CSRF_TOKEN_NAME_VAR                 = "csrfTokenName";
+    private static CSRF_TOKEN_VALUE_VAR                = "csrfTokenValue";
+
+    private static CSRF_TOKEN_NAME = "_csrf";
 
     private static ACTIVE_PATHS = ['dashboard', 'detection-point', 
                                    'user', 'trends-dashboard', 
@@ -133,11 +142,7 @@ class AppsensorUIRestServer extends RestServer {
         // console.log("Working dir: " + process.cwd());
     }
 
-    async init(): Promise<void> {
-        this.expressApp.use(e.urlencoded());
-
-        passport.use(new LocalStrategy(this.verifyUserCredentials.bind(this)));
-
+    protected override async setSession(): Promise<void> {
         const connection = await ConnectionManager.getConnection();
         const storeFunction = MySQLStore(sessionNS);
         const sessionStore = new storeFunction({}, connection);
@@ -148,6 +153,10 @@ class AppsensorUIRestServer extends RestServer {
             resave: false,
             saveUninitialized: false
         }));
+    }
+
+    protected override async setAuthentication(): Promise<void> {
+        passport.use(new LocalStrategy(this.verifyUserCredentials.bind(this)));
 
         this.expressApp.use(passport.authenticate('session'));
 
@@ -168,13 +177,7 @@ class AppsensorUIRestServer extends RestServer {
                 cb(error);
             }); 
         });
-
-        this.expressApp.use(this.prepareTemplateVariables.bind(this));
-
-        super.init();
     }
-
-
 
     private verifyUserCredentials (username: string,
                                    password: string,
@@ -193,6 +196,257 @@ class AppsensorUIRestServer extends RestServer {
         .catch(error => {
             done(error);
         }); 
+    }
+
+    protected override async setAuthorization(): Promise<void> {
+        this.expressApp.use(this.isAuthorized);
+    }
+
+    private isAuthorized(req: e.Request, res: e.Response, next: e.NextFunction) {
+        const pathToCompare = req.path.trim().toLowerCase();
+        if (pathToCompare === '/login' ||
+            pathToCompare === '/about' ||
+            pathToCompare.startsWith('/webjars/') || //static resources
+            pathToCompare.startsWith('/css/') ||     //static resources
+            pathToCompare.startsWith('/js/')) {      //static resources
+            //don't require any authentication and authorization
+            next();
+
+            return;
+        }
+
+        //As first, the user has to be authenticated
+        if (!req.user) {
+            res.redirect('/login');
+            return;
+        }
+
+
+        //Check authorization
+
+        const userDetails = req.user as UserDetails;
+
+        let requiredAuthorityName = 'VIEW_DATA';
+        switch (pathToCompare) {
+            case '/configuration': {
+
+                requiredAuthorityName = 'VIEW_CONFIGURATION';
+
+                break;
+            }
+            default: {
+                //all others require VIEW_DATA authority
+                //set at the beginning of the switch
+            }
+        }
+
+        let authorized = false;
+        const userAuthorities = userDetails.getAuthorities();
+        for (let i = 0; i < userAuthorities.length; i++) {
+            if (userAuthorities[i].getName() === requiredAuthorityName) {
+                authorized = true;
+                break;
+            }
+        };
+
+        if (!authorized) {
+            res.status(403).send("You are not authorized to perform this action!");
+        } else {
+            next();
+        }
+    }
+
+    protected override setRequestLogging() {
+        this.expressApp.use(
+            morgan('dev', 
+                    {
+                        immediate: true,
+                        stream: { 
+                            write(str: string) {
+                                Logger.getServerLogger().trace(str);
+                            }
+                        }
+                    }));
+                    
+        super.setRequestLogging();
+    }
+
+    protected override setRenderPages(): void {
+        this.expressApp.use(this.prepareTemplateVariables.bind(this));
+
+        const csrfProtection = csurf();
+        //render pages
+        this.expressApp.get('/login', csrfProtection, this.renderLogInPage.bind(this));
+        this.expressApp.post('/login', e.urlencoded(), csrfProtection, passport.authenticate('local', {
+            successRedirect: '/',
+            failureMessage: true,
+            failureRedirect: '/login'
+        }));
+        this.expressApp.get('/logout', function(req, res, next) {
+            req.logout(function(err) {
+                if (err) { return next(err); }
+                res.redirect('/login');
+            });
+        });  
+
+        this.expressApp.get('/', this.renderPage('dashboard.html'));
+        this.expressApp.get('/trends-dashboard', this.renderPage('trends-dashboard.html'));
+        this.expressApp.get('/configuration', this.renderPage('configuration.html'));
+        this.expressApp.get('/about', this.renderPage('about.html'));
+        this.expressApp.get('/geo-map', this.renderPage('geo-map.html'));
+        this.expressApp.get('/users/:user', this.renderUserPage.bind(this));
+        this.expressApp.get('/detection-points/:category/:label', this.renderDetectionPointPage.bind(this));
+    }
+
+    private isMessagesAvailable(obj: any): obj is SESSION_WITH_MESSAGES {
+        return 'messages' in obj;
+    }
+
+    private prepareTemplateVariables(req: e.Request, res: e.Response, next: e.NextFunction) {
+        delete this.templateVariables["error"];
+
+        this.templateVariables.LOGGED_IN_USERNAME = '';
+
+        if (req.user) {
+            delete this.templateVariables["logout"];
+            this.templateVariables.LOGGED_IN_USERNAME = (req.user as UserDetails).getUsername();
+        } else if (this.isMessagesAvailable(req.session) && req.session.messages.length > 0){
+            this.templateVariables["error"] = req.session.messages[0]; //the message doesn't matter, only activates the error block in the template
+        }
+
+        let path = '';
+        const pathToCompare = req.path.trim().toLowerCase();
+        if (pathToCompare.includes("/")) {
+            path = req.path.substring(req.path.lastIndexOf("/") + 1, req.path.length);
+        } else {
+            path = req.path;
+        }
+        
+        //special handler for dashboard
+        if (path.length === 0) {
+            path = "dashboard";
+        }
+        
+        //special handler for detection point
+        if (pathToCompare.includes("/detection-points/")) {
+            path = "detection-point";
+        }
+        
+        //special handler for users
+        if (pathToCompare.includes("/users/")) {
+            path = "user";
+        }
+        
+        if (AppsensorUIRestServer.ACTIVE_PATHS.indexOf(path) > -1) {
+
+            const keys = Object.keys(this.templateVariables);
+            keys.forEach(key => {
+                if (key.startsWith(AppsensorUIRestServer.ACTIVE_PATH_SECTION_PART)) {
+                    //delete not active path keys
+                    delete this.templateVariables[key];
+                }
+            });
+    
+            const key = AppsensorUIRestServer.ACTIVE_PATH_SECTION_PART + "_" + path;
+            this.templateVariables[key] = path;
+        }
+
+
+        if (pathToCompare.includes("/logout")) {
+            this.templateVariables["logout"] = "logout";
+        }
+
+
+        // console.log(this.templateVariables);
+
+        next();
+    }
+
+    private renderPage(pageName: string) {
+        const self = this;
+        
+        return function(req: e.Request, res: e.Response, next: e.NextFunction) {
+            res.render(pageName, self.templateVariables)
+        }
+    }
+
+    private renderLogInPage(req: e.Request, res: e.Response, next: e.NextFunction) {
+
+        this.templateVariables[AppsensorUIRestServer.CSRF_TOKEN_NAME_VAR] = AppsensorUIRestServer.CSRF_TOKEN_NAME;
+        this.templateVariables[AppsensorUIRestServer.CSRF_TOKEN_VALUE_VAR] = req.csrfToken();
+
+        res.render('login.html', this.templateVariables);
+    }
+
+    private renderUserPage(req: e.Request, res: e.Response, next: e.NextFunction) {
+        const user = req.params.user;
+
+        this.templateVariables[AppsensorUIRestServer.USERNAME_DETAIL_VAR] = user;
+
+        res.render('user.html', this.templateVariables);
+    }
+
+    private renderDetectionPointPage(req: e.Request, res: e.Response, next: e.NextFunction) {
+        const category = req.params.category;
+        const label    = req.params.label;
+
+        this.templateVariables[AppsensorUIRestServer.DETECTION_POINT_CATEGORY_DETAIL_VAR] = category;
+        this.templateVariables[AppsensorUIRestServer.DETECTION_POINT_LABEL_DETAIL_VAR] = label;
+
+        res.render('detection-point.html', this.templateVariables);
+    }
+
+    protected setEndpoints(): void {
+        //dashboard endpoints
+        this.expressApp.get('/api/dashboard/all', this.dashboardController.allContent.bind(this.dashboardController));
+        this.expressApp.get('/api/responses/active', this.dashboardController.activeResponses.bind(this.dashboardController));
+        this.expressApp.get('/api/dashboard/by-time-frame', this.dashboardController.byTimeFrame.bind(this.dashboardController));
+        this.expressApp.get('/api/dashboard/by-category', this.dashboardController.byCategory.bind(this.dashboardController));
+        this.expressApp.get('/api/events/grouped', this.dashboardController.groupedEvents.bind(this.dashboardController));
+
+        //detection points endpoints
+        this.expressApp.get('/api/detection-points/:category/:label/all', this.detectionPointController.allContent.bind(this.detectionPointController));
+        this.expressApp.get('/api/detection-points/:category/:label/by-time-frame', this.detectionPointController.byTimeFrame.bind(this.detectionPointController));
+        this.expressApp.get('/api/detection-points/:label/configuration', this.detectionPointController.configuration.bind(this.detectionPointController));
+        this.expressApp.get('/api/detection-points/:label/latest-events', this.detectionPointController.recentEvents.bind(this.detectionPointController));
+        this.expressApp.get('/api/detection-points/:label/latest-attacks', this.detectionPointController.recentAttacks.bind(this.detectionPointController));
+        this.expressApp.get('/api/detection-points/:label/by-client-application', this.detectionPointController.byClientApplication.bind(this.detectionPointController));
+        this.expressApp.get('/api/detection-points/:label/top-users', this.detectionPointController.topUsers.bind(this.detectionPointController));
+        this.expressApp.get('/api/detection-points/:label/grouped', this.detectionPointController.groupedDetectionPoints.bind(this.detectionPointController));
+        this.expressApp.get('/api/detection-points/top', this.detectionPointController.topDetectionPoints.bind(this.detectionPointController));
+
+        //user endpoints
+        this.expressApp.get('/api/users/:username/all', this.userController.allContent.bind(this.userController));
+        this.expressApp.get('/api/users/:username/active-responses',  this.userController.activeResponses.bind(this.userController));
+        this.expressApp.get('/api/users/:username/by-time-frame', this.userController.byTimeFrame.bind(this.userController));
+        this.expressApp.get('/api/users/:username/latest-events',  this.userController.recentEvents.bind(this.userController));
+        this.expressApp.get('/api/users/:username/latest-attacks',  this.userController.recentAttacks.bind(this.userController));
+        this.expressApp.get('/api/users/:username/latest-responses', this.userController.recentResponses.bind(this.userController));
+        this.expressApp.get('/api/users/:username/by-client-application',  this.userController.byClientApplication.bind(this.userController));
+        this.expressApp.get('/api/users/:username/grouped',  this.userController.groupedUsers.bind(this.userController));
+        this.expressApp.get('/api/users/top',  this.userController.topUsers.bind(this.userController));
+
+        //trends endpoints
+        this.expressApp.get('/api/trends/by-time-frame', this.trendsController.byTimeFrame.bind(this.trendsController));
+
+        //configuration endpoints
+        this.expressApp.get('/api/configuration/server-config', this.configController.getServerConfiguration.bind(this.configController));
+    }
+
+    protected override getStaticContentDir(): string {
+        return AppsensorUIRestServer.STATIC_CONTENT_DIR;
+    }
+
+    protected override errorHandler(err: any,  
+                                    req: e.Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>, 
+                                    res: e.Response<any, Record<string, any>>, 
+                                    next: e.NextFunction): void {
+        if (err.code !== 'EBADCSRFTOKEN') {
+            super.errorHandler(err, req, res, next);
+        } else {
+            // handle CSRF token errors
+            res.status(403).send();
+        }
     }
 
     protected override attachToServer(): void {
@@ -284,237 +538,6 @@ class AppsensorUIRestServer extends RestServer {
             });
         }
     }
-
-    private isMessagesAvailable(obj: any): obj is SESSION_WITH_MESSAGES {
-        return 'messages' in obj;
-    }
-
-    private prepareTemplateVariables(req: e.Request, res: e.Response, next: e.NextFunction) {
-        delete this.templateVariables["error"];
-
-        this.templateVariables.LOGGED_IN_USERNAME = '';
-
-        if (req.user) {
-            delete this.templateVariables["logout"];
-            this.templateVariables.LOGGED_IN_USERNAME = (req.user as UserDetails).getUsername();
-        } else if (this.isMessagesAvailable(req.session) && req.session.messages.length > 0){
-            this.templateVariables["error"] = req.session.messages[0]; //the message doesn't matter, only activates the error block in the template
-        }
-
-        let path = '';
-        const pathToCompare = req.path.trim().toLowerCase();
-        if (pathToCompare.includes("/")) {
-            path = req.path.substring(req.path.lastIndexOf("/") + 1, req.path.length);
-        } else {
-            path = req.path;
-        }
-        
-        //special handler for dashboard
-        if (path.length === 0) {
-            path = "dashboard";
-        }
-        
-        //special handler for detection point
-        if (pathToCompare.includes("/detection-points/")) {
-            path = "detection-point";
-        }
-        
-        //special handler for users
-        if (pathToCompare.includes("/users/")) {
-            path = "user";
-        }
-        
-        if (AppsensorUIRestServer.ACTIVE_PATHS.indexOf(path) > -1) {
-
-            const keys = Object.keys(this.templateVariables);
-            keys.forEach(key => {
-                if (key.startsWith(AppsensorUIRestServer.ACTIVE_PATH_SECTION_PART)) {
-                    //delete not active path keys
-                    delete this.templateVariables[key];
-                }
-            });
-    
-            const key = AppsensorUIRestServer.ACTIVE_PATH_SECTION_PART + "_" + path;
-            this.templateVariables[key] = path;
-        }
-
-
-        if (pathToCompare.includes("/logout")) {
-            this.templateVariables["logout"] = "logout";
-        }
-
-
-        // console.log(this.templateVariables);
-
-        next();
-    }
-
-    protected override getStaticContentDir(): string {
-        return AppsensorUIRestServer.STATIC_CONTENT_DIR;
-    }
-
-    protected override setRequestLogging() {
-        this.expressApp.use(
-            morgan('dev', 
-                    {
-                        immediate: true,
-                        stream: { 
-                            write(str: string) {
-                                Logger.getServerLogger().trace(str);
-                            }
-                        }
-                    }));
-                    
-        super.setRequestLogging();
-    }
-
-    private renderPage(pageName: string) {
-        const self = this;
-        
-        return function(req: e.Request, res: e.Response, next: e.NextFunction) {
-            res.render(pageName, self.templateVariables)
-        }
-    }
-
-    private renderLogInOutPage(req: e.Request, res: e.Response, next: e.NextFunction) {
-
-        res.render('login.html', this.templateVariables);
-    }
-
-    private renderUserPage(req: e.Request, res: e.Response, next: e.NextFunction) {
-        const user = req.params.user;
-
-        this.templateVariables[AppsensorUIRestServer.USERNAME_DETAIL_VAR] = user;
-
-        res.render('user.html', this.templateVariables);
-    }
-
-    private renderDetectionPointPage(req: e.Request, res: e.Response, next: e.NextFunction) {
-        const category = req.params.category;
-        const label    = req.params.label;
-
-        this.templateVariables[AppsensorUIRestServer.DETECTION_POINT_CATEGORY_DETAIL_VAR] = category;
-        this.templateVariables[AppsensorUIRestServer.DETECTION_POINT_LABEL_DETAIL_VAR] = label;
-
-        res.render('detection-point.html', this.templateVariables);
-    }
-
-    private isAuthorized(req: e.Request, res: e.Response, next: e.NextFunction) {
-        const pathToCompare = req.path.trim().toLowerCase();
-        if (pathToCompare === '/login' ||
-            pathToCompare === '/about' ||
-            pathToCompare.startsWith('/webjars/') || //static resources
-            pathToCompare.startsWith('/css/') ||     //static resources
-            pathToCompare.startsWith('/js/')) {      //static resources
-            //don't require any authentication and authorization
-            next();
-
-            return;
-        }
-
-        //As first, the user has to be authenticated
-        if (!req.user) {
-            res.redirect('/login');
-            return;
-        }
-
-
-        //Check authorization
-
-        const userDetails = req.user as UserDetails;
-
-        let requiredAuthorityName = 'VIEW_DATA';
-        switch (pathToCompare) {
-            case '/configuration': {
-
-                requiredAuthorityName = 'VIEW_CONFIGURATION';
-
-                break;
-            }
-            default: {
-                //all others require VIEW_DATA authority
-                //set at the beginning of the switch
-            }
-        }
-
-        let authorized = false;
-        const userAuthorities = userDetails.getAuthorities();
-        for (let i = 0; i < userAuthorities.length; i++) {
-            if (userAuthorities[i].getName() === requiredAuthorityName) {
-                authorized = true;
-                break;
-            }
-        };
-
-        if (!authorized) {
-            next("You are not authorized to perform this action!");
-        } else {
-            next();
-        }
-    }
-
-    protected setEndpoints(): void {
-        this.expressApp.use(this.isAuthorized);
-
-        //render pages
-        this.expressApp.get('/login', this.renderLogInOutPage.bind(this));
-        this.expressApp.post('/login', passport.authenticate('local', {
-            successRedirect: '/',
-            failureMessage: true,
-            failureRedirect: '/login'
-        }));
-        this.expressApp.get('/logout', function(req, res, next) {
-            req.logout(function(err) {
-                if (err) { return next(err); }
-                res.redirect('/login');
-            });
-        });  
-
-        this.expressApp.get('/', this.renderPage('dashboard.html'));
-        this.expressApp.get('/trends-dashboard', this.renderPage('trends-dashboard.html'));
-        this.expressApp.get('/configuration', this.renderPage('configuration.html'));
-        this.expressApp.get('/about', this.renderPage('about.html'));
-        this.expressApp.get('/geo-map', this.renderPage('geo-map.html'));
-        this.expressApp.get('/users/:user', this.renderUserPage.bind(this));
-        this.expressApp.get('/detection-points/:category/:label', this.renderDetectionPointPage.bind(this));
-
-
-        //dashboard endpoints
-        this.expressApp.get('/api/dashboard/all', this.dashboardController.allContent.bind(this.dashboardController));
-        this.expressApp.get('/api/responses/active', this.dashboardController.activeResponses.bind(this.dashboardController));
-        this.expressApp.get('/api/dashboard/by-time-frame', this.dashboardController.byTimeFrame.bind(this.dashboardController));
-        this.expressApp.get('/api/dashboard/by-category', this.dashboardController.byCategory.bind(this.dashboardController));
-        this.expressApp.get('/api/events/grouped', this.dashboardController.groupedEvents.bind(this.dashboardController));
-
-        //detection points endpoints
-        this.expressApp.get('/api/detection-points/:category/:label/all', this.detectionPointController.allContent.bind(this.detectionPointController));
-        this.expressApp.get('/api/detection-points/:category/:label/by-time-frame', this.detectionPointController.byTimeFrame.bind(this.detectionPointController));
-        this.expressApp.get('/api/detection-points/:label/configuration', this.detectionPointController.configuration.bind(this.detectionPointController));
-        this.expressApp.get('/api/detection-points/:label/latest-events', this.detectionPointController.recentEvents.bind(this.detectionPointController));
-        this.expressApp.get('/api/detection-points/:label/latest-attacks', this.detectionPointController.recentAttacks.bind(this.detectionPointController));
-        this.expressApp.get('/api/detection-points/:label/by-client-application', this.detectionPointController.byClientApplication.bind(this.detectionPointController));
-        this.expressApp.get('/api/detection-points/:label/top-users', this.detectionPointController.topUsers.bind(this.detectionPointController));
-        this.expressApp.get('/api/detection-points/:label/grouped', this.detectionPointController.groupedDetectionPoints.bind(this.detectionPointController));
-        this.expressApp.get('/api/detection-points/top', this.detectionPointController.topDetectionPoints.bind(this.detectionPointController));
-
-        //user endpoints
-        this.expressApp.get('/api/users/:username/all', this.userController.allContent.bind(this.userController));
-        this.expressApp.get('/api/users/:username/active-responses',  this.userController.activeResponses.bind(this.userController));
-        this.expressApp.get('/api/users/:username/by-time-frame', this.userController.byTimeFrame.bind(this.userController));
-        this.expressApp.get('/api/users/:username/latest-events',  this.userController.recentEvents.bind(this.userController));
-        this.expressApp.get('/api/users/:username/latest-attacks',  this.userController.recentAttacks.bind(this.userController));
-        this.expressApp.get('/api/users/:username/latest-responses', this.userController.recentResponses.bind(this.userController));
-        this.expressApp.get('/api/users/:username/by-client-application',  this.userController.byClientApplication.bind(this.userController));
-        this.expressApp.get('/api/users/:username/grouped',  this.userController.groupedUsers.bind(this.userController));
-        this.expressApp.get('/api/users/top',  this.userController.topUsers.bind(this.userController));
-
-        //trends endpoints
-        this.expressApp.get('/api/trends/by-time-frame', this.trendsController.byTimeFrame.bind(this.trendsController));
-
-        //configuration endpoints
-        this.expressApp.get('/api/configuration/server-config', this.configController.getServerConfiguration.bind(this.configController));
-    }
-
     
 }
 

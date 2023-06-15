@@ -80,17 +80,45 @@ class RestServer {
         this.expressApp  = e(); 
     }
     
-    init() {
-        this.expressApp.use(cors());
-        this.expressApp.use(e.json());
+    async init() {
+        //Set middlewares
+
+        this.setBase();
+
+        await this.setSession();
+
+        await this.setAuthentication();
+
+        await this.setAuthorization();
         
         this.setRequestLogging();
+
+        this.setRenderPages();
 
         this.setEndpoints();
     
         this.setStaticContent();
 
         this.setOnNotFoundResource();
+
+        this.setErrorHandler();
+    }
+    
+    protected setBase() {
+        this.expressApp.use(cors());
+        this.expressApp.use(e.json());
+    }
+
+    protected async setSession(): Promise<void> {
+        //your code in a subclass goes here
+    }
+
+    protected async setAuthentication(): Promise<void> {
+        //your code in a subclass goes here
+    }
+
+    protected async setAuthorization(): Promise<void> {
+        //your code in a subclass goes here
     }
 
     protected setRequestLogging() {
@@ -105,8 +133,11 @@ class RestServer {
                     }));
     }
 
-    protected setEndpoints() {
+    protected setRenderPages() {
+        //your code in a subclass goes here
+    }
 
+    protected setEndpoints() {
         //your code in a subclass goes here
     }
     
@@ -144,6 +175,14 @@ class RestServer {
         this.expressApp.use((req, res, next) => {
             res.status(404).send();
         });
+    }
+
+    protected setErrorHandler() {
+        this.expressApp.use(this.errorHandler.bind(this));
+    }
+
+    protected errorHandler(err: any, req: e.Request, res: e.Response, next: e.NextFunction) {
+        next(err)
     }
 
     startServer() {
