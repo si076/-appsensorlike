@@ -61,16 +61,18 @@ var GeneralConfigurationHeader = React.createClass({
 	
 	var geolocateIpAddresses = ('geolocateIpAddresses' in config && config.geolocateIpAddresses) ? config.geolocateIpAddresses : "Not Configured";
 	
-    return (
+	//stripped of the html below because these fields don't play any role in this appsensor port
+	// 
+	// <SimpleRow left="Client Application Header Name" right={clientApplicationHeaderName} />
+	// <SimpleRow left="Server Host Name" right={serverHostName} />
+	// <SimpleRow left="Server Port" right={serverPort} />
+	// <SimpleRow left="Server Socket Timeout (ms)" right={serverSocketTimeout} />
+	// <SimpleRow left="Geolocation" right={geolocationInfo} />
+	return (
     	<div id="general_configuration">
     		<br />
     		<h2>General Configuration</h2>
     		<hr />
-            <SimpleRow left="Client Application Header Name" right={clientApplicationHeaderName} />
-            <SimpleRow left="Server Host Name" right={serverHostName} />
-            <SimpleRow left="Server Port" right={serverPort} />
-            <SimpleRow left="Server Socket Timeout (ms)" right={serverSocketTimeout} />
-            <SimpleRow left="Geolocation" right={geolocationInfo} />
             <SimpleRow left="Configuration File" right={configurationFile} />
         </div>
     );

@@ -1,0 +1,344 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "definitions": {
+        "PoolOptions": {
+            "additionalProperties": false,
+            "properties": {
+                "acquireTimeout": {
+                    "description": "The milliseconds before a timeout occurs during the connection acquisition. This is slightly different from connectTimeout,\nbecause acquiring a pool connection does not always involve making a connection. (Default: 10 seconds)",
+                    "type": "number"
+                },
+                "bigNumberStrings": {
+                    "description": "Enabling both supportBigNumbers and bigNumberStrings forces big numbers (BIGINT and DECIMAL columns) to be\nalways returned as JavaScript String objects (Default: false). Enabling supportBigNumbers but leaving\nbigNumberStrings disabled will return big numbers as String objects only when they cannot be accurately\nrepresented with [JavaScript Number objects](https://262.ecma-international.org/5.1/#sec-8.5)\n(which happens when they exceed the [-2^53, +2^53] range), otherwise they will be returned as Number objects.\nThis option is ignored if supportBigNumbers is disabled.",
+                    "type": "boolean"
+                },
+                "charset": {
+                    "description": "The charset for the connection. This is called 'collation' in the SQL-level of MySQL (like utf8_general_ci).\nIf a SQL-level charset is specified (like utf8mb4) then the default collation for that charset is used.\n(Default: 'UTF8_GENERAL_CI')",
+                    "type": "string"
+                },
+                "connectTimeout": {
+                    "description": "The milliseconds before a timeout occurs during the initial connection to the MySQL server. (Default: 10 seconds)",
+                    "type": "number"
+                },
+                "connectionLimit": {
+                    "description": "The maximum number of connections to create at once. (Default: 10)",
+                    "type": "number"
+                },
+                "database": {
+                    "description": "Name of the database to use for this connection",
+                    "type": "string"
+                },
+                "dateStrings": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "enum": [
+                                    "DATE",
+                                    "DATETIME",
+                                    "TIMESTAMP"
+                                ],
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "boolean"
+                        }
+                    ],
+                    "description": "Force date types (TIMESTAMP, DATETIME, DATE) to be returned as strings rather then inflated into JavaScript Date\nobjects. Can be true/false or an array of type names to keep as strings.\n\n(Default: false)"
+                },
+                "debug": {
+                    "description": "This will print all incoming and outgoing packets on stdout.\nYou can also restrict debugging to packet types by passing an array of types (strings) to debug;\n\n(Default: false)"
+                },
+                "enableKeepAlive": {
+                    "description": "Enable keep-alive on the socket.  It's disabled by default, but the\nuser can enable it and supply an initial delay.",
+                    "type": "boolean"
+                },
+                "flags": {
+                    "description": "List of connection flags to use other than the default ones. It is also possible to blacklist default ones",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "host": {
+                    "description": "The hostname of the database you are connecting to. (Default: localhost)",
+                    "type": "string"
+                },
+                "idleTimeout": {
+                    "description": "The idle connections timeout, in milliseconds. (Default: 60000)",
+                    "type": "number"
+                },
+                "insecureAuth": {
+                    "description": "Allow connecting to MySQL instances that ask for the old (insecure) authentication method. (Default: false)",
+                    "type": "boolean"
+                },
+                "keepAliveInitialDelay": {
+                    "description": "If keep-alive is enabled users can supply an initial delay.",
+                    "type": "number"
+                },
+                "localAddress": {
+                    "description": "The source IP address to use for TCP connection",
+                    "type": "string"
+                },
+                "maxIdle": {
+                    "description": "The minimum number of idle connections. (Default: 10)",
+                    "type": "number"
+                },
+                "multipleStatements": {
+                    "description": "Allow multiple mysql statements per query. Be careful with this, it exposes you to SQL injection attacks. (Default: false)",
+                    "type": "boolean"
+                },
+                "password": {
+                    "description": "The password of that MySQL user",
+                    "type": "string"
+                },
+                "password1": {
+                    "description": "Alias for the MySQL user password. Makes a bit more sense in a multifactor authentication setup (see\n\"password2\" and \"password3\")",
+                    "type": "string"
+                },
+                "password2": {
+                    "description": "2nd factor authentication password. Mandatory when the authentication policy for the MySQL user account\nrequires an additional authentication method that needs a password.\nhttps://dev.mysql.com/doc/refman/8.0/en/multifactor-authentication.html",
+                    "type": "string"
+                },
+                "password3": {
+                    "description": "3rd factor authentication password. Mandatory when the authentication policy for the MySQL user account\nrequires two additional authentication methods and the last one needs a password.\nhttps://dev.mysql.com/doc/refman/8.0/en/multifactor-authentication.html",
+                    "type": "string"
+                },
+                "port": {
+                    "description": "The port number to connect to. (Default: 3306)",
+                    "type": "number"
+                },
+                "queryFormat": {
+                    "additionalProperties": false,
+                    "description": "A custom query format function",
+                    "type": "object"
+                },
+                "queueLimit": {
+                    "description": "The maximum number of connection requests the pool will queue before returning an error from getConnection. If set to 0, there\nis no limit to the number of queued connection requests. (Default: 0)",
+                    "type": "number"
+                },
+                "rowsAsArray": {
+                    "description": "Return each row as an array, not as an object.\nThis is useful when you have duplicate column names.\nThis can also be set in the `QueryOption` object to be applied per-query.",
+                    "type": "boolean"
+                },
+                "socketPath": {
+                    "description": "The path to a unix domain socket to connect to. When used host and port are ignored",
+                    "type": "string"
+                },
+                "ssl": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/SslOptions"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "object with ssl parameters or a string containing name of ssl profile"
+                },
+                "stringifyObjects": {
+                    "description": "Stringify objects instead of converting to values. (Default: 'false')",
+                    "type": "boolean"
+                },
+                "supportBigNumbers": {
+                    "description": "When dealing with big numbers (BIGINT and DECIMAL columns) in the database, you should enable this option\n(Default: false)",
+                    "type": "boolean"
+                },
+                "timezone": {
+                    "description": "The timezone used to store local dates. (Default: 'local')",
+                    "type": "string"
+                },
+                "trace": {
+                    "description": "Generates stack traces on Error to include call site of library entrance ('long stack traces'). Slight\nperformance penalty for most calls. (Default: true)",
+                    "type": "boolean"
+                },
+                "typeCast": {
+                    "anyOf": [
+                        {
+                            "additionalProperties": false,
+                            "type": "object"
+                        },
+                        {
+                            "type": "boolean"
+                        }
+                    ],
+                    "description": "Determines if column values should be converted to native JavaScript types. It is not recommended (and may go away / change in the future)\nto disable type casting, but you can currently do so on either the connection or query level. (Default: true)\n\nYou can also specify a function (field: any, next: () => void) => {} to do the type casting yourself.\n\nWARNING: YOU MUST INVOKE the parser using one of these three field functions in your custom typeCast callback. They can only be called once.\n\nfield.string()\nfield.buffer()\nfield.geometry()\n\nare aliases for\n\nparser.parseLengthCodedString()\nparser.parseLengthCodedBuffer()\nparser.parseGeometryValue()\n\nYou can find which field function you need to use by looking at: RowDataPacket.prototype._typeCast"
+                },
+                "user": {
+                    "description": "The MySQL user to authenticate as",
+                    "type": "string"
+                },
+                "waitForConnections": {
+                    "description": "Determines the pool's action when no connections are available and the limit has been reached. If true, the pool will queue\nthe connection request and call it when one becomes available. If false, the pool will immediately call back with an error.\n(Default: true)",
+                    "type": "boolean"
+                }
+            },
+            "type": "object"
+        },
+        "SslOptions": {
+            "additionalProperties": false,
+            "properties": {
+                "ca": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "items": {
+                                "additionalProperties": false,
+                                "patternProperties": {
+                                    "^[0-9]+$": {
+                                        "type": "number"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "Either a string/Buffer or list of strings/Buffers of PEM encoded CA certificates to trust."
+                },
+                "cert": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "items": {
+                                "additionalProperties": false,
+                                "patternProperties": {
+                                    "^[0-9]+$": {
+                                        "type": "number"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "A string/buffer or list of strings/Buffers holding the PEM encoded certificate(s)"
+                },
+                "ciphers": {
+                    "description": "A string describing the ciphers to use or exclude",
+                    "type": "string"
+                },
+                "crl": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "Either a string or list of strings of PEM encoded CRLs (Certificate Revocation List)"
+                },
+                "key": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                "^[0-9]+$": {
+                                    "type": "number"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "items": {
+                                "additionalProperties": false,
+                                "patternProperties": {
+                                    "^[0-9]+$": {
+                                        "type": "number"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "Either a string/buffer or list of strings/Buffers holding the PEM encoded private key(s) to use"
+                },
+                "maxVersion": {
+                    "description": "Configure the maximum supported version of SSL, the default is TLSv1.3.",
+                    "type": "string"
+                },
+                "minVersion": {
+                    "description": "Configure the minimum supported version of SSL, the default is TLSv1.2.",
+                    "type": "string"
+                },
+                "passphrase": {
+                    "description": "A string of passphrase for the private key or pfx",
+                    "type": "string"
+                },
+                "pfx": {
+                    "description": "A string or buffer holding the PFX or PKCS12 encoded private key, certificate and CA certificates",
+                    "type": "string"
+                },
+                "rejectUnauthorized": {
+                    "description": "You can also connect to a MySQL server without properly providing the appropriate CA to trust. You should not do this.",
+                    "type": "boolean"
+                },
+                "verifyIdentity": {
+                    "description": "You can verify the server name identity presented on the server certificate when connecting to a MySQL server.\nYou should enable this but it is disabled by default right now for backwards compatibility.",
+                    "type": "boolean"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "properties": {
+        "poolOptions": {
+            "$ref": "#/definitions/PoolOptions"
+        }
+    },
+    "required": [
+        "poolOptions"
+    ],
+    "type": "object"
+}
+

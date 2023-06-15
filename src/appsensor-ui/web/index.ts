@@ -14,17 +14,26 @@ import { AppSensorEvent, Attack, Response } from "../../core/core.js";
 import { WebSocketJsonObject } from "./websocket/WebSocketJSONObject.js";
 
 import e from 'express';
-import * as serveStatic from 'serve-static';
+import sessionF, * as sessionNS from 'express-session';
+import MySQLStore from 'express-mysql-session';
+
 import morgan from 'morgan';
 import hbs from 'hbs';
-import path from 'path';
+import passport from 'passport';
+import {Strategy as LocalStrategy, IVerifyOptions} from 'passport-local';
+
 
 import http, { IncomingMessage } from 'http';
 import https from 'https';
+import path from 'path';
+import crypto from 'crypto';
 
 import WebSocket, { WebSocketServer } from "ws";
 import { ConfigurationReport } from "../reports/ConfigurationReport.js";
 import { ConfigurationController } from "./controller/ConfigurationController.js";
+import { ConnectionManager } from "../security/mysql/connection_manager.js";
+import { UserDetails, UserDetailsService } from "../security/UserDetailsService.js";
+import { MySQLUserDetailsService } from "../security/mysql/MySQLUserDetailsService.js";
 
 
 type TEMPLATE_VARIABLES = {
@@ -35,9 +44,17 @@ type TEMPLATE_VARIABLES = {
 interface WebSocketAdditionalProperties {
     isAlive?: boolean;
     remoteAddress?: string;
-}
+};
 
 type WebSocketExt = WebSocket.WebSocket & WebSocketAdditionalProperties;
+
+type SESSION_USER_ID = {
+    username: string;
+};
+
+interface SESSION_WITH_MESSAGES {
+    messages: string[]
+};
 
 class AppsensorUIRestServerConfigReader extends JSONConfigReadValidate {
     constructor() {
@@ -45,7 +62,7 @@ class AppsensorUIRestServerConfigReader extends JSONConfigReadValidate {
               './rest/server/appsensor-rest-server-config_schema.json',
               RestServerConfig.prototype);
     }
-}
+};
 
 class AppsensorUIRestServer extends RestServer {
     
@@ -77,6 +94,8 @@ class AppsensorUIRestServer extends RestServer {
 
     private templateVariables: TEMPLATE_VARIABLES;
 
+    private userDetailsService: UserDetailsService;
+
     constructor(restServerConfig: string = 'appsensor-ui-rest-server-config.json') {
         super(new AppsensorUIRestServerConfigReader().read(restServerConfig));
 
@@ -94,9 +113,11 @@ class AppsensorUIRestServer extends RestServer {
         this.trendsController = new TrendsDashboardController(trendsReport);
         this.configController = new ConfigurationController(configReport);
 
+        this.userDetailsService = new MySQLUserDetailsService();
+
         this.templateVariables = {
             CONTEXT_PATH: '',
-            LOGGED_IN_USERNAME: 'Test'
+            LOGGED_IN_USERNAME: ''
         };
 
         const basePath = this.config.basePath ? this.config.basePath : '';
@@ -110,6 +131,68 @@ class AppsensorUIRestServer extends RestServer {
         hbs.registerPartials(path.join(templatesPath, AppsensorUIRestServer.TEMPLATES_PARTIALS_DIR));
 
         // console.log("Working dir: " + process.cwd());
+    }
+
+    async init(): Promise<void> {
+        this.expressApp.use(e.urlencoded());
+
+        passport.use(new LocalStrategy(this.verifyUserCredentials.bind(this)));
+
+        const connection = await ConnectionManager.getConnection();
+        const storeFunction = MySQLStore(sessionNS);
+        const sessionStore = new storeFunction({}, connection);
+
+        this.expressApp.use(sessionF({
+            secret: 'session_cookie_secret',
+            store: sessionStore,
+            resave: false,
+            saveUninitialized: false
+        }));
+
+        this.expressApp.use(passport.authenticate('session'));
+
+        const self = this;
+
+        passport.serializeUser<SESSION_USER_ID>(function(user: Express.User, cb) {
+            process.nextTick(function() {
+              cb(null, { username: (user as UserDetails).getUsername() });
+            });
+        });
+          
+        passport.deserializeUser<SESSION_USER_ID>(function(id, cb) {
+            self.userDetailsService.loadUserByUsername(id.username)
+            .then(userDetails => {
+                cb(null, userDetails);
+            })
+            .catch(error => {
+                cb(error);
+            }); 
+        });
+
+        this.expressApp.use(this.prepareTemplateVariables.bind(this));
+
+        super.init();
+    }
+
+
+
+    private verifyUserCredentials (username: string,
+                                   password: string,
+                                   done: (error: any, user?: Express.User | false, options?: IVerifyOptions) => void,
+                                  ): void {
+
+        this.userDetailsService.loadUserByUsername(username)
+        .then(userDetails => {
+            if (userDetails && userDetails.isEnabled() &&
+                userDetails.getPassword() === password) {
+                done(null, userDetails);
+            } else {
+                done(null, false, { message: 'Incorrect username or password.' });
+            }
+        })
+        .catch(error => {
+            done(error);
+        }); 
     }
 
     protected override attachToServer(): void {
@@ -202,7 +285,22 @@ class AppsensorUIRestServer extends RestServer {
         }
     }
 
-    prepareTemplateVariables(req: e.Request, res: e.Response, next: e.NextFunction) {
+    private isMessagesAvailable(obj: any): obj is SESSION_WITH_MESSAGES {
+        return 'messages' in obj;
+    }
+
+    private prepareTemplateVariables(req: e.Request, res: e.Response, next: e.NextFunction) {
+        delete this.templateVariables["error"];
+
+        this.templateVariables.LOGGED_IN_USERNAME = '';
+
+        if (req.user) {
+            delete this.templateVariables["logout"];
+            this.templateVariables.LOGGED_IN_USERNAME = (req.user as UserDetails).getUsername();
+        } else if (this.isMessagesAvailable(req.session) && req.session.messages.length > 0){
+            this.templateVariables["error"] = req.session.messages[0]; //the message doesn't matter, only activates the error block in the template
+        }
+
         let path = '';
         const pathToCompare = req.path.trim().toLowerCase();
         if (pathToCompare.includes("/")) {
@@ -226,7 +324,6 @@ class AppsensorUIRestServer extends RestServer {
             path = "user";
         }
         
-
         if (AppsensorUIRestServer.ACTIVE_PATHS.indexOf(path) > -1) {
 
             const keys = Object.keys(this.templateVariables);
@@ -241,6 +338,12 @@ class AppsensorUIRestServer extends RestServer {
             this.templateVariables[key] = path;
         }
 
+
+        if (pathToCompare.includes("/logout")) {
+            this.templateVariables["logout"] = "logout";
+        }
+
+
         // console.log(this.templateVariables);
 
         next();
@@ -249,13 +352,6 @@ class AppsensorUIRestServer extends RestServer {
     protected override getStaticContentDir(): string {
         return AppsensorUIRestServer.STATIC_CONTENT_DIR;
     }
-
-    // protected override getStaticOption<R extends http.ServerResponse>(): serveStatic.ServeStaticOptions<R> {
-    //     return  {
-    //         fallthrough: true,
-    //         redirect: false
-    //     };
-    // }
 
     protected override setRequestLogging() {
         this.expressApp.use(
@@ -272,7 +368,7 @@ class AppsensorUIRestServer extends RestServer {
         super.setRequestLogging();
     }
 
-    renderPage(pageName: string) {
+    private renderPage(pageName: string) {
         const self = this;
         
         return function(req: e.Request, res: e.Response, next: e.NextFunction) {
@@ -280,7 +376,12 @@ class AppsensorUIRestServer extends RestServer {
         }
     }
 
-    renderUserPage(req: e.Request, res: e.Response, next: e.NextFunction) {
+    private renderLogInOutPage(req: e.Request, res: e.Response, next: e.NextFunction) {
+
+        res.render('login.html', this.templateVariables);
+    }
+
+    private renderUserPage(req: e.Request, res: e.Response, next: e.NextFunction) {
         const user = req.params.user;
 
         this.templateVariables[AppsensorUIRestServer.USERNAME_DETAIL_VAR] = user;
@@ -288,7 +389,7 @@ class AppsensorUIRestServer extends RestServer {
         res.render('user.html', this.templateVariables);
     }
 
-    renderDetectionPointPage(req: e.Request, res: e.Response, next: e.NextFunction) {
+    private renderDetectionPointPage(req: e.Request, res: e.Response, next: e.NextFunction) {
         const category = req.params.category;
         const label    = req.params.label;
 
@@ -298,18 +399,85 @@ class AppsensorUIRestServer extends RestServer {
         res.render('detection-point.html', this.templateVariables);
     }
 
+    private isAuthorized(req: e.Request, res: e.Response, next: e.NextFunction) {
+        const pathToCompare = req.path.trim().toLowerCase();
+        if (pathToCompare === '/login' ||
+            pathToCompare === '/about' ||
+            pathToCompare.startsWith('/webjars/') || //static resources
+            pathToCompare.startsWith('/css/') ||     //static resources
+            pathToCompare.startsWith('/js/')) {      //static resources
+            //don't require any authentication and authorization
+            next();
+
+            return;
+        }
+
+        //As first, the user has to be authenticated
+        if (!req.user) {
+            res.redirect('/login');
+            return;
+        }
+
+
+        //Check authorization
+
+        const userDetails = req.user as UserDetails;
+
+        let requiredAuthorityName = 'VIEW_DATA';
+        switch (pathToCompare) {
+            case '/configuration': {
+
+                requiredAuthorityName = 'VIEW_CONFIGURATION';
+
+                break;
+            }
+            default: {
+                //all others require VIEW_DATA authority
+                //set at the beginning of the switch
+            }
+        }
+
+        let authorized = false;
+        const userAuthorities = userDetails.getAuthorities();
+        for (let i = 0; i < userAuthorities.length; i++) {
+            if (userAuthorities[i].getName() === requiredAuthorityName) {
+                authorized = true;
+                break;
+            }
+        };
+
+        if (!authorized) {
+            next("You are not authorized to perform this action!");
+        } else {
+            next();
+        }
+    }
+
     protected setEndpoints(): void {
-        this.expressApp.use(this.prepareTemplateVariables.bind(this));
+        this.expressApp.use(this.isAuthorized);
 
         //render pages
+        this.expressApp.get('/login', this.renderLogInOutPage.bind(this));
+        this.expressApp.post('/login', passport.authenticate('local', {
+            successRedirect: '/',
+            failureMessage: true,
+            failureRedirect: '/login'
+        }));
+        this.expressApp.get('/logout', function(req, res, next) {
+            req.logout(function(err) {
+                if (err) { return next(err); }
+                res.redirect('/login');
+            });
+        });  
+
         this.expressApp.get('/', this.renderPage('dashboard.html'));
         this.expressApp.get('/trends-dashboard', this.renderPage('trends-dashboard.html'));
         this.expressApp.get('/configuration', this.renderPage('configuration.html'));
         this.expressApp.get('/about', this.renderPage('about.html'));
         this.expressApp.get('/geo-map', this.renderPage('geo-map.html'));
-        //'/logout'
         this.expressApp.get('/users/:user', this.renderUserPage.bind(this));
         this.expressApp.get('/detection-points/:category/:label', this.renderDetectionPointPage.bind(this));
+
 
         //dashboard endpoints
         this.expressApp.get('/api/dashboard/all', this.dashboardController.allContent.bind(this.dashboardController));
@@ -346,10 +514,12 @@ class AppsensorUIRestServer extends RestServer {
         //configuration endpoints
         this.expressApp.get('/api/configuration/server-config', this.configController.getServerConfiguration.bind(this.configController));
     }
+
+    
 }
 
-(() => {
+(async () => {
     const inst = new AppsensorUIRestServer();
-    inst.init();
+    await inst.init();
     inst.startServer();
 })()
