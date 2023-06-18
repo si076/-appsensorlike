@@ -13,16 +13,14 @@ class AppSensorWebsocketExecClient {
     private userManager: UserManager = new NoopUserManager();
     private responseHandler: ResponseHandler = new LocalResponseHandler(this.userManager);
 
-    constructor(address: string | URL = '', 
-                configLocation: string = '',
-                options?: WebSocket.ClientOptions | ClientRequestArgs, 
+    constructor(configLocation: string = '', 
                 responseHandler?: ResponseHandler) {
 
         if (responseHandler) {
             this.responseHandler = responseHandler;
         }
 
-        const eventManager = new WebSocketEventManager(address, configLocation, options);
+        const eventManager = new WebSocketEventManager(configLocation);
 
         this.appSensorClient = new AppSensorClient();
         this.appSensorClient.setEventManager(eventManager);
@@ -34,8 +32,8 @@ class AppSensorWebsocketExecClient {
         return this.appSensorClient;
     }
 
-    closeWebSocket() {
-        (this.appSensorClient.getEventManager() as WebSocketEventManager).closeSocket();
+    async closeWebSocket() {
+        await (this.appSensorClient.getEventManager() as WebSocketEventManager).closeSocket();
     }
 }
 

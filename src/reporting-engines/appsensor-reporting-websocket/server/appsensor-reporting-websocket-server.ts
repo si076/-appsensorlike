@@ -2,13 +2,12 @@ import { AppSensorEvent, Attack, Response, KeyValuePair, AppSensorServer, User, 
 import { SearchCriteria } from "../../../core/criteria/criteria.js";
 import { AttackStore, EventStore, ResponseStore } from "../../../core/storage/storage.js";
 import { ReportingEngineExt } from "../../reporting-engines.js";
-import { JSONServerConfigurationReader } from "../../../configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
 import { JSONConfigReadValidate } from "../../../utils/Utils.js";
 import { AppSensorWebSocketServer, WebSocketExt, WebSocketServerConfig } from "../../../websocket/server/appsensor-websocket-server.js";
 import { ActionRequest } from "../../../websocket/appsensor-websocket.js";
 import { Action, Context } from "../../../core/accesscontrol/accesscontrol.js";
 
-import WebSocket, {  } from "ws";
+import { IncomingMessage } from "http";
 
 class ReportingWebSocketServerConfigReader  extends JSONConfigReadValidate {
 
@@ -29,8 +28,8 @@ class AppSensorReportingWebSocketServer extends AppSensorWebSocketServer impleme
 
     constructor(appSensorServer: AppSensorServer,
                 configLocation: string = 'appsensor-reporting-websocket-server-config.json',
-                serverOptions? :WebSocket.ServerOptions) {
-        super(new ReportingWebSocketServerConfigReader().read(configLocation), serverOptions);
+                handleProtocols?: (protocols: Set<string>, request: IncomingMessage) => string | false) {
+        super(new ReportingWebSocketServerConfigReader().read(configLocation), handleProtocols);
 
         this.appSensorServer = appSensorServer;
 

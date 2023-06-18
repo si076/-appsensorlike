@@ -15,6 +15,7 @@ enum EXEC_MODE {
 
 async function runTests(appSensorServer: AppSensorServer, 
                         appSensorClient: AppSensorClient, 
+                        configLocation: string,
                         readInf: readline.Interface | null = null,
                         execMode: EXEC_MODE = EXEC_MODE.EXEC_MODE_LOCAL) {
 
@@ -37,52 +38,71 @@ async function runTests(appSensorServer: AppSensorServer,
             resolve(choice);
         });
     });
-    await testChoice(appSensorServer, appSensorClient, choice, execMode);
+    await testChoice(appSensorServer, appSensorClient, choice, configLocation, execMode, rl);
 }
 
 async function testChoice(appSensorServer: AppSensorServer, 
                           appSensorClient: AppSensorClient, 
                           choice: string,
-                          execMode: EXEC_MODE = EXEC_MODE.EXEC_MODE_LOCAL) {
-    switch (choice) {
-        case "1":  
-        case "a": {
-            await MultipleDetectionPointsSameLabelEventAnalysisEngineTest.runTests(appSensorServer, appSensorClient);
-            if (choice !== 'a') {
-                break;
-            }
-        }
-        case "2":  
-        case "a": {
-            await SimpleAggregateEventAnalysisEngineTest.runTests(appSensorServer, appSensorClient);
-            if (choice !== 'a') {
-                break;
-            }
-        }
-        case "3":  
-        case "a": {
-            await ReferenceStatisticalEventAnalysisEngineTest.runTests(appSensorServer, appSensorClient);
-            if (choice !== 'a') {
-                break;
-            }
-        }
-        case "4":  
-        case "a": {
-            await AggregateEventAnalysisEngineIntegrationTest.runTests(appSensorServer, appSensorClient);
-            if (choice !== 'a') {
-                break;
-            }
-        }
-        case "5":  
-        case "a": {
-            await ErrorHandlingTest.runTests(appSensorServer, appSensorClient, execMode);
-            if (choice !== 'a') {
-                break;
-            }
-        }
-        
-    }
+                          configLocation: string,
+                          execMode: EXEC_MODE = EXEC_MODE.EXEC_MODE_LOCAL,
+                          readInf: readline.Interface) {
+    const execTimesStr: string = await new Promise((resolve, reject) => {
+        readInf!.question("Execution times:", (choice: string) => {
+            resolve(choice);
+        });
+    });
 
+    const execTimes = Number.parseInt(execTimesStr);
+    
+    const startInMillis = new Date().getTime();
+
+    for (let i = 0; i < execTimes; i++) {
+        
+        switch (choice) {
+            case "1":  
+            case "a": {
+                await MultipleDetectionPointsSameLabelEventAnalysisEngineTest.runTests(appSensorServer, appSensorClient, configLocation);
+                if (choice !== 'a') {
+                    break;
+                }
+            }
+            case "2":  
+            case "a": {
+                await SimpleAggregateEventAnalysisEngineTest.runTests(appSensorServer, appSensorClient);
+                if (choice !== 'a') {
+                    break;
+                }
+            }
+            case "3":  
+            case "a": {
+                await ReferenceStatisticalEventAnalysisEngineTest.runTests(appSensorServer, appSensorClient);
+                if (choice !== 'a') {
+                    break;
+                }
+            }
+            case "4":  
+            case "a": {
+                await AggregateEventAnalysisEngineIntegrationTest.runTests(appSensorServer, appSensorClient);
+                if (choice !== 'a') {
+                    break;
+                }
+            }
+            case "5":  
+            case "a": {
+                await ErrorHandlingTest.runTests(appSensorServer, appSensorClient, execMode);
+                if (choice !== 'a') {
+                    break;
+                }
+            }
+            
+        }
+
+    }
+    
+    const endInMillis = new Date().getTime();
+    const average = (endInMillis - startInMillis) / execTimes;
+    console.log('Average time for test exection:', average, ' in in milliseconds.');
 }
 
 export {runTests, EXEC_MODE};

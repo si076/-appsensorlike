@@ -1,5 +1,7 @@
 {
-    "options": {
+    "protocol": "http",
+
+    "listenOptions": {
         "port": 4500
     }
 }

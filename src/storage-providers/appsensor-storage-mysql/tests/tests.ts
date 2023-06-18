@@ -82,12 +82,14 @@ async function runTestsWebSocket(readInf: readline.Interface | null = null) {
                                              
     const appSensorWebSocketClient = new AppSensorWebsocketExecClient();
 
+    await appSensorWebSocketServer.startWebSocketServer();
+
     await runTests(appSensorWebSocketServer.getAppSensorServer(), 
                    appSensorWebSocketClient.getAppSensorClient(), 
                    readInf);
 
-    appSensorWebSocketClient.closeWebSocket();
-    appSensorWebSocketServer.closeWebSocketServer();
+    await appSensorWebSocketClient.closeWebSocket();
+    await appSensorWebSocketServer.closeWebSocketServer();
 }
 
 export {runTestsLocally, runTestsWebSocket}

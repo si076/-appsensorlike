@@ -1,3 +1,4 @@
+import { IncomingMessage } from "http";
 import WebSocket from "ws";
 import { ReferenceAccessController } from "../../../access-controllers/appsensor-access-control-reference/ReferenceAccessController.js";
 
@@ -30,7 +31,7 @@ class AppSensorWebsocketExecServer {
 
     constructor(appServerConfigFile: string = '',
                 webSocketServerConfigFile: string = '',
-				serverOptions? :WebSocket.ServerOptions,
+				handleProtocols?: (protocols: Set<string>, request: IncomingMessage) => string | false,
                 attackStore?: AttackStore,
                 eventStore?: EventStore,
                 responseStore?: ResponseStore) {
@@ -84,15 +85,19 @@ class AppSensorWebsocketExecServer {
 
         this.appSensorServer.setAccessController(new ReferenceAccessController());
 
-        this.requestHandler = new WebSocketRequestHandler(this.appSensorServer, webSocketServerConfigFile, serverOptions);
+        this.requestHandler = new WebSocketRequestHandler(this.appSensorServer, webSocketServerConfigFile, handleProtocols);
     }
 
     getAppSensorServer() {
         return this.appSensorServer;
     }
 
-    closeWebSocketServer() {
-        (this.requestHandler as WebSocketRequestHandler).closeServer();
+    async startWebSocketServer() {
+        await (this.requestHandler as WebSocketRequestHandler).startServer();
+    }
+
+    async closeWebSocketServer() {
+        await (this.requestHandler as WebSocketRequestHandler).closeServer();
     }
 }
 

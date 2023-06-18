@@ -22,14 +22,8 @@ class WebSocketEventManager extends AppSensorWebSocketClient implements EventMan
 	
 	private static eventEmmiter: EventEmitter = new EventEmitter();
 	
-    constructor(address: string | URL = '', 
-				configLocation: string = 'appsensor-websocket-event-manager-config.json',
-				options?: WebSocket.ClientOptions | ClientRequestArgs) {
-		super(address, new WebSocketEventManagerConfigReader().read(configLocation), options);
-    }
-
-    public closeSocket() {
-        super.closeSocket();
+    constructor(configLocation: string = 'appsensor-websocket-event-manager-config.json') {
+		super(new WebSocketEventManagerConfigReader().read(configLocation));
     }
 
     protected override onServerResponse(response: ActionResponse) {

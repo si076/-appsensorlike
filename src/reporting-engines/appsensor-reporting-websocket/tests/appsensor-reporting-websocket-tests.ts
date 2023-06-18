@@ -16,8 +16,8 @@ class AppSensorReportingWebsocketClientTest {
 
     private wsClient: AppSensorReportingWebSocketClient;
 
-	constructor() {
-        this.wsClient = new AppSensorReportingWebSocketClient();
+	constructor(websocketConfigLocation: string = '') {
+        this.wsClient = new AppSensorReportingWebSocketClient(websocketConfigLocation);
 	}
 
     public async test(earliest: string) {
@@ -73,6 +73,10 @@ class AppSensorReportingWebsocketClientTest {
 
 		return {eventCount: eventCount, attackCount: attackCount, responseCount: responseCount};
     }
+
+	async closeWebsocket() {
+		await this.wsClient.closeSocket();
+	}
 }
 
 class AppSensorReportingWebsocketClientExt extends AppSensorReportingWebSocketClient {
@@ -102,7 +106,7 @@ class AppSensorReportingWebsocketTests {
 
     private wsServer: AppSensorReportingWebSocketServer;
 
-    constructor() {
+    constructor(websocketServerConfigLocation: string = '') {
         this.appSensorLocal = new AppSensorLocal('', 
                                                  new MySQLAttackStore(),
                                                  new MySQLEventStore(),
@@ -111,8 +115,12 @@ class AppSensorReportingWebsocketTests {
         this.appSensorClient = this.appSensorLocal.getAppSensorClient();
         this.appSensorServer = this.appSensorLocal.getAppSensorServer();
 
-        this.wsServer = new AppSensorReportingWebSocketServer(this.appSensorServer);
+        this.wsServer = new AppSensorReportingWebSocketServer(this.appSensorServer, websocketServerConfigLocation);
     }
+
+	public async startServer() {
+		await this.wsServer.startServer();
+	}
 
     public async populateData() {
         const ipAddress1 = await IPAddress.fromString("5.45.80.10", this.geoLocator);
@@ -381,26 +389,56 @@ class AppSensorReportingWebsocketTests {
 		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
 	}
 
-	public justSomeMethod() {
-		console.log('--> justSomeMethod');
+	async closeServer() {
+		await this.wsServer.closeServer();
+		await this.wsServer.stopServer();
 	}
+}
 
+async function runTestWithHttpServer(earliest: string) {
+	console.log('----- With Http Server -----');
+	let configLocation = './reporting-engines/appsensor-reporting-websocket/tests/appsensor-reporting-websocket-server-config1.json';
+    const server = new AppSensorReportingWebsocketTests(configLocation);
+	await server.startServer();
+    await server.initializeMySQLStorage();
+    await server.populateData();
+
+	configLocation = './reporting-engines/appsensor-reporting-websocket/tests/appsensor-reporting-websocket-client-config1.json';
+	const client = new AppSensorReportingWebsocketClientTest(configLocation);
+    await client.test(earliest);
+
+	await client.closeWebsocket();
+
+	await server.closeServer();
+}
+
+async function runTestWithHttpsServer(earliest: string) {
+	console.log('----- With Https Server -----');
+	let configLocation = './reporting-engines/appsensor-reporting-websocket/tests/appsensor-reporting-websocket-server-config2.json';
+    const server = new AppSensorReportingWebsocketTests(configLocation);
+	await server.startServer();
+    await server.initializeMySQLStorage();
+    await server.populateData();
+
+	configLocation = './reporting-engines/appsensor-reporting-websocket/tests/appsensor-reporting-websocket-client-config2.json';
+	const client = new AppSensorReportingWebsocketClientTest(configLocation);
+    await client.test(earliest);
+	
+	await client.closeWebsocket();
+
+	await server.closeServer();
 }
 
 async function runTests() {
     console.log('----- Run AppSensorReportingWebsocketTests -----');
 	const earliest = new Date().toISOString();
-    const inst = new AppSensorReportingWebsocketTests();
-    await inst.initializeMySQLStorage();
-    await inst.populateData();
-	const client = new AppSensorReportingWebsocketClientTest();
-    await client.test(earliest);
-
-	inst.justSomeMethod();
+	await runTestWithHttpServer(earliest);
+	await runTestWithHttpsServer(earliest);
 }
 
 async function runServerSeparately() {
     const inst = new AppSensorReportingWebsocketTests();
+	await inst.startServer();
     await inst.initializeMySQLStorage();
     await inst.populateData();
 }

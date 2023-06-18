@@ -4,15 +4,27 @@
     "definitions": {
         "AbortSignal": {
             "additionalProperties": false,
-            "description": "A signal object that allows you to communicate with a DOM request (such as a Fetch) and abort it if required via an AbortController object.",
             "properties": {
                 "aborted": {
-                    "description": "Returns true if this AbortSignal's AbortController has signaled to abort, and false otherwise.",
                     "type": "boolean"
-                }
+                },
+                "onabort": {
+                    "anyOf": [
+                        {
+                            "additionalProperties": false,
+                            "type": "object"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "reason": {}
             },
             "required": [
-                "aborted"
+                "aborted",
+                "onabort",
+                "reason"
             ],
             "type": "object"
         },
@@ -179,6 +191,14 @@
                 "name"
             ],
             "type": "object"
+        },
+        "HTTP_PROTOCOLS": {
+            "enum": [
+                "http",
+                "http2",
+                "https"
+            ],
+            "type": "string"
         },
         "Http2ServerRequest": {
             "additionalProperties": false,
@@ -5529,13 +5549,7 @@
             "$ref": "#/definitions/ListenOptions"
         },
         "protocol": {
-            "default": "http",
-            "enum": [
-                "http",
-                "http2",
-                "https"
-            ],
-            "type": "string"
+            "$ref": "#/definitions/HTTP_PROTOCOLS"
         }
     },
     "required": [

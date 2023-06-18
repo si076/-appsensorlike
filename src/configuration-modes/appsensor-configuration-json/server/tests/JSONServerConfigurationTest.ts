@@ -6,8 +6,12 @@ import { CorrelationSet } from "../../../../core/correlation/correlation.js";
 import { Clause, Expression, MonitorPoint, Rule } from "../../../../core/rule/rule.js";
 
 import assert from "assert";
+import fs from 'fs';
 
 class JSONServerConfigurationTest {
+
+    private static TEST_CONFIG_LOCATION = 
+        './configuration-modes/appsensor-configuration-json/server/tests/appsensor-server-config.json';
 
     private testConfigurationReadOfAllElements(): void {
         console.log('--> testConfigurationReadOfAllElements');
@@ -203,8 +207,10 @@ class JSONServerConfigurationTest {
             configExpected.setCustomDetectionPoints(customDetectionPoints);
         }
 
+        configExpected.configurationFile = fs.realpathSync(JSONServerConfigurationTest.TEST_CONFIG_LOCATION);
 
-        const configActual = new JSONServerConfigurationReader().read('./configuration-modes/appsensor-configuration-json/server/tests/appsensor-server-config.json');
+
+        const configActual = new JSONServerConfigurationReader().read(JSONServerConfigurationTest.TEST_CONFIG_LOCATION);
 
         assert.deepStrictEqual(configActual, configExpected);
 

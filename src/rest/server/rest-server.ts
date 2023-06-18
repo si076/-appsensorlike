@@ -1,89 +1,45 @@
 import e from 'express';
 import * as serveStatic from 'serve-static';
-import cors from 'cors';
 
 import morgan from 'morgan';
 
-import net from 'net';
-import tls from 'tls';
 import http from 'http';
-import https from 'https';
-import http2 from 'http2';
-import fs from 'fs';
 import path from 'path';
 
 import { ServerConfiguration } from '../../core/configuration/server/server_configuration.js';
 import { IPAddress } from '../../core/core.js';
 import { AccessController, Action, Context } from '../../core/accesscontrol/accesscontrol.js';
 import { Logger } from '../../logging/logging.js';
+import { HttpS2Server, HttpS2ServerConfig } from '../../http/HttpS2Server.js';
 
-enum PROTOCOLS {
-    HTTP  = 'http',
-    HTTPS = 'https',
-    HTTP2 = 'http2'
-}
-
-class RestServerConfig {
-    protocol: PROTOCOLS = PROTOCOLS.HTTP;
+class RestServerConfig extends HttpS2ServerConfig {
     
     basePath?: string | undefined;
     langs?: string[] | undefined;
     appPaths?: string[] | undefined;
-
-    // http: {
-    //     requestTimeout?: number | undefined;
-    //     keepAliveTimeout?: number | undefined;
-    //     connectionsCheckingInterval?: number | undefined;
-    //     insecureHTTPParser?: boolean | undefined;
-    //     maxHeaderSize?: number | undefined;
-    //     noDelay?: boolean | undefined;
-    //     keepAlive?: boolean | undefined;
-    //     keepAliveInitialDelay?: number | undefined;
-    //     uniqueHeaders?: Array<string | string[]> | undefined;
-    // } = {};
-
-    // https: {
-    //     requestTimeout?: number | undefined;
-    //     keepAliveTimeout?: number | undefined;
-    //     connectionsCheckingInterval?: number | undefined;
-    //     insecureHTTPParser?: boolean | undefined;
-    //     maxHeaderSize?: number | undefined;
-    //     noDelay?: boolean | undefined;
-    //     keepAlive?: boolean | undefined;
-    //     keepAliveInitialDelay?: number | undefined;
-    //     uniqueHeaders?: Array<string | string[]> | undefined;
-
-    //     key: string,
-    //     cert: string
-    // } = {key: '', cert: ''};
-
-    http?: http.ServerOptions | undefined;
-
-    https?: https.ServerOptions | undefined;
-
-    http2?: http2.ServerOptions | undefined;
-
-    listenOptions?: net.ListenOptions | undefined;
 }
 
-class RestServer {
+class RestServer extends HttpS2Server {
 
     protected expressApp: e.Express;
-
-    protected server: http.Server | https.Server | http2.Http2Server | null = null;
 
     protected config: RestServerConfig;
 
     constructor(config: RestServerConfig) {
+        super();
         this.config = config;
 
         this.expressApp  = e(); 
+    }
+
+    protected override getConfiguration(): HttpS2ServerConfig {
+        return this.config;
     }
     
     async init() {
         //Set middlewares
 
-        this.setBase();
+        await this.setBase();
 
         await this.setSession();
 
@@ -91,21 +47,26 @@ class RestServer {
 
         await this.setAuthorization();
         
-        this.setRequestLogging();
+        await this.setRequestLogging();
 
-        this.setRenderPages();
+        await this.setRenderPages();
 
-        this.setEndpoints();
+        await this.setEndpoints();
     
-        this.setStaticContent();
+        await this.setStaticContent();
 
         this.setOnNotFoundResource();
 
         this.setErrorHandler();
     }
+
+    async initStartServer() {
+        await this.init();
+        await this.startServer();
+    }
     
-    protected setBase() {
-        this.expressApp.use(cors());
+    protected async setBase(): Promise<void> {
+        // this.expressApp.use(cors());
         this.expressApp.use(e.json());
     }
 
@@ -121,7 +82,7 @@ class RestServer {
         //your code in a subclass goes here
     }
 
-    protected setRequestLogging() {
+    protected async setRequestLogging(): Promise<void> {
         this.expressApp.use(
             morgan('dev', 
                     {
@@ -133,11 +94,11 @@ class RestServer {
                     }));
     }
 
-    protected setRenderPages() {
+    protected async setRenderPages(): Promise<void> {
         //your code in a subclass goes here
     }
 
-    protected setEndpoints() {
+    protected async setEndpoints(): Promise<void> {
         //your code in a subclass goes here
     }
     
@@ -152,7 +113,7 @@ class RestServer {
         };
     }
     
-    protected setStaticContent() {
+    protected async setStaticContent(): Promise<void> {
         const staticOptions = this.getStaticOption();
 
         let basePath = this.config.basePath ? this.config.basePath : '';
@@ -185,82 +146,9 @@ class RestServer {
         next(err)
     }
 
-    startServer() {
-
-        switch (this.config.protocol) {
-            case PROTOCOLS.HTTP: {
-                const options = this.config.http ? this.config.http : {};
-                this.server = http.createServer(options);
-                break;
-            }
-            case PROTOCOLS.HTTPS: {
-                const options = this.config.https ? this.config.https : {};
-                if (!options.key) {
-                    throw new Error("For https server: You have to set the name of the key file under config https.key!");
-                }
-                if (!options.cert) {
-                    throw new Error("For https server: You have to set the name of the cert file under config https.cert!");
-                }
-                const serviceKey = fs.readFileSync(options.key as string);
-                const certificate = fs.readFileSync(options.cert as string);
-
-                options.key = serviceKey;
-                options.cert = certificate;
-
-                this.server = https.createServer(options);
-                break;
-            }
-            case PROTOCOLS.HTTP2: {
-                //not supported yet in express
-                throw new Error("Not supported yet in the current version of Express!");
-                // const options = config.http2 ? config.http2 : {};
-                // this.server = http2.createServer(options);
-                break;
-            }
-        }
-
+    protected async attachToServer() {
         if (this.server) {
-
-            this.server.on('error', (err: Error) => {
-                Logger.getServerLogger().error('RestServer.startServer:', 'error:', err);
-            }).on('tlsClientError', (err: Error, tlsSocket: tls.TLSSocket) => {
-                Logger.getServerLogger().error('RestServer.startServer:', 'tlsClientError:', err);
-            });
-
-            this.attachToServer();
-
             this.server.addListener('request', this.expressApp);
-        
-            const listenOptions = this.config.listenOptions ? this.config.listenOptions: {};
-            const serverSelf = this.server;
-            this.server.listen(listenOptions, () => {
-                let address: string | net.AddressInfo | null = serverSelf.address();
-                if (this.instanceofAddressInfo(address)) {
-                    address = address.address + ':' + address.port;
-                }
-                Logger.getServerLogger().info('RestServer.startServer: ', `Listening on: ${address}`);
-            });
-        }
-
-    }
-
-    protected attachToServer() {
-        //allow sharing of the same http server
-    }
-
-    private instanceofAddressInfo(obj: any): obj is net.AddressInfo {
-        return 'address' in obj && 'family' in obj && 'port' in obj;
-    }
-
-    protected stopServer() {
-        if (this.server) {
-            this.server.close((err?: Error) => {
-                if (err) {
-                    Logger.getServerLogger().error('RestServer.stopServer: ', err);
-                } else {
-                    Logger.getServerLogger().info('RestServer.stopServer: ', 'Server stopped.');
-                }
-            });
         }
     }
 

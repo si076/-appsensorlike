@@ -4,13 +4,17 @@ import { AppSensorRestClient } from '../client/appsensor_rest_client.js';
 import { AppSensorRestServer } from '../server/appsensor-rest-server.js';
 
 async function runTests(readInf: readline.Interface | null = null) {
+    const configLocation = "./execution-modes/tests/analysis/appsensor-analysis-tests-server-config.json";
     const appSensorRestServer = 
-            new AppSensorRestServer("./execution-modes/tests/analysis/appsensor-analysis-tests-server-config.json",
+            new AppSensorRestServer(configLocation,
                                              "");
     const appSensorRestClient = new AppSensorRestClient();
 
+    await appSensorRestServer.initStartServer();
+    
     await test(appSensorRestServer.getAppSensorServer(), 
                appSensorRestClient.getAppSensorClient(), 
+               configLocation,
                readInf,
                EXEC_MODE.EXEC_MODE_REST);
    

@@ -10,7 +10,7 @@
     "gen_client_config_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-client-config_schema.json ClientConfiguration",
     "gen_mysql_mapping_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o mapping_schema.json IMapping",
     "gen_storage_mysql_config_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-storage-mysql-config_schema.json MySQLStorageConfig",
-    "gen_reporting_websocket_server_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-websocket-server-config_schema.json IWebSocketServerConfig",
+    "gen_reporting_websocket_server_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-websocket-server-config_schema.json WebSocketServerConfig",
     "gen_reporting_websocket_client_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-websocket-client-config_schema.json WebSocketClientConfig",
     "run_reporting_tests_server_only": "npx run-func ./reporting-engines/appsensor-reporting-websocket/tests/appsensor-reporting-websocket-tests.js runServerSeparately",
     "run_reporting_tests_client_only": "npx run-func ./reporting-engines/appsensor-reporting-websocket/tests/appsensor-reporting-websocket-tests.js runClientSeparately",

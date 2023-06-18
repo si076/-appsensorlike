@@ -81,14 +81,19 @@ class AppSensorRestServer {
         this.appSensorServer.setAccessController(new ReferenceAccessController());
 
         this.requestHandler = new RestRequestHandler(this.appSensorServer, restServerConfigFile);
-        (this.requestHandler as RestRequestHandler).init();
-        (this.requestHandler as RestRequestHandler).startServer();
     }
 
     getAppSensorServer() {
         return this.appSensorServer;
     }
 
+    async initStartServer() {
+        await (this.requestHandler as RestRequestHandler).initStartServer();
+    }
+
+    async stopServer() {
+        await (this.requestHandler as RestRequestHandler).stopServer();
+    }
 }
 
 export {AppSensorRestServer}

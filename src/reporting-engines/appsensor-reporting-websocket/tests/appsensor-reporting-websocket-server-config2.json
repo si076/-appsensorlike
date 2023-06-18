@@ -1,0 +1,12 @@
+{
+    "protocol": "https",
+
+    "https": {
+        "key": "localhost-key.pem",
+        "cert": "localhost.pem"
+    },
+
+    "listenOptions": {
+        "port": 3500
+    }
+}

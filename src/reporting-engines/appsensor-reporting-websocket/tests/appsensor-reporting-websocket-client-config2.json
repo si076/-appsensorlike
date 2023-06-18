@@ -1,0 +1,6 @@
+{
+    "address": "wss://localhost:3500",
+    "options": {
+        "rejectUnauthorized": false
+    }
+}

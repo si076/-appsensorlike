@@ -28,7 +28,7 @@ class RestRequestHandler extends RestServer implements RequestHandler {
         this.appSensorServer = appSensorServer;
     }
 
-    protected override setEndpoints(): void {
+    protected override async setEndpoints(): Promise<void> {
         this.expressApp.param('earliest', function (req: e.Request, res: e.Response, next: e.NextFunction, paramValue:any) {
             if (paramValue) {
                 const number = Date.parse(paramValue);

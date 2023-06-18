@@ -5,18 +5,22 @@ import { AppSensorWebsocketExecClient } from '../client/appsensor_websocket_clie
 import { AppSensorWebsocketExecServer } from '../server/appsensor_websocket_server.js';
 
 async function runTests(readInf: readline.Interface | null = null) {
+    const configLocation = "./execution-modes/tests/analysis/appsensor-analysis-tests-server-config.json";
     const appSensorWebSocketServer = 
-            new AppSensorWebsocketExecServer("./execution-modes/tests/analysis/appsensor-analysis-tests-server-config.json",
+            new AppSensorWebsocketExecServer(configLocation,
                                              "");
     const appSensorWebSocketClient = new AppSensorWebsocketExecClient();
 
+    await appSensorWebSocketServer.startWebSocketServer();
+
     await test(appSensorWebSocketServer.getAppSensorServer(), 
                appSensorWebSocketClient.getAppSensorClient(), 
+               configLocation,
                readInf,
                EXEC_MODE.EXEC_MODE_WEBSOCKET);
     
-    appSensorWebSocketClient.closeWebSocket();
-    appSensorWebSocketServer.closeWebSocketServer();
+    await appSensorWebSocketClient.closeWebSocket();
+    await appSensorWebSocketServer.closeWebSocketServer();
 }
 
 

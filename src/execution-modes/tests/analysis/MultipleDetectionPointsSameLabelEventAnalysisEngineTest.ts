@@ -3,6 +3,7 @@ import { SearchCriteria } from "../../../core/criteria/criteria.js";
 import { BaseTest } from "./BaseTest.js";
 
 import assert from "assert";
+import { JSONServerConfigurationReader } from "../../../configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
 
 class MultipleDetectionPointsSameLabelEventAnalysisEngineTest extends BaseTest {
 
@@ -20,8 +21,21 @@ class MultipleDetectionPointsSameLabelEventAnalysisEngineTest extends BaseTest {
 			MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionSystem1.getDetectionSystemId());
 	}
 
-	constructor(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
+	private configLocation: string;
+
+	constructor(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient, configLocation: string) {
 		super(appSensorServer, appSensorClient);
+
+		this.configLocation = configLocation;
+	}
+
+	protected initializeTest(): void {
+		//it is essential for this test to reload the test configuration from the file 
+		//when it's executed along with other tests multiple times
+		const config = new JSONServerConfigurationReader().read(this.configLocation);
+		this.appSensorServer.setConfiguration(config);
+
+		super.initializeTest();
 	}
 
 	private async testAttackCreationMultipleDetectionPointsOneLabel() {
@@ -121,9 +135,9 @@ class MultipleDetectionPointsSameLabelEventAnalysisEngineTest extends BaseTest {
 		console.log('<-- testAttackCreationMultipleDetectionPointsOneLabel');
 	}
 
-	public static async runTests(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
+	public static async runTests(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient, configLocation: string) {
 		console.log('----- Run MultipleDetectionPointsSameLabelEventAnalysisEngineTest -----');
-		const inst = new MultipleDetectionPointsSameLabelEventAnalysisEngineTest(appSensorServer, appSensorClient);
+		const inst = new MultipleDetectionPointsSameLabelEventAnalysisEngineTest(appSensorServer, appSensorClient, configLocation);
 
 		inst.initializeTest();
 		await inst.testAttackCreationMultipleDetectionPointsOneLabel();

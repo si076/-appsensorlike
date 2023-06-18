@@ -97,7 +97,7 @@ class AppsensorUIRestServer extends RestServer {
     private configController: ConfigurationController;
 
     //reporting client
-    private wsClient: AppSensorReportingWebSocketClient;
+    private wsReportingClient: AppSensorReportingWebSocketClient;
     //websocket server to send coming AppSensorEvent, Attack and Responses to the browser
     private websocketServer: WebSocketServer | null = null;
 
@@ -108,13 +108,13 @@ class AppsensorUIRestServer extends RestServer {
     constructor(restServerConfig: string = 'appsensor-ui-rest-server-config.json') {
         super(new AppsensorUIRestServerConfigReader().read(restServerConfig));
 
-        this.wsClient = new AppSensorReportingWebSocketClient();
+        this.wsReportingClient = new AppSensorReportingWebSocketClient();
 
-        const userReport = new UserReport(this.wsClient);
-        const detectionPointReport = new DetectionPointReport(this.wsClient);
-        const dashboardReport = new DashboardReport(this.wsClient, userReport, detectionPointReport);
-        const trendsReport = new TrendsDashboardReport(this.wsClient);
-        const configReport = new ConfigurationReport(this.wsClient);
+        const userReport = new UserReport(this.wsReportingClient);
+        const detectionPointReport = new DetectionPointReport(this.wsReportingClient);
+        const dashboardReport = new DashboardReport(this.wsReportingClient, userReport, detectionPointReport);
+        const trendsReport = new TrendsDashboardReport(this.wsReportingClient);
+        const configReport = new ConfigurationReport(this.wsReportingClient);
 
         this.userController = new UserController(userReport);
         this.detectionPointController = new DetectionPointController(detectionPointReport);
@@ -256,7 +256,7 @@ class AppsensorUIRestServer extends RestServer {
         }
     }
 
-    protected override setRequestLogging() {
+    protected override async setRequestLogging(): Promise<void> {
         this.expressApp.use(
             morgan('dev', 
                     {
@@ -271,7 +271,7 @@ class AppsensorUIRestServer extends RestServer {
         super.setRequestLogging();
     }
 
-    protected override setRenderPages(): void {
+    protected override async setRenderPages(): Promise<void> {
         this.expressApp.use(this.prepareTemplateVariables.bind(this));
 
         const csrfProtection = csurf();
@@ -396,7 +396,7 @@ class AppsensorUIRestServer extends RestServer {
         res.render('detection-point.html', this.templateVariables);
     }
 
-    protected setEndpoints(): void {
+    protected async setEndpoints(): Promise<void> {
         //dashboard endpoints
         this.expressApp.get('/api/dashboard/all', this.dashboardController.allContent.bind(this.dashboardController));
         this.expressApp.get('/api/responses/active', this.dashboardController.activeResponses.bind(this.dashboardController));
@@ -449,7 +449,7 @@ class AppsensorUIRestServer extends RestServer {
         }
     }
 
-    protected override attachToServer(): void {
+    protected override async attachToServer(): Promise<void> {
         if (this.server instanceof http.Server || 
             this.server instanceof https.Server) {
             
@@ -477,7 +477,7 @@ class AppsensorUIRestServer extends RestServer {
                 Logger.getServerLogger().info('AppSensorUI.websocketServer:', 'connection', 
                                                'remote address:', ws.remoteAddress);
 
-                self.wsClient.addOnAddListener((obj: AppSensorEvent | Attack | Response) => {
+                self.wsReportingClient.addOnAddListener((obj: AppSensorEvent | Attack | Response) => {
                     let type = '';
                     if (obj instanceof AppSensorEvent) {
                         type = "event";
@@ -526,6 +526,9 @@ class AppsensorUIRestServer extends RestServer {
             });
 
         }
+
+        //add the express app's request listener
+        super.attachToServer();
     }
 
     private ping() {
@@ -543,6 +546,5 @@ class AppsensorUIRestServer extends RestServer {
 
 (async () => {
     const inst = new AppsensorUIRestServer();
-    await inst.init();
-    inst.startServer();
+    await inst.initStartServer();
 })()

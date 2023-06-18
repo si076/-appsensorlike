@@ -1,3 +1,4 @@
+import { IncomingMessage } from "http";
 import WebSocket from "ws";
 import { Context } from "../../../../core/accesscontrol/accesscontrol.js";
 
@@ -25,13 +26,9 @@ class WebSocketRequestHandler extends AppSensorWebSocketServer implements Reques
 	
     constructor(appSensorServer: AppSensorServer,
 				configLocation: string = 'appsensor-websocket-request-handler-config.json',
-				serverOptions? :WebSocket.ServerOptions) {
-		super(new WebSocketRequestHandlerConfigReader().read(configLocation), serverOptions);
+				handleProtocols?: (protocols: Set<string>, request: IncomingMessage) => string | false) {
+		super(new WebSocketRequestHandlerConfigReader().read(configLocation), handleProtocols);
         this.appSensorServer = appSensorServer;
-    }
-
-    public closeServer() {
-        super.closeServer();
     }
 
     protected isConnectionAllowed(ws: WebSocketExt): boolean {

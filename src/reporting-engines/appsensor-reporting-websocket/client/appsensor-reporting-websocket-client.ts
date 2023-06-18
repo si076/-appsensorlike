@@ -23,10 +23,8 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
 
     private static ON_ADD_EVENT = 'ON_ADD';
 
-    constructor(address: string | URL = '', 
-                configLocation: string = 'appsensor-reporting-websocket-client-config.json',
-                options?: WebSocket.ClientOptions | ClientRequestArgs) {
-        super(address, new ReportingWebSocketClientConfigReader().read(configLocation), options);
+    constructor(configLocation: string = 'appsensor-reporting-websocket-client-config.json') {
+        super(new ReportingWebSocketClientConfigReader().read(configLocation));
     }
 
     protected override onServerResponse(response: ActionResponse) {

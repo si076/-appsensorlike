@@ -33,37 +33,22 @@ class AppSensorWebSocketClient {
     protected myUUID: string;
 
     protected reconnectAddress: string | URL;
-    protected reconnectConfig: WebSocketClientConfig | null;
-    protected reconnectOptions: WebSocket.ClientOptions | ClientRequestArgs | undefined;
+    protected reconnectConfig: WebSocketClientConfig;
     protected reconnectTimer: NodeJS.Timer | null = null;
 
-    constructor(address: string | URL = '', 
-                config: WebSocketClientConfig | null = null,
-                options?: WebSocket.ClientOptions | ClientRequestArgs) {
+    constructor(config: WebSocketClientConfig) {
         
-        let _address = address;
-        if (!_address && config) {
-            _address = config.address;
-        }
-
-        let _options = options;
-        if (!_options && config) {
-            _options = config.options;
-        }
-
         this.myUUID = uuidv4();
 
-        _address += '?' + UUID_QUERY_PARAM + '=' + this.myUUID;
+        const _address = config.address + '?' + UUID_QUERY_PARAM + '=' + this.myUUID;
 
         this.reconnectAddress = _address;   
         this.reconnectConfig = config;
-        this.reconnectOptions = _options;
 
-        this.connect(_address, config, _options);
+        this.connect(_address, config.options);
     }
 
-    protected connect(address: string | URL, 
-                      config: WebSocketClientConfig | null = null,
+    protected connect(address: string | URL,
                       options?: WebSocket.ClientOptions | ClientRequestArgs) {
         
 
@@ -93,7 +78,7 @@ class AppSensorWebSocketClient {
     }
 
     protected onError(error: Error) {
-        Logger.getClientLogger().trace(`AppSensorWebSocketClient.socket: ${this.myUUID}:`, 'error ', error);
+        Logger.getClientLogger().error(`AppSensorWebSocketClient.socket: ${this.myUUID}:`, 'error ', error);
     }
 
     protected onClose(code: number, reason: Buffer) {
@@ -108,7 +93,7 @@ class AppSensorWebSocketClient {
 
     protected reconnect() {
         Logger.getClientLogger().info('AppSensorWebSocketClient.reconnect:', 'Retry reconnect...');
-        return this.connect(this.reconnectAddress, this.reconnectConfig, this.reconnectOptions);
+        return this.connect(this.reconnectAddress, this.reconnectConfig.options);
     }
 
     onMessage(data: WebSocket.RawData, isBinary: boolean) {
@@ -172,7 +157,7 @@ class AppSensorWebSocketClient {
         }
     }
 
-    protected closeSocket() {
+    public async closeSocket() {
         if (this.socket) {
             this.socket.close();
         }
