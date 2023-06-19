@@ -122,12 +122,12 @@ class DashboardReport {
         const configuredDetectionPointCategories = await this.getConfiguredDetectionPointCategories();
 		for (const category of configuredDetectionPointCategories) {
 
-            events = events.filter(el => el.getDetectionPoint() ? el.getDetectionPoint()!.getCategory() === category : false);
-            attacks = attacks.filter(el => el.getDetectionPoint() ? el.getDetectionPoint()!.getCategory() === category : false);
+            let filteredEvents = events.filter(el => el.getDetectionPoint() ? el.getDetectionPoint()!.getCategory() === category : false);
+            let filteredAttacks = attacks.filter(el => el.getDetectionPoint() ? el.getDetectionPoint()!.getCategory() === category : false);
 
 			const countByLabel = new Table<string, Type, number>();
 			
-			for (const event of events) {
+			for (const event of filteredEvents) {
                 let label = '';
                 if (event.getDetectionPoint()) {
                     //no mutation of the detection point; the label is ensured by the config reader
@@ -145,7 +145,7 @@ class DashboardReport {
 				countByLabel.put(label, Type.EVENT, count);
 			}
 			
-			for (const attack of attacks) {
+			for (const attack of filteredAttacks) {
                 let label = '';
                 if (attack.getDetectionPoint()) {
                     //no mutation of the detection point; the label is ensured by the config reader
@@ -163,10 +163,10 @@ class DashboardReport {
 				countByLabel.put(label, Type.ATTACK, count);
 			}
 			
-			events = this.latest<AppSensorEvent>(events, maxItems);
-			attacks = this.latest<Attack>(attacks, maxItems);
+			filteredEvents = this.latest<AppSensorEvent>(filteredEvents, maxItems);
+			filteredAttacks = this.latest<Attack>(filteredAttacks, maxItems);
 			
-			items.push(CategoryItem.of(category, events.length, attacks.length, countByLabel, events, attacks));
+			items.push(CategoryItem.of(category, filteredEvents.length, filteredAttacks.length, countByLabel, filteredEvents, filteredAttacks));
 		}
 		
 		return items;
