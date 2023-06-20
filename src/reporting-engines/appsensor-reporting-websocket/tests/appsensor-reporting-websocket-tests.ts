@@ -144,65 +144,80 @@ class AppSensorReportingWebsocketTests {
 		const users: User[] = [user1, user2, user3, user4];
 		const detectionSystems: DetectionSystem[] = [detectionSystem1, detectionSystem2];
 		
-        const detectionPoint1 = new DetectionPoint(Category.INPUT_VALIDATION, "IE1");
+        // const detectionPoint1 = new DetectionPoint(Category.INPUT_VALIDATION, "IE1");
 		
-		this.appSensorServer.getConfiguration()!.setDetectionPoints(this.loadMockedDetectionPoints());
+		const configuredDetPoint = this.loadMockedDetectionPoints();
+		this.appSensorServer.getConfiguration()!.setDetectionPoints(configuredDetPoint);
 		
 		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
+                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
 
 		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
+                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
 
 		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
+                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
 
 		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
+                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
 
 		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
+                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
 
 		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
+                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
 
 		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
+                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
 
 		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
+                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
 
 		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
+                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
 
 		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
+                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
 
 		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
+                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
 
 		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
+                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
 
 		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
+                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
 
 		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], detectionPoint1, detectionSystems[this.getRandomInt(2)]));
+                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
+
+		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
+
+		//to ensure that will have at least one generated attack and response
+		await this.appSensorClient.getEventManager()!
+                    .addEvent(new AppSensorEvent(users[0], configuredDetPoint[0], detectionSystems[0]));
+
+		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
+		await this.appSensorClient.getEventManager()!
+                    .addEvent(new AppSensorEvent(users[0], configuredDetPoint[0], detectionSystems[0]));
+
+		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
+		await this.appSensorClient.getEventManager()!
+                    .addEvent(new AppSensorEvent(users[0], configuredDetPoint[0], detectionSystems[0]));
 
 		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 	}
@@ -238,6 +253,7 @@ class AppSensorReportingWebsocketTests {
 		
 		const log = new Response();
 		log.setAction("log");
+		log.setInterval(new Interval(30, INTERVAL_UNITS.MINUTES));
 		
 		const logout = new Response();
 		logout.setAction("logout");

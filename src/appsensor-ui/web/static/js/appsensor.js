@@ -29,12 +29,10 @@ function getTimestamp(selectedTimeSpan) {
 }
 
 function formatTimestamp(timestamp) {
-	var timestampTmp = timestamp;
-	if (timestampTmp) {
-		//expected timestamp in YYYY-MM-DDTHH:mm:ss.sssZ or YYYY-MM-DDTHH:mm:ss.ssss±HH:mm
-		timestampTmp = timestampTmp.toUpperCase().replace('T', ' ').replace('Z', '');
-	}
-	return timestampTmp;
+	//timestamp is UTC in ISO format i.e. YYYY-MM-DDTHH:mm:ss.sssZ or YYYY-MM-DDTHH:mm:ss.ssss±HH:mm
+	//
+	//we want it in the local time, format YYYY-MM-DD HH:mm:ss.SSSZ
+	return moment(new Date(timestamp)).format('YYYY-MM-DD HH:mm:ss.SSSZ');
 }
 
 function toCardinal(selectedTimeSpan) {

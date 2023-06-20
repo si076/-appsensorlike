@@ -1,6 +1,6 @@
 import { JSONServerConfigurationReader } from "../../configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
-import { DetectionPointDescriptions, DetectionPointDescriptionsReader, ReportingEngineExt, ReportingSettings, ReportingSettingsLoader } from "../reporting-engines.js";
-import { AppSensorReportingWebSocketClient } from "../appsensor-reporting-websocket/client/appsensor-reporting-websocket-client.js";
+import { DetectionPointDescriptions, DetectionPointDescriptionsReader, ReportingEngineExt, ReportingSettings, ReportingSettingsLoader } from "../../reporting-engines/reporting-engines.js";
+import { AppSensorReportingWebSocketClient } from "../../reporting-engines/appsensor-reporting-websocket/client/appsensor-reporting-websocket-client.js";
 import { ServerConfiguration } from "../../core/configuration/server/server_configuration.js";
 import { AppSensorEvent, Attack, DetectionPoint, DetectionSystem, Response, User, Utils as coreUtils} from "../../core/core.js";
 import { SearchCriteria } from "../../core/criteria/criteria.js";

@@ -334,6 +334,11 @@ var ByDetectionPointPanel = React.createClass({
 		    item.count = countByLabel.backingMap[key];
 		    cblArray.push(item);
 		}
+
+		var enCollator = new Intl.Collator('en');
+		cblArray.sort((a, b) => {
+			return enCollator.compare(a.label, b.label);
+		})
 		
 		var byDetectionPointRender = cblArray.map(function (detectionPointInfo) {
 			

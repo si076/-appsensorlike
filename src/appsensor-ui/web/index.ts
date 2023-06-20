@@ -29,16 +29,15 @@ import csurf from 'csurf';
 import http, { IncomingMessage } from 'http';
 import https from 'https';
 import path from 'path';
-import crypto from 'crypto';
 
 import WebSocket, { WebSocketServer } from "ws";
 import { ConfigurationReport } from "../reports/ConfigurationReport.js";
 import { ConfigurationController } from "./controller/ConfigurationController.js";
 import { ConnectionManager } from "../security/mysql/connection_manager.js";
 import { UserDetails, UserDetailsService } from "../security/UserDetailsService.js";
-import { MySQLUserDetailsService } from "../security/mysql/MySQLUserDetailsService.js";
 import { ParamsDictionary } from "express-serve-static-core";
 import { ParsedQs } from "qs";
+import { UserManager } from "../security/UserManager.js";
 
 
 type TEMPLATE_VARIABLES = {
@@ -103,7 +102,7 @@ class AppsensorUIRestServer extends RestServer {
 
     private templateVariables: TEMPLATE_VARIABLES;
 
-    private userDetailsService: UserDetailsService;
+    private userManager: UserManager;
 
     constructor(restServerConfig: string = 'appsensor-ui-rest-server-config.json') {
         super(new AppsensorUIRestServerConfigReader().read(restServerConfig));
@@ -122,7 +121,7 @@ class AppsensorUIRestServer extends RestServer {
         this.trendsController = new TrendsDashboardController(trendsReport);
         this.configController = new ConfigurationController(configReport);
 
-        this.userDetailsService = new MySQLUserDetailsService();
+        this.userManager = new UserManager();
 
         this.templateVariables = {
             CONTEXT_PATH: '',
@@ -169,7 +168,7 @@ class AppsensorUIRestServer extends RestServer {
         });
           
         passport.deserializeUser<SESSION_USER_ID>(function(id, cb) {
-            self.userDetailsService.loadUserByUsername(id.username)
+            self.userManager.loadUserByUsername(id.username)
             .then(userDetails => {
                 cb(null, userDetails);
             })
@@ -184,7 +183,7 @@ class AppsensorUIRestServer extends RestServer {
                                    done: (error: any, user?: Express.User | false, options?: IVerifyOptions) => void,
                                   ): void {
 
-        this.userDetailsService.loadUserByUsername(username)
+        this.userManager.loadUserByUsername(username)
         .then(userDetails => {
             if (userDetails && userDetails.isEnabled() &&
                 userDetails.getPassword() === password) {
@@ -272,6 +271,8 @@ class AppsensorUIRestServer extends RestServer {
     }
 
     protected override async setRenderPages(): Promise<void> {
+        const self = this;
+
         this.expressApp.use(this.prepareTemplateVariables.bind(this));
 
         const csrfProtection = csurf();
@@ -283,8 +284,11 @@ class AppsensorUIRestServer extends RestServer {
             failureRedirect: '/login'
         }));
         this.expressApp.get('/logout', function(req, res, next) {
+            self.userManager.logoutUser((req.user as UserDetails).getUsername());
+
             req.logout(function(err) {
                 if (err) { return next(err); }
+                
                 res.redirect('/login');
             });
         });  
