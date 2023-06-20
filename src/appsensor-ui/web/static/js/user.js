@@ -125,6 +125,7 @@ var UserDetail = React.createClass({
 	  
 	  render: function() {
 		var timestamp = getTimestamp(this.props.selectedTimeSpan);
+		timestamp = formatTimestamp(timestamp);
 		
 	    return (
 			<div class="row">
@@ -215,7 +216,7 @@ var LatestEventsContent = React.createClass({
 		    	  <td>{latestEvent.detectionPoint.category}</td>
 		    	  <td>{latestEvent.user.username}</td>
 		    	  <td>{latestEvent.detectionSystem.detectionSystemId}</td>
-		    	  <td>{latestEvent.timestamp}</td>
+		    	  <td>{formatTimestamp(latestEvent.timestamp)}</td>
 		    	</tr>
 		      );
 		    });
@@ -265,7 +266,7 @@ var LatestAttacksContent = React.createClass({
 		    	  <td>{latestAttack.detectionPoint.category}</td>
 		    	  <td>{latestAttack.user.username}</td>
 		    	  <td>{latestAttack.detectionSystem.detectionSystemId}</td>
-		    	  <td>{latestAttack.timestamp}</td>
+		    	  <td>{formatTimestamp(latestAttack.timestamp)}</td>
 		    	</tr>
 		      );
 		    });
@@ -322,7 +323,7 @@ var LatestResponsesContent = React.createClass({
 		    	  <td>{responseContent}</td>
 		    	  <td>{latestResponse.user.username}</td>
 		    	  <td>{latestResponse.detectionSystem.detectionSystemId}</td>
-		    	  <td>{latestResponse.timestamp}</td>
+		    	  <td>{formatTimestamp(latestResponse.timestamp)}</td>
 		    	</tr>
 		      );
 		    });
@@ -493,7 +494,7 @@ var ActiveResponsesContent = React.createClass({
 			  
 		      return (
 		    	<tr>
-		    	  <td>{actionContent} sent to {activeResponse.detectionSystem.detectionSystemId} at {activeResponse.timestamp}</td>
+		    	  <td>{actionContent} sent to {activeResponse.detectionSystem.detectionSystemId} at {formatTimestamp(activeResponse.timestamp)}</td>
 		    	</tr>
 		      );
 		    });

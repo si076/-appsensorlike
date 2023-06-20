@@ -45,7 +45,7 @@ function logEventOrAttack(type, message) {
     
     composed.type = type;
     composed.category = detectionPoint.label + ' (' + detectionPoint.category + ')' ;
-    composed.timestamp = data.timestamp;
+    composed.timestamp = formatTimestamp(data.timestamp);
     
     var fromIpAddress = (user.ipAddress) ? ' (' + user.ipAddress.address + ')' : ' (no IP Address)';
 	var fromGeo = (user.ipAddress && user.ipAddress.geoLocation) ? 
@@ -76,7 +76,7 @@ function logResponse(message) {
 	var responseDescription = response.action + responseInterval;
 	
 	composed.category = responseDescription;	
-	composed.timestamp = event.timestamp;
+	composed.timestamp = formatTimestamp(response.timestamp);
 	
 	// for a response, to/from are reversed
 	var toIpAddress = (user.ipAddress) ? ' (' + user.ipAddress.address + ')' : ' (no IP Address)';
@@ -93,62 +93,6 @@ function logResponse(message) {
 	
 	addActivityMessage(composed);
 }
-
-// function subscribeOnSuccess(frame) {
-// 	client.subscribe("/events", function(message) {
-// 		logEventOrAttack('Event', message);    
-// 	});
-
-// 	client.subscribe("/attacks", function(message) {
-// 		logEventOrAttack('Attack', message);
-// 	});
-  
-// 	client.subscribe("/responses", function(message) {
-// 	  	var response = JSON.parse(message.body);
-	  	
-// 	    var user = response.user;
-// 	    var detectionSystem = response.detectionSystem;
-	    
-// 	    var composed = {};
-	    
-// 	    composed.type = 'Response';
-	    
-// 	    var responseInterval = (response.interval) ? ' ( effective for ' + response.interval.duration + ' ' + response.interval.unit + ')' : ''
-// 	    var responseDescription = response.action + responseInterval;
-	    
-// 	    composed.category = responseDescription;	
-// 	    composed.timestamp = event.timestamp;
-	    
-// 	    // for a response, to/from are reversed
-// 	    var toIpAddress = (user.ipAddress) ? ' (' + user.ipAddress.address + ')' : ' (no IP Address)';
-//     	var toGeo = (user.ipAddress && user.ipAddress.geoLocation) ? 
-//     			' (' + user.ipAddress.geoLocation.latitude + ' / ' + user.ipAddress.geoLocation.longitude + ')' : 
-//     				' (no geo)';
-//     	var fromIpAddress = (detectionSystem.ipAddress) ? ' (' + detectionSystem.ipAddress.address + ')' : ' (no IP Address)';
-//     	var fromGeo = (detectionSystem.ipAddress && detectionSystem.ipAddress.geoLocation) ? 
-//     			' (' + detectionSystem.ipAddress.geoLocation.latitude + ' / ' + detectionSystem.ipAddress.geoLocation.longitude + ')' : 
-//     				' (no geo)';
-    	
-//     	composed.from = detectionSystem.detectionSystemId + fromIpAddress + fromGeo;
-// 	    composed.to = user.username + toIpAddress + toGeo;
-	    
-//     	addActivityMessage(composed);
-// 	});
-// }
-
-// function reconnectOnFailure(error) {
-//     console.log('STOMP: ' + error);
-//     setTimeout(stompConnect, 10000);
-//     console.log('STOMP: Reconecting in 10 seconds');
-// };
-
-// function stompConnect() {
-//     console.log('STOMP: Attempting connection');
-//     // recreate the stompClient to use a new WebSocket
-//     socket = new SockJS('/appsensor-websocket');
-//     client = Stomp.over(socket);
-//     client.connect('unused_user', 'unused_password', subscribeOnSuccess, reconnectOnFailure);
-// }
 
 function activateSlider(selectedTimeSpan) {
 	var items =[ 'Month','Week','Day','Shift', 'Hour'];
@@ -275,6 +219,7 @@ var Dashboard = React.createClass({
 	  
 	  render: function() {
 		var timestamp = getTimestamp(this.props.selectedTimeSpan);
+		timestamp = formatTimestamp(timestamp);
 		
 	    return (
 			<div class="row">
@@ -349,7 +294,7 @@ var RecentItemsPanelContent = React.createClass({
 		    	  <td><a href={[apiBaseUrl + '/detection-points/' + item.detectionPoint.category + '/' + item.detectionPoint.label]}>{item.detectionPoint.label}</a></td>
 		    	  <td><a href={[apiBaseUrl + '/users/' + item.user.username]}>{item.user.username}</a></td>
 		    	  <td>{item.detectionSystem.detectionSystemId}</td>
-		    	  <td>{item.timestamp}</td>
+		    	  <td>{formatTimestamp(item.timestamp)}</td>
 		    	</tr>
 		      );
 		    });

@@ -28,6 +28,15 @@ function getTimestamp(selectedTimeSpan) {
   	return timestamp;
 }
 
+function formatTimestamp(timestamp) {
+	var timestampTmp = timestamp;
+	if (timestampTmp) {
+		//expected timestamp in YYYY-MM-DDTHH:mm:ss.sssZ or YYYY-MM-DDTHH:mm:ss.ssss±HH:mm
+		timestampTmp = timestampTmp.toUpperCase().replace('T', ' ').replace('Z', '');
+	}
+	return timestampTmp;
+}
+
 function toCardinal(selectedTimeSpan) {
   	var cardinal;
   	
