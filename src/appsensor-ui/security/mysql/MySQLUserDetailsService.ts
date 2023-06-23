@@ -1,7 +1,7 @@
 import * as msql from 'mysql2';
 import { Logger } from '../../../logging/logging.js';
 
-import { Authority, Group, User, UserDetails, UserDetailsService } from "../UserDetailsService.js";
+import { Authority, AUTHORITY_NAME, Group, User, UserDetails, UserDetailsService } from "../UserDetailsService.js";
 import { ConnectionManager } from './connection_manager.js';
 
 class UserDetailsImpl implements UserDetails {
@@ -74,7 +74,7 @@ class MySQLUserDetailsService implements UserDetailsService {
 
         const authoritiesByUserName = 
             await MySQLUserDetailsService.executeSQLOnDB<Authority[]>(sql, (results: {id: number, 
-                                                                         authority: string}[]) => {
+                                                                         authority: AUTHORITY_NAME}[]) => {
                 const authorities: Authority[] = [];
 
                 results.forEach(el => {
@@ -104,7 +104,7 @@ class MySQLUserDetailsService implements UserDetailsService {
         
         const groupAuthoritiesByUserName = 
             await MySQLUserDetailsService.executeSQLOnDB<Authority[]>(sql, (results: {id: number, 
-                                                                         authority: string}[]) => {
+                                                                         authority: AUTHORITY_NAME}[]) => {
                 const authorities: Authority[] = [];
 
                 results.forEach(el => {

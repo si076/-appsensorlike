@@ -97,11 +97,17 @@ class Group {
 	
 }
 
+enum AUTHORITY_NAME {
+	NONE               = 'NONE', 
+	VIEW_DATA          = 'VIEW_DATA',
+	VIEW_CONFIGURATION = 'VIEW_CONFIGURATION',
+}
+
 class Authority {
 	
 	private id: number = -1;
 
-	private name: string = '';
+	private name: AUTHORITY_NAME = AUTHORITY_NAME.NONE;
 
 	private users = new Set<User>();
 	
@@ -119,7 +125,7 @@ class Authority {
 		return this.name;
 	}
 
-	public setName(name: string) {
+	public setName(name: AUTHORITY_NAME) {
 		this.name = name;
 	}
 
@@ -174,4 +180,4 @@ interface UserDetailsService {
     loadUserByUsername(username: string): Promise<UserDetails | null>;
 }
 
-export {User, Group, Authority, UserDetails, UserDetailsService};
+export {User, Group, AUTHORITY_NAME, Authority, UserDetails, UserDetailsService};
