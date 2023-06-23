@@ -34,7 +34,7 @@ import WebSocket, { WebSocketServer } from "ws";
 import { ConfigurationReport } from "../reports/ConfigurationReport.js";
 import { ConfigurationController } from "./controller/ConfigurationController.js";
 import { ConnectionManager } from "../security/mysql/connection_manager.js";
-import { UserDetails, UserDetailsService } from "../security/UserDetailsService.js";
+import { AUTHORITY_NAME, UserDetails, UserDetailsService } from "../security/UserDetailsService.js";
 import { ParamsDictionary } from "express-serve-static-core";
 import { ParsedQs } from "qs";
 import { UserManager } from "../security/UserManager.js";
@@ -225,11 +225,11 @@ class AppsensorUIRestServer extends RestServer {
 
         const userDetails = req.user as UserDetails;
 
-        let requiredAuthorityName = 'VIEW_DATA';
+        let requiredAuthorityName = AUTHORITY_NAME.VIEW_DATA;
         switch (pathToCompare) {
             case '/configuration': {
 
-                requiredAuthorityName = 'VIEW_CONFIGURATION';
+                requiredAuthorityName = AUTHORITY_NAME.VIEW_CONFIGURATION;
 
                 break;
             }
