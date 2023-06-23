@@ -219,7 +219,31 @@ class AppSensorReportingWebsocketTests {
 		await this.appSensorClient.getEventManager()!
                     .addEvent(new AppSensorEvent(users[0], configuredDetPoint[0], detectionSystems[0]));
 
+
+		//add events of one more category detection point 
+		const detectionPointRE7 = new DetectionPoint(Category.REQUEST, "RE7");
+
 		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
+		await this.appSensorClient.getEventManager()!
+                    .addEvent(new AppSensorEvent(users[1], detectionPointRE7, detectionSystems[1]));
+
+		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
+		await this.appSensorClient.getEventManager()!
+                    .addEvent(new AppSensorEvent(users[1], detectionPointRE7, detectionSystems[1]));
+
+		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
+		await this.appSensorClient.getEventManager()!
+                    .addEvent(new AppSensorEvent(users[1], detectionPointRE7, detectionSystems[1]));
+
+		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
+		await this.appSensorClient.getEventManager()!
+                    .addEvent(new AppSensorEvent(users[1], detectionPointRE7, detectionSystems[1]));
+
+		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
+		await this.appSensorClient.getEventManager()!
+                    .addEvent(new AppSensorEvent(users[1], detectionPointRE7, detectionSystems[1]));
+					
+		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);	
 	}
     
     private getRandomInt(max: number) {
@@ -250,6 +274,8 @@ class AppSensorReportingWebsocketTests {
 		const events13minutes6 = new Threshold(13, minutes6);
 		const events14minutes7 = new Threshold(14, minutes7);
 		const events15minutes8 = new Threshold(15, minutes8);
+		const events2minutes8 = new Threshold(2, minutes8);
+		const events5minutes5 = new Threshold(5, minutes5);
 		
 		const log = new Response();
 		log.setAction("log");
@@ -346,11 +372,25 @@ class AppSensorReportingWebsocketTests {
 		
 		const point5 = new DetectionPoint(Category.INPUT_VALIDATION, "IE5", events15minutes8, point5Responses);
 		
+
+		const point6Responses: Response[] = [];
+		point6Responses.push(log);
+
+		const point6 = new DetectionPoint(Category.REQUEST, "RE7", events2minutes8, point6Responses);
+
+		const point7Responses: Response[] = [];
+		point7Responses.push(logout);
+		
+		const point7 = new DetectionPoint(Category.REQUEST, "RE7", events5minutes5, point7Responses);
+
+
 		configuredDetectionPoints.push(point1);
 		configuredDetectionPoints.push(point2);
 		configuredDetectionPoints.push(point3);
 		configuredDetectionPoints.push(point4);
 		configuredDetectionPoints.push(point5);
+		configuredDetectionPoints.push(point6);
+		configuredDetectionPoints.push(point7);
 
 		return configuredDetectionPoints;
 	}    
