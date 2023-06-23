@@ -7,10 +7,6 @@ class ConfigurationReport extends BaseReport {
         super(reportingEngine);
     }
 
-	// @PreAuthorize("hasAnyRole('VIEW_CONFIGURATION', 'EDIT_CONFIGURATION')")
-	// @RequestMapping(value="/api/configuration/server-config", method = RequestMethod.GET)
-	// @ResponseBody
-	// public String getServerConfiguration() {
     public async getServerConfiguration(): Promise<string> {
             return this.reportingEngine.getServerConfigurationAsJson();
 	}

@@ -4,7 +4,7 @@ import { Interval } from "@js-joda/extra";
 import { AppSensorEvent, Attack, DetectionPoint, Response, Utils } from "../../core/core.js";
 import { ReportingEngineExt } from "../../reporting-engines/reporting-engines.js";
 import { BaseReport } from "./BaseReport.js";
-import { Dates, Table, TimeFrameItem, TimeUnit, Type, ViewObject } from "./Reports.js";
+import { Dates, NAME_EVENT_COUNT, Table, TimeFrameItem, TimeUnit, Type, ViewObject } from "./Reports.js";
 
 class DetectionPointReport extends BaseReport {
 
@@ -12,10 +12,6 @@ class DetectionPointReport extends BaseReport {
         super(reportingEngine);
     }
 
-	// @PreAuthorize("hasAnyRole('VIEW_DATA')")
-	// @RequestMapping(value="/api/detection-points/{label}/all", method = RequestMethod.GET)
-	// @ResponseBody
-	// public Map<String,Object> allContent(@PathVariable("label") String label, @RequestParam("earliest") String rfc3339Timestamp, @RequestParam Long limit, @RequestParam int slices) { 
     public async allContent(category: string, label: string, earliest: string, limit: number, slices: number): Promise<Map<string,Object>> { 
         const allContent = new Map<string,Object>();
 		
@@ -43,10 +39,6 @@ class DetectionPointReport extends BaseReport {
 		return allContent;
 	}
 	
-	// @PreAuthorize("hasAnyRole('VIEW_DATA')")
-	// @RequestMapping(value="/api/detection-points/{label}/by-time-frame", method = RequestMethod.GET)
-	// @ResponseBody
-	// public Collection<TimeFrameItem> byTimeFrame(@PathVariable("label") String label) {
     public async byTimeFrame(category: string, label: string): Promise<TimeFrameItem[]> {
         const items: TimeFrameItem[] = [];
         
@@ -83,39 +75,23 @@ class DetectionPointReport extends BaseReport {
 		return items;
 	}
 	
-	// @PreAuthorize("hasAnyRole('VIEW_DATA')")
-	// @RequestMapping(value="/api/detection-points/{label}/configuration", method = RequestMethod.GET)
-	// @ResponseBody
-	// public String configuration(@PathVariable("label") String label) {
     public async configuration(label: string): Promise<string> {
         const configuredDetPoints = await this.getConfiguredDetectionPoints(label);
 
         return JSON.stringify(configuredDetPoints);
 	}
 	
-	// @PreAuthorize("hasAnyRole('VIEW_DATA')")
-	// @RequestMapping(value="/api/detection-points/{label}/latest-events", method = RequestMethod.GET)
-	// @ResponseBody
-	// public Collection<Event> recentEvents(@PathVariable("label") String label, @RequestParam("earliest") String rfc3339Timestamp, @RequestParam("limit") Long limit) {
     public async recentEvents(label: string, earliest: string, limit: number): Promise<AppSensorEvent[]> {
 
 		return super.recentEvents(label, earliest, limit, this.filterByDetectionPointLabel(label));
 	}
 	
-	// @PreAuthorize("hasAnyRole('VIEW_DATA')")
-	// @RequestMapping(value="/api/detection-points/{label}/latest-attacks", method = RequestMethod.GET)
-	// @ResponseBody
-	// public Collection<Attack> recentAttacks(@PathVariable("label") String label, @RequestParam("earliest") String rfc3339Timestamp, @RequestParam("limit") Long limit) {
     public async recentAttacks(label: string, earliest: string, limit: number): Promise<Attack[]> {
 
 		return super.recentAttacks(label, earliest, limit, this.filterByDetectionPointLabel(label));
 	}
 	
 	// seen by these client apps
-	// @PreAuthorize("hasAnyRole('VIEW_DATA')")
-	// @RequestMapping(value="/api/detection-points/{label}/by-client-application", method = RequestMethod.GET)
-	// @ResponseBody
-	// public String byClientApplication(@PathVariable("label") String label, @RequestParam("earliest") String rfc3339Timestamp) {
     public async byClientApplication(label: string, earliest: string): Promise<string> {
         const table = new Table<string,Type,number>();
 	
@@ -132,11 +108,7 @@ class DetectionPointReport extends BaseReport {
 		return JSON.stringify(table);
 	}
 	
-	// @PreAuthorize("hasAnyRole('VIEW_DATA')")
-	// @RequestMapping(value="/api/detection-points/{label}/top-users", method = RequestMethod.GET)
-	// @ResponseBody
-	// public Map<String, Long> topUsers(@PathVariable("label") String label, @RequestParam("earliest") String rfc3339Timestamp, @RequestParam("limit") Long limit) {
-    public async topUsers(label: string, earliest: string, limit: number): Promise<{[key: string]: number}> {
+    public async topUsers(label: string, earliest: string, limit: number): Promise<NAME_EVENT_COUNT> {
         const map = new Map<string, number>();
         
         let events = await this.reportingEngine.findEvents(earliest);
@@ -161,7 +133,7 @@ class DetectionPointReport extends BaseReport {
 
         toArray = toArray.slice(0, limit);
 
-		const filtered: {[key: string]: number} = {};
+		const filtered: NAME_EVENT_COUNT = {};
         toArray.forEach(el => {
             filtered[el[0]] = el[1];
         });
@@ -169,10 +141,6 @@ class DetectionPointReport extends BaseReport {
         return filtered;
 	}
 	
-	// @PreAuthorize("hasAnyRole('VIEW_DATA')")
-	// @RequestMapping(value="/api/detection-points/{label}/grouped", method = RequestMethod.GET)
-	// @ResponseBody
-	// public ViewObject groupedDetectionPoints(@PathVariable("label") String label, @RequestParam("earliest") String rfc3339Timestamp, @RequestParam("slices") int slices) {
     public async groupedDetectionPoints(label: string, earliest: string, slices: number): Promise<ViewObject<number>> {
         const startingTime = new Date(earliest).getTime();
 
@@ -196,11 +164,8 @@ class DetectionPointReport extends BaseReport {
 		return viewObject;
 	}
 	
-	// @PreAuthorize("hasAnyRole('VIEW_DATA')")
-	// @RequestMapping(value="/api/detection-points/top", method = RequestMethod.GET)
-	// @ResponseBody
-	// public Map<String, Long> topDetectionPoints(@RequestParam("earliest") String rfc3339Timestamp, @RequestParam("limit") Long limit) {
-    public async topDetectionPoints(earliest: string, limit: number): Promise<{[key: string]: number}> {
+    public async topDetectionPoints(earliest: string, 
+                                    limit: number | undefined = undefined): Promise<NAME_EVENT_COUNT> {
         const map = new Map<string, number>();
 		
 		let events = await this.reportingEngine.findEvents(earliest);
@@ -224,7 +189,7 @@ class DetectionPointReport extends BaseReport {
 
         toArray = toArray.slice(0, limit);
 
-		const filtered: {[key: string]: number} = {};
+		const filtered: NAME_EVENT_COUNT = {};
         toArray.forEach(el => {
             filtered[el[0]] = el[1];
         });

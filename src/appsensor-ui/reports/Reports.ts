@@ -2,6 +2,8 @@ import { Instant, LocalDateTime } from "@js-joda/core";
 import {Interval} from '@js-joda/extra';
 import { AppSensorEvent, Attack } from "../../core/core";
 
+type NAME_EVENT_COUNT = {[key: string]: number};
+
 enum TimeUnit { 
     MONTH = "MONTH", 
     WEEK  = "WEEK", 
@@ -372,4 +374,4 @@ class Dates {
 }
 
 export {TimeUnit, Type, TimeFrameItem, Table, ViewObject, CategoryItem, Dates,
-        TrendItem}
+        TrendItem, NAME_EVENT_COUNT}

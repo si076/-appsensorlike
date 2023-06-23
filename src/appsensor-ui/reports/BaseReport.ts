@@ -42,11 +42,13 @@ class BaseReport {
 
     public async recentEvents(param: string,
                               earliest: string, 
-                              limit: number,
-                              filterFunc: (value: AppSensorEvent, index: number, array: AppSensorEvent[]) => unknown): Promise<AppSensorEvent[]> {
+                              limit: number | undefined = undefined,
+                              filterFunc?: (value: AppSensorEvent, index: number, array: AppSensorEvent[]) => unknown): Promise<AppSensorEvent[]> {
         
         let events = await this.reportingEngine.findEvents(earliest);
-        events = events.filter(filterFunc);
+        if (filterFunc) {
+            events = events.filter(filterFunc);
+        }
 
         events.sort(this.compareByDateDescending);
              
@@ -55,11 +57,13 @@ class BaseReport {
 
     public async recentAttacks(param: string,
                                earliest: string, 
-                               limit: number,
-                               filterFunc: (value: Attack, index: number, array: Attack[]) => unknown ): Promise<Attack[]> {
+                               limit: number | undefined = undefined,
+                               filterFunc?: (value: Attack, index: number, array: Attack[]) => unknown ): Promise<Attack[]> {
 
         let attacks = await this.reportingEngine.findAttacks(earliest);
-        attacks = attacks.filter(filterFunc);
+        if (filterFunc) {
+            attacks = attacks.filter(filterFunc);
+        }
 
         attacks.sort(this.compareByDateDescending);
 
@@ -68,16 +72,73 @@ class BaseReport {
 
     public async recentResponses(param: string,
                                  earliest: string, 
-                                 limit: number,
-                                 filterFunc: (value: Response, index: number, array: Response[]) => unknown ): Promise<Response[]> {
+                                 limit: number | undefined = undefined,
+                                 filterFunc?: (value: Response, index: number, array: Response[]) => unknown ): Promise<Response[]> {
 
         let responses = await this.reportingEngine.findResponses(earliest);
-        responses = responses.filter(filterFunc);
+        if (filterFunc) {
+            responses = responses.filter(filterFunc);
+        }
 
         responses.sort(this.compareByDateDescending);
 
 		return responses.slice(0, limit);
 	}
+
+    public async getRecent(earliest: string, 
+                           limit: number | undefined = undefined,
+                           filterFunc?: (value: AppSensorEvent | Attack | Response) => unknown): Promise<(AppSensorEvent | Attack | Response)[]> {
+        const events    = await this.recentEvents('', earliest, limit, filterFunc);
+        const attacks   = await this.recentAttacks('', earliest, limit, filterFunc);
+        const responses = await this.recentResponses('', earliest, limit, filterFunc);
+
+        const merged: (AppSensorEvent | Attack | Response)[] = [];
+
+        let response = responses.shift();
+        let attack = attacks.shift();
+        let event = events.shift();
+        while(response || attack || event) {
+            let rt = -1;
+            if (response) {
+                const timestamp = response.getTimestamp();
+                rt = timestamp ? timestamp.getTime() : -1;
+            }
+
+            let at = -1;
+            if (attack) {
+                const timestamp = attack.getTimestamp();
+                at = timestamp ? timestamp.getTime() : -1;
+            }
+
+            let et = -1;
+            if (event) {
+                const timestamp = event.getTimestamp();
+                et = timestamp ? timestamp.getTime() : -1;
+            }
+
+            if (rt > at && rt > et) {
+                merged.push(response!);
+                response = responses.shift();
+            } else if (at > rt && at > et) {
+                merged.push(attack!);
+                attack = attacks.shift();
+            } else if (et > rt && et > at) {
+                merged.push(event!);
+                event = events.shift();
+            } else if (rt > -1 && rt === at && at === et) {
+                merged.push(response!);
+                response = responses.shift();
+
+                merged.push(attack!);
+                attack = attacks.shift();
+
+                merged.push(event!);
+                event = events.shift();
+            }
+        }
+
+        return merged;
+    }
 
     protected async filterAndCount(param: string,
                                    earliest: string,

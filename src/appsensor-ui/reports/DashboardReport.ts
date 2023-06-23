@@ -23,10 +23,6 @@ class DashboardReport {
 		this.detectionPointReport = detectionPointReport;
     }
 
-	// @PreAuthorize("hasAnyRole('VIEW_DATA')")
-	// @RequestMapping(value="/api/dashboard/all", method = RequestMethod.GET)
-	// @ResponseBody
-	// public Map<String,Object> allContent(@RequestParam("earliest") String rfc3339Timestamp, @RequestParam("slices") int slices, @RequestParam("limit") Long limit) {
     public async allContent(earliest: string, slices: number, limit: number): Promise<Map<string,Object>> {
         const allContent = new Map<string,Object>();
 		
@@ -51,10 +47,6 @@ class DashboardReport {
 		return allContent; 
 	}
 	
-	// @PreAuthorize("hasAnyRole('VIEW_DATA')")
-	// @RequestMapping(value="/api/responses/active", method = RequestMethod.GET)
-	// @ResponseBody
-	// public Collection<Response> activeResponses(@RequestParam("earliest") String rfc3339Timestamp, @RequestParam("limit") Long limit) {
     public async activeResponses(earliest: string, limit: number): Promise<Response[]> {
         let activeResponses: Response[] = await this.reportingEngine.findResponses(earliest);
 
@@ -67,10 +59,6 @@ class DashboardReport {
 		return activeResponses;
 	}
 	
-	// @PreAuthorize("hasAnyRole('VIEW_DATA')")
-	// @RequestMapping(value="/api/dashboard/by-time-frame", method = RequestMethod.GET)
-	// @ResponseBody
-	// public Collection<TimeFrameItem> byTimeFrame() {
     public async byTimeFrame(): Promise<TimeFrameItem[]> {
         const items: TimeFrameItem[] = [];
 		
@@ -107,10 +95,6 @@ class DashboardReport {
         return items;
 	}
 	
-	// @PreAuthorize("hasAnyRole('VIEW_DATA')")
-	// @RequestMapping(value="/api/dashboard/by-category", method = RequestMethod.GET)
-	// @ResponseBody
-	// public Collection<CategoryItem> byCategory(@RequestParam("earliest") String rfc3339Timestamp) {
     public async byCategory(earliest: string): Promise<CategoryItem[]> {
         const items: CategoryItem[] = [];
 
@@ -192,10 +176,6 @@ class DashboardReport {
 	// 
 	// this function drives the dashboard and is specifically formatted for an morris.js graph
 	// 
-	// @PreAuthorize("hasAnyRole('VIEW_DATA')")
-	// @RequestMapping(value="/api/events/grouped", method = RequestMethod.GET)
-	// @ResponseBody
-	// public ViewObject groupedEvents(@RequestParam("earliest") String rfc3339Timestamp, @RequestParam("slices") int slices) {
     public async groupedEvents(earliest: string, slices: number): Promise<ViewObject<number>> {
         const startingTime = new Date(earliest).getTime();  
 

@@ -10,10 +10,6 @@ class TrendsDashboardReport extends BaseReport {
         super(reportingEngine);
     }
 
-	// @PreAuthorize("hasAnyRole('VIEW_DATA')")
-	// @RequestMapping(value="/api/trends/by-time-frame", method = RequestMethod.GET)
-	// @ResponseBody
-	// public Collection<TrendItem> countEvents() {
     public async countEvents(): Promise<TrendItem[]> {
         const trends: TrendItem[] = [];
 		

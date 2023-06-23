@@ -4,7 +4,8 @@ import { Interval } from "@js-joda/extra";
 import { AppSensorEvent, Attack, Response, Utils } from "../../core/core.js";
 import {ReportingEngineExt} from "../../reporting-engines/reporting-engines.js"
 import { BaseReport } from "./BaseReport.js";
-import { Dates, Table, TimeFrameItem, TimeUnit, Type, ViewObject } from "./Reports.js";
+import { Dates, NAME_EVENT_COUNT, Table, TimeFrameItem, TimeUnit, Type, ViewObject } from "./Reports.js";
+
 
 class UserReport extends BaseReport {
 
@@ -12,10 +13,6 @@ class UserReport extends BaseReport {
         super(reportingEngine);
     }
 
-    // // @PreAuthorize("hasAnyRole('VIEW_DATA')")
-    // // @RequestMapping(value="/api/users/{username}/all", method = RequestMethod.GET)
-    // // @ResponseBody
-    // public Map<String,Object> allContent(@PathVariable("username") String username, @RequestParam("earliest") String rfc3339Timestamp, @RequestParam Long limit, @RequestParam int slices) { 
     public async allContent(username: string, earliest: string, limit: number, slices: number): Promise<Map<string,Object>> { 
         const allContent = new Map<string,Object>();
         
@@ -43,10 +40,6 @@ class UserReport extends BaseReport {
         return allContent;
     }
 
-    // @PreAuthorize("hasAnyRole('VIEW_DATA')")
-    // @RequestMapping(value="/api/users/{username}/active-responses", method = RequestMethod.GET)
-    // @ResponseBody
-    // public Collection<Response> activeResponses(@PathVariable("username") String username, @RequestParam("earliest") String rfc3339Timestamp) {
     public async activeResponses(username: string, earliest: string): Promise<Response[]> {
         
         let activeResponses: Response[] = await this.reportingEngine.findResponses(earliest);
@@ -68,10 +61,6 @@ class UserReport extends BaseReport {
         return activeResponses;
     }
 
-    // @PreAuthorize("hasAnyRole('VIEW_DATA')")
-    // @RequestMapping(value="/api/users/{username}/by-time-frame", method = RequestMethod.GET)
-    // @ResponseBody
-    // public Collection<TimeFrameItem> byTimeFrame(@PathVariable("username") String username) {
     public async byTimeFrame(username: string): Promise<TimeFrameItem[]> {
         const items: TimeFrameItem[] = [];
         
@@ -108,38 +97,22 @@ class UserReport extends BaseReport {
         return items;
     }
 
-    // @PreAuthorize("hasAnyRole('VIEW_DATA')")
-    // @RequestMapping(value="/api/users/{username}/latest-events", method = RequestMethod.GET)
-    // @ResponseBody
-    // public Collection<Event> recentEvents(@PathVariable("username") String username, @RequestParam("earliest") String rfc3339Timestamp, @RequestParam("limit") Long limit) {
     public async recentEvents(username: string, earliest: string, limit: number): Promise<AppSensorEvent[]> {
         
         return super.recentEvents(username, earliest, limit, this.filterByUser(username));
     }
 
-    // @PreAuthorize("hasAnyRole('VIEW_DATA')")
-    // @RequestMapping(value="/api/users/{username}/latest-attacks", method = RequestMethod.GET)
-    // @ResponseBody
-    // public Collection<Attack> recentAttacks(@PathVariable("username") String username, @RequestParam("earliest") String rfc3339Timestamp, @RequestParam("limit") Long limit) {
     public async recentAttacks(username: string, earliest: string, limit: number): Promise<Attack[]> {
         
         return super.recentAttacks(username, earliest, limit, this.filterByUser(username));
     }
 
-    // @PreAuthorize("hasAnyRole('VIEW_DATA')")
-    // @RequestMapping(value="/api/users/{username}/latest-responses", method = RequestMethod.GET)
-    // @ResponseBody
-    // public Collection<Response> recentResponses(@PathVariable("username") String username, @RequestParam("earliest") String rfc3339Timestamp, @RequestParam("limit") Long limit) {
     public async recentResponses(username: string, earliest: string, limit: number): Promise<Response[]> {
         
         return super.recentResponses(username, earliest, limit, this.filterByUser(username));
     }
 
     // seen by these client apps
-    // @PreAuthorize("hasAnyRole('VIEW_DATA')")
-    // @RequestMapping(value="/api/users/{username}/by-client-application", method = RequestMethod.GET)
-    // @ResponseBody
-    // public String byClientApplication(@PathVariable("username") String username, @RequestParam("earliest") String rfc3339Timestamp) {
     public async byClientApplication(username: string, earliest: string): Promise<string> {
         const table = new Table<string,Type,number>();
 
@@ -161,10 +134,6 @@ class UserReport extends BaseReport {
         return JSON.stringify(table);
     }
 
-    // @PreAuthorize("hasAnyRole('VIEW_DATA')")
-    // @RequestMapping(value="/api/users/{username}/grouped", method = RequestMethod.GET)
-    // @ResponseBody
-    // public ViewObject groupedUsers(@PathVariable("username") String username, @RequestParam("earliest") String rfc3339Timestamp, @RequestParam("slices") int slices) {
     public async groupedUsers(username: string, earliest: string, slices: number): Promise<ViewObject<number>> {
         const startingTime = new Date(earliest).getTime(); 
 
@@ -191,11 +160,8 @@ class UserReport extends BaseReport {
         return viewObject;
     }
 
-    // @PreAuthorize("hasAnyRole('VIEW_DATA')")
-    // @RequestMapping(value="/api/users/top", method = RequestMethod.GET)
-    // @ResponseBody
-    // public Map<String, Long> topUsers(@RequestParam("earliest") String rfc3339Timestamp, @RequestParam("limit") Long limit) {
-    public async topUsers(earliest: string, limit: number): Promise<{[key: string]: number}> {
+    public async topUsers(earliest: string, 
+                          limit: number | undefined = undefined): Promise<NAME_EVENT_COUNT> {
         const map = new Map<string, number>();
         
         const events = await this.reportingEngine.findEvents(earliest);
@@ -219,7 +185,7 @@ class UserReport extends BaseReport {
 
         toArray = toArray.slice(0, limit);
 
-        const filtered: {[key: string]: number} = {};
+        const filtered: NAME_EVENT_COUNT = {};
         toArray.forEach(el => {
             filtered[el[0]] = el[1];
         });
