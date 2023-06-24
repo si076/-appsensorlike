@@ -25,22 +25,18 @@ class ConsoleRecentReport extends ConsoleReport {
         this.baseReport = baseReport;
         this.detectionPointDescriptions = detectionPointDescriptions;
 
-        this.header = ["", "Type", "Category", "Id", "From", "To", "Timestamp", "Description"];
+        this.setHeader(["", "Type", "Category", "Id", "From", "To", "Timestamp", "Description"]);
     }
 
     override async loadItems(settings: AppSensorUIConsoleSettings): Promise<void> {
         const lastCheckStr = settings.lastCheck!.toISOString();
         if (this.earliest !== lastCheckStr) {
+            this.initData();
+
             this.startSpinner();
 
             this.earliest = lastCheckStr;
             this.items = await this.baseReport.getRecent(this.earliest);
-
-            this.itemCount = this.items.length;
-
-            this.adjustColMaxCharacters(this.header);
-
-            this.data = [];
 
             this.items.forEach((item, index) => {
 
@@ -103,9 +99,7 @@ class ConsoleRecentReport extends ConsoleReport {
                              timestampStr,
                              detectionPointDescr];
                 
-                this.adjustColMaxCharacters(row);
-                
-                this.data.push(row);
+                this.addDataRow(row);
     
             });
 

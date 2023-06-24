@@ -81,13 +81,32 @@ abstract class ConsoleReport {
         rowHeights[rowIndex] = height;
     }
 
+    protected setHeader(row: string[]) {
+        this.adjustColMaxCharacters(row);
+
+        this.header = row;
+    }
+
+    protected initData() {
+        this.data = [];
+        this.itemCount = 0;
+    }
+
+    protected addDataRow(row: string[]) {
+        this.adjustColMaxCharacters(row);
+
+        this.data.push(row);
+                
+        this.itemCount = this.data.length;
+    }
+
     protected getDisplayTableConfig(columnCount: number, 
                                     displayedDataRowCount: number,
                                     specificWidths?: {[index: number]: number}): TableUserConfig {
         //by default distribute space equaly among the columns
 
         const colPaddingBorder = 1 + 1 + 1 + 1; //border left + padding left + padding right + border right;
-        let columnWidth = this.DEFAULT_DISPLAY_TABLE_WIDTH / columnCount - columnCount * colPaddingBorder;
+        let columnWidth = (this.DEFAULT_DISPLAY_TABLE_WIDTH - (columnCount * colPaddingBorder)) / columnCount ;
         if (specificWidths) {
             let specificWidthsTotal = 0;
             let specWidthCount = 0;
@@ -97,7 +116,7 @@ abstract class ConsoleReport {
                 specificWidthsTotal += specificWidths[key] + colPaddingBorder;
             }
 
-            columnWidth = (this.DEFAULT_DISPLAY_TABLE_WIDTH - specificWidthsTotal) / (columnCount - specWidthCount) - (columnCount - specWidthCount) * colPaddingBorder;
+            columnWidth = (this.DEFAULT_DISPLAY_TABLE_WIDTH - specificWidthsTotal - ((columnCount - specWidthCount) * colPaddingBorder)) / (columnCount - specWidthCount);
         }
 
         const columns: {[index: number]:ColumnUserConfig} = {};

@@ -373,5 +373,5 @@ class Dates {
 	
 }
 
-export {TimeUnit, Type, TimeFrameItem, Table, ViewObject, CategoryItem, Dates,
+export {TimeUnit, TimeUnitUtil, TrendDirection, Type, TimeFrameItem, Table, ViewObject, CategoryItem, Dates,
         TrendItem, NAME_EVENT_COUNT}

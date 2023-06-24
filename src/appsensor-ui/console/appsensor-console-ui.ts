@@ -24,6 +24,8 @@ import { ConsoleRecentReport } from "./ConsoleRecentReport.js";
 import { ConsoleMostActiveDetectionPointsReport, ConsoleMostActiveUsersReport } from "./ConsoleMostActiveReports.js";
 import { ConsoleDetPointCategorizationReport } from "./ConsoleDetPointCategorizationReport.js";
 import { ConsoleReport } from "./ConsoleReport.js";
+import { TrendsDashboardReport } from "../reports/TrendsDashboardReport.js";
+import { ConsoleTrendsReport } from "./ConsoleTrendsReport.js";
 // inquirer.registerPrompt("search-list", SearchBox);
 // @ts-ignore
 // inquirer.registerPrompt("date", DatePrompt);
@@ -257,6 +259,7 @@ class ReportingConsole {
         reports.push(new ConsoleRecentReport(new BaseReport(this.reportingEngine), this.detectionPointDescriptions));
         reports.push(new ConsoleMostActiveDetectionPointsReport(new DetectionPointReport(this.reportingEngine)));
         reports.push(new ConsoleMostActiveUsersReport(new UserReport(this.reportingEngine)));
+        reports.push(new ConsoleTrendsReport(new TrendsDashboardReport(this.reportingEngine)));
         reports.push(new ConsoleDetPointCategorizationReport(this.detectionPointDescriptions));
 
         let selectedReport = 0;

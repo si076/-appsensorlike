@@ -15,20 +15,18 @@ class ConsoleMostActiveUsersReport extends ConsoleReport {
     constructor(userReport: UserReport) {
         super();
         this.userReport = userReport;
-        this.header = ["", "User Name (count of events)"];
+        this.setHeader(["", "User Name (count of events)"]);
     }
 
     override async loadItems(settings: AppSensorUIConsoleSettings): Promise<void> {
         const lastCheckStr = settings.lastCheck!.toISOString();
         if (this.earliest !== lastCheckStr) {
+            this.initData();
+            
             this.startSpinner();
 
             this.earliest = lastCheckStr;
             const userEventCount = await this.userReport.topUsers(this.earliest);
-
-            this.adjustColMaxCharacters(this.header);
-
-            this.data = [];
 
             let index = 0;
             for (let key in userEventCount) {
@@ -40,14 +38,10 @@ class ConsoleMostActiveUsersReport extends ConsoleReport {
                 //["", "User Name (count of events)"]
                 const row = [indexStr, line];
 
-                this.adjustColMaxCharacters(row);
-
-                this.data.push(row);
+                this.addDataRow(row);
 
                 index++;
             }
-        
-            this.itemCount = this.topUsers.length;
 
             this.stopSpinner();
         }
@@ -78,20 +72,18 @@ class ConsoleMostActiveDetectionPointsReport extends ConsoleReport {
     constructor(detectionPointReport: DetectionPointReport) {
         super();
         this.detectionPointReport = detectionPointReport;
-        this.header = ["", "Detection Point Label(Category) (count of events)"];
+        this.setHeader(["", "Detection Point Label(Category) (count of events)"]);
     }
 
     override async loadItems(settings: AppSensorUIConsoleSettings): Promise<void> {
         const lastCheckStr = settings.lastCheck!.toISOString();
         if (this.earliest !== lastCheckStr) {
+            this.initData();
+
             this.startSpinner();
 
             this.earliest = lastCheckStr;
             const detPointEventCount = await this.detectionPointReport.topDetectionPoints(this.earliest);
-
-            this.adjustColMaxCharacters(this.header);
-
-            this.data = [];
 
             let index = 0;
             for (let key in detPointEventCount) {
@@ -106,14 +98,10 @@ class ConsoleMostActiveDetectionPointsReport extends ConsoleReport {
                 //["", "Detection Point Label(Category) (count of events)"]
                 const row = [indexStr, line];
 
-                this.adjustColMaxCharacters(row);
-
-                this.data.push(row);
+                this.addDataRow(row);
 
                 index++;
             }
-
-            this.itemCount = this.topDetectionPoints.length;
     
             this.stopSpinner();
         }

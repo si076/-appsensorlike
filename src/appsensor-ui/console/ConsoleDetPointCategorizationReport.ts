@@ -14,13 +14,12 @@ class ConsoleDetPointCategorizationReport extends ConsoleReport {
         super();
         this.detectionPointDescriptions = detectionPointDescriptions;
 
-        this.header = ["Category", "Description", "Affected Users", "Detection Points"];
+        this.setHeader(["Category", "Description", "Affected Users", "Detection Points"]);
     }
 
     async loadItems(settings: AppSensorUIConsoleSettings): Promise<void> {
         if (!this.loaded) {
-            this.adjustColMaxCharacters(this.header);
-            
+           
             const centerStyle: EXCEL4NODE_CELL_STYLE = {alignment: {vertical: "center"}};
             const centerWrapStyle: EXCEL4NODE_CELL_STYLE = {alignment: {vertical: "center", wrapText: true}};
             const topWrapStyle: EXCEL4NODE_CELL_STYLE = {alignment: {vertical: "top", wrapText: true}};
@@ -35,10 +34,9 @@ class ConsoleDetPointCategorizationReport extends ConsoleReport {
 
                 let row = [entry[0], categorization.description, "One User", detPointsStr];
 
-                this.adjustColMaxCharacters(row);
                 this.adjustRowHeightForExcel(this.excelCellsConfig.rowHeightInLinse, rowIndex, row);
 
-                this.data.push(row);
+                this.addDataRow(row);
 
                 rowIndex++;
 
@@ -47,10 +45,9 @@ class ConsoleDetPointCategorizationReport extends ConsoleReport {
 
                 row = [entry[0], categorization.description, "All User", detPointsStr];
 
-                this.adjustColMaxCharacters(row);
                 this.adjustRowHeightForExcel(this.excelCellsConfig.rowHeightInLinse, rowIndex, row);
 
-                this.data.push(row);
+                this.addDataRow(row);
 
                 rowIndex++;
 
@@ -80,7 +77,7 @@ class ConsoleDetPointCategorizationReport extends ConsoleReport {
             //mind that we set a fixed width of Description column in getDisplayTableConfig method
             this.colMaxCharacters[1] = ConsoleDetPointCategorizationReport.DESCRIPTION_COLUMN_WIDTH;
 
-            this.itemCount = this.data.length;
+            this.loaded = true;
         }
     }
 
