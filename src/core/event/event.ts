@@ -1,11 +1,17 @@
 import { AppSensorEvent, Attack, Response } from "../core.js";
 
-interface EventManager {
+/**
+ * The EventManager is the key interface that the {@link ClientApplication} accesses to 
+ * interact with AppSensor.
+ * 
+ * In contrast to the ORIGINAL code here methods are asynchronous returning Promise<T>.
+ */
+ interface EventManager {
 	
 	/**
-	 * Add an {@link Event}.
+	 * Add an {@link AppSensorEvent}.
 	 * 
-	 * @param event {@link Event} to add
+	 * @param event {@link AppSensorEvent} to add
 	 */
 	addEvent(event: AppSensorEvent): Promise<void>;
 	

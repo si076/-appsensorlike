@@ -10,41 +10,63 @@ import { ResponseHandler, UserManager } from './response/response.js';
 import {Rule} from './rule/rule.js'
 import { AttackStore, EventStore, ResponseStore } from './storage/storage.js';
 
+/** 
+ *	ObjectValidationError is thrown when validation of an object fails.
+ */ 
 class ObjectValidationError extends Error {
 
+	//reference to the checked object
 	invalidObj: Object;
-
+	/**
+	 * @param message the error message
+	 * @param invalidObj reference to the checked object
+	 */
 	constructor(message: string, invalidObj: Object) {
 		super(message);
 		this.invalidObj = invalidObj;
 	}
 }
 
-interface IEquals {
-
+/** 
+ *	Implemented by classes which want to check equality of instances of the same class
+ */ 
+ interface IEquals {
+	/** 
+	 * Check the equality of this object and the passed object 
+	 * @param obj object to check equality on
+	 */
 	equals(obj: Object | null | undefined): boolean
 
 }
 
-interface IValidateInitialize {
+/** 
+ * Context dependent checks and initialization of an object.
+ */ 
+ interface IValidateInitialize {
 
 	/** 
 	 * Context dependent checks and initialization.
-	 * Applied when: loading an object from DB's tabls, after JSON.parse.
+	 * Applied when: loading an object from DB's tabls; after JSON.parse.
 	 * This is an additional check and initialization to JSON schema validation,
 	 * in case of configuration object.
 	 */
 	 checkValidInitialize(): void;
 }
 
-interface IAppsensorEntity extends IEquals, IValidateInitialize {
+// /** 
+//  *
+//  */ 
+//  interface IAppsensorEntity extends IEquals, IValidateInitialize {
 
-   getId(): string | undefined;
+//    getId(): string | undefined;
 
-   setId(id: string): void;
-}
+//    setId(id: string): void;
+// }
 
-class AppsensorEntity implements IAppsensorEntity {
+/**
+ *  Base class for the most of the following classes 
+ */
+class AppsensorEntity implements IEquals, IValidateInitialize {
 
 	protected id?: string | undefined;
 
@@ -69,7 +91,11 @@ class AppsensorEntity implements IAppsensorEntity {
 	}
 }
 
-class KeyValuePair extends AppsensorEntity {
+/** 
+ *	Represent a (key, value) pair.
+ *  It could store application specific information. 
+ */ 
+ class KeyValuePair extends AppsensorEntity {
 	
 	private key: string;
     private value: string;
@@ -115,25 +141,30 @@ class KeyValuePair extends AppsensorEntity {
 		}
 	}
 
-	// public toString(): string {
-	// 	return new ToStringBuilder(this)
-	// 			.append("id", id)
-	// 			.append("key", key)
-	// 			.append("value", value)
-	// 			.toString();
-	// }
-
 }
 
-enum INTERVAL_UNITS {
+
+/** 
+ *	Interval units
+ */ 
+ enum INTERVAL_UNITS {
 	"MILLISECONDS" = "milliseconds",
-	"SECONDS" = "seconds",
-	"MINUTES" = "minutes",
-	"HOURS" = "hours",
-	"DAYS" = "days"
+	"SECONDS" 	   = "seconds",
+	"MINUTES" 	   = "minutes",
+	"HOURS" 	   = "hours",
+	"DAYS" 		   = "days"
 }
 
-class Interval extends AppsensorEntity {
+/**
+ * The Interval represents a span of time.
+ * 
+ * <ul>
+ * 		<li>duration (example: 15)</li>
+ * 		<li>unit: (example: minutes)</li>
+ * </ul>
+ * 
+ */
+ class Interval extends AppsensorEntity {
 
 	/** 
 	 * Duration portion of interval, ie. '3' if you wanted 
@@ -216,17 +247,19 @@ class Interval extends AppsensorEntity {
 			throw new ObjectValidationError("unit is not of INTERVAL_UNITS", this);
 		}
 	}
-	// @Override
-	// public String toString() {
-	// 	return new ToStringBuilder(this).
-	// 		       append("duration", duration).
-	// 		       append("unit", unit).
-	// 		       toString();
-	// }
-	
+
 }
 
-class Threshold extends AppsensorEntity {
+/**
+ * The Threshold represents a number of occurrences over a span of time.
+ * 
+ * <ul>
+ * 		<li>count: (example: 12)</li>
+ * 		<li>interval: (example: 15 minutes)</li>
+ * </ul>
+ * 
+ */
+ class Threshold extends AppsensorEntity {
 
 	/** The count at which this threshold is triggered. */
 	private count: number = 0;
@@ -281,19 +314,17 @@ class Threshold extends AppsensorEntity {
 			this.interval.checkValidInitialize();
 		}
 	}
-	// @Override
-	// public String toString() {
-	// 	return new ToStringBuilder(this).
-	// 		       append("count", count).
-	// 		       append("interval", interval).
-	// 		       toString();
-	// }
 	
 }
 
-class Response  extends AppsensorEntity {
+/**
+ * After an {@link Attack} has been determined to have occurred, a Response
+ * is executed. The Response configuration is done on the server-side, not 
+ * the client application. 
+ */
+ class Response  extends AppsensorEntity {
 	
-	/** User the response is for */
+	/** {@link User} the response is for */
 	private user?: User | null | undefined;
 	
 	/** When the event occurred */
@@ -302,7 +333,7 @@ class Response  extends AppsensorEntity {
 	/** String representing response action name */
 	private action: string = '';
 	
-	/** Interval response should last for, if applicable. Ie. block access for 30 minutes */
+	/** {@link Interval} response should last for, if applicable. Ie. block access for 30 minutes */
 	private interval?: Interval | null | undefined;
 
 	/** Client application name that response applies to. */
@@ -315,12 +346,12 @@ class Response  extends AppsensorEntity {
 
 	/** ADDITION TO THE ORIGINAL CODE TO TRACE WHAT CAUSED THIS RESPONSE
 	 *  ESSENTIAL FOR REPORTING
-	 *  Detection Point that was triggered */
+	 *  {@link DetectionPoint} that was triggered */
 	private detectionPoint: DetectionPoint | null = null;
 
 	/** ADDITION TO THE ORIGINAL CODE TO TRACE WHAT CAUSED THIS RESPONSE
 	 *  ESSENTIAL FOR REPORTING
-	 *  Rule that was triggered */
+	 *  {@link Rule} that was triggered */
 	private rule: Rule | null = null;
 
 	
@@ -503,37 +534,35 @@ class Response  extends AppsensorEntity {
 		}
 		
 	}
-	// @Override
-	// public String toString() {
-	// 	return new ToStringBuilder(this).
-	// 		       append("user", user).
-	// 		       append("timestamp", timestamp).
-	// 		       append("action", action).
-	// 		       append("interval", interval).
-	// 		       append("detectionSystem", detectionSystem).
-	// 		       append("metadata", metadata).
-	// 		       toString();
-	// }
 	
 }
 
-
+/**
+ * Detection point category 
+ */
 class Category {
 	public static REQUEST 				= "Request";
 	public static AUTHENTICATION 		= "Authentication";
 	public static SESSION_MANAGEMENT 	= "Session Management";
 	public static ACCESS_CONTROL 		= "Access Control";
-	public static INPUT_VALIDATION 	= "Input Validation";
+	public static INPUT_VALIDATION 		= "Input Validation";
 	public static OUTPUT_ENCODING 		= "Output Encoding";
 	public static COMMAND_INJECTION 	= "Command Injection";
 	public static FILE_IO 				= "File IO";
 	public static HONEY_TRAP 			= "Honey Trap";
 	public static USER_TREND 			= "User Trend";
-	public static SYSTEM_TREND 		= "System Trend";
+	public static SYSTEM_TREND 			= "System Trend";
 	public static REPUTATION 			= "Reputation";
 }
 
-class DetectionPoint  extends AppsensorEntity {
+/**
+ * The detection point represents the unique sensor concept in the code.
+ *
+ * A list of project detection points are maintained at https://www.owasp.org/index.php/AppSensor_DetectionPoints
+ *
+ * @see <a href="https://www.owasp.org/index.php/AppSensor_DetectionPoints">https://www.owasp.org/index.php/AppSensor_DetectionPoints</a>
+ */
+ class DetectionPoint  extends AppsensorEntity {
 
 	protected guid?: string | undefined;
 
@@ -548,7 +577,7 @@ class DetectionPoint  extends AppsensorEntity {
 	private label?: string | undefined;
 
 	/**
-	 * {@link Threshold} for determining whether given detection point (associated {@link Event})
+	 * {@link Threshold} for determining whether given detection point (associated {@link AppSensorEvent})
 	 * should be considered an {@link Attack}.
 	 */
 	private threshold: Threshold  | null = null;
@@ -582,11 +611,6 @@ class DetectionPoint  extends AppsensorEntity {
 	public getCategory(): string {
 		return this.category;
 	}
-
-	// public setCategory(category: string): DetectionPoint {
-	// 	this.category = category;
-	// 	return this;
-	// }
 
 	public getLabel(): string | undefined {
 		return this.label;
@@ -687,19 +711,13 @@ class DetectionPoint  extends AppsensorEntity {
 		}
 
 	}
-	// @Override
-	// public String toString() {
-	// 	return new ToStringBuilder(this).
-	// 			   append("category", category).
-	// 		       append("label", label).
-	// 		       append("threshold", threshold).
-	// 		       append("responses", responses).
-	// 		       append("guid", guid).
-	// 		       toString();
-	// }
+
 }
 
-class IPAddress extends AppsensorEntity {
+/**
+ * The IP Address for the user, optionally provided by the client application. 
+ */
+ class IPAddress extends AppsensorEntity {
 
 	private address: string = '';
 	
@@ -807,17 +825,15 @@ class IPAddress extends AppsensorEntity {
 			this.geoLocation.checkValidInitialize();
 		}
 	}
-	// @Override
-	// public String toString() {
-	// 	return new ToStringBuilder(this).
-	// 			append("address", address).
-	// 			append("geoLocation", geoLocation).
-	// 		    toString();
-	// }
 	
 }
 
-class DetectionSystem extends AppsensorEntity {
+/**
+ * Identifier label for the system that detected the event. 
+ * This will be either the client application, or possibly an external 
+ * detection system, such as syslog, a WAF, network IDS, etc.  
+ */
+ class DetectionSystem extends AppsensorEntity {
 
 	private detectionSystemId: string = '';
 	
@@ -873,19 +889,25 @@ class DetectionSystem extends AppsensorEntity {
 			this.ipAddress.checkValidInitialize();
 		}
 	}
-	// @Override
-	// public String toString() {
-	// 	return new ToStringBuilder(this).
-	// 			append("detectionSystemId", detectionSystemId).
-	// 			append("ipAddress", ipAddress).
-	// 		    toString();
-	// }
 	
 }
 
-class User extends AppsensorEntity {
+/**
+ * The standard User object. This represents the end user in the system, 
+ * NOT the client application. 
+ * 
+ * The base implementation assumes the username is provided by the client application. 
+ * 
+ * It is up to the client application to manage the username. 
+ * The username could be anything, an actual username, an IP address, 
+ * or any other identifier desired. The core notion is that any desired 
+ * correlation on the user is done by comparing the username.
+ */
+ class User extends AppsensorEntity {
 
+	//not part of the original code
 	public static ANONYMOUS_USER = 'ANONYMOUS';
+	//not part of the original code
 	public static UNDEFINED_USER = '<<UNDEFINED>>' 
 
 	private username: string = User.ANONYMOUS_USER;
@@ -943,17 +965,15 @@ class User extends AppsensorEntity {
 			this.ipAddress.checkValidInitialize();
 		}
 	}
-	// @Override
-	// public String toString() {
-	// 	return new ToStringBuilder(this).
-	// 			append("username", username).
-	// 			append("ipAddress", ipAddress).
-	// 		    toString();
-	// }
 	
 }
 
-class Resource extends AppsensorEntity {
+/**
+ * Resource represents a generic component of an application. In many cases, 
+ * it would represent a URL, but it could also presumably be used for something 
+ * else, such as a specific object, function, or even a subsection of an application, etc.
+ */
+ class Resource extends AppsensorEntity {
 	
 	/** 
 	 * The resource being requested when a given event/attack was triggered, which can be used 
@@ -1012,12 +1032,22 @@ class Resource extends AppsensorEntity {
 	}
 }
 
-class AppSensorEvent extends AppsensorEntity {
+/**
+ * Event is a specific instance that a sensor has detected that
+ * represents a suspicious activity.
+ *
+ * The key difference between an AppSensorEvent and an Attack is that an AppSensorEvent
+ * is "suspicous" whereas an Attack has been determined to be "malicious" by some analysis.
+ * 
+ * The name of this class in the original Java code is Event. 
+ * Since Javascript has own native Event class, this class has been renamed to AppSensorEvent (not to burden with namespace all the time).
+ */
+ class AppSensorEvent extends AppsensorEntity {
 
-	/** User who triggered the event, could be anonymous user */
+	/** {@link User} who triggered the event, could be anonymous user */
 	private user: User | null = null;
 
-	/** Detection Point that was triggered */
+	/** {@link DetectionPoint} that was triggered */
 	private detectionPoint: DetectionPoint | null = null;
 
 	/** When the event occurred */
@@ -1163,25 +1193,25 @@ class AppSensorEvent extends AppsensorEntity {
 			this.metadata = [];
 		}
 	}
-	// @Override
-	// public String toString() {
-	// 	return new ToStringBuilder(this).
-	// 			append("user", user).
-	// 			append("detectionPoint", detectionPoint).
-	// 			append("timestamp", timestamp).
-	// 			append("detectionSystem", detectionSystem).
-	// 			append("resource", resource).
-	// 			append("metadata", metadata).
-	// 		    toString();
-	// }
+
 }
 
-class Attack extends AppsensorEntity {
+/**
+ * An attack can be added to the system in one of two ways:
+ * <ol>
+ * 		<li>Analysis is performed by the event analysis engine and determines an attack has occurred</li>
+ * 		<li>Analysis is performed by an external system (ie. WAF) and added to the system.</li>
+ * </ol>
+ *
+ * The key difference between an AppSensorEvent and an Attack is that an AppSensorEvent
+ * is "suspicous" whereas an Attack has been determined to be "malicious" by some analysis.
+ */
+ class Attack extends AppsensorEntity {
 
-	/** User who triggered the attack, could be anonymous user */
+	/** {@link User} who triggered the attack, could be anonymous user */
 	private user: User | null = null;
 
-	/** Detection Point that was triggered */
+	/** {@link DetectionPoint} that was triggered */
 	private detectionPoint: DetectionPoint | null = null;
 
 	/** When the attack occurred */
@@ -1352,34 +1382,26 @@ class Attack extends AppsensorEntity {
 			this.metadata = [];
 		}
 	}
-	// @Override
-	// public String toString() {
-	// 	return new ToStringBuilder(this).
-	// 		       append("user", user).
-	// 		       append("detectionPoint", detectionPoint).
-	// 		       append("rule", rule).
-	// 		       append("timestamp", timestamp).
-	// 		       append("detectionSystem", detectionSystem).
-	// 		       append("resource", resource).
-	// 		       append("metadata", metadata).
-	// 		       toString();
-	// }
 
 }
 
-interface RequestHandler {
+/**
+ * The RequestHandler is the key interface that the server side of 
+ * AppSensor implements to handle the different functional requests.
+ */
+ interface RequestHandler {
 	
 	// APPSENSOR_CLIENT_APPLICATION_IDENTIFIER_ATTR: string = "APPSENSOR_CLIENT_APPLICATION_IDENTIFIER_ATTR";
 	
 	/**
-	 * Add an Event.
+	 * Add an {@link AppSensorEvent}.
 	 * 
-	 * @param event Event to add
+	 * @param event AppSensorEvent to add
 	 */
 	addEvent(event: AppSensorEvent): Promise<void>;
 	
 	/**
-	 * Add an Attack
+	 * Add an {@link Attack}
 	 * @param attack Attack to add
 	 */
 	addAttack(attack: Attack): Promise<void>;
@@ -1395,12 +1417,16 @@ interface RequestHandler {
 	
 }
 
-class ClientApplication implements IEquals {
+/**
+ * The ClientApplication object represents a consumer of the AppSensor 
+ * services in any of the client-server style setups.
+ */
+ class ClientApplication implements IEquals {
 	
 	/** The name of the client application */
 	private name: string = '';
 	
-	/** The collection of {@link Role}s associated with this client application */
+	/** The collection of Roles associated with this client application */
 	private roles: Role[] = [];
 
 	/** The {@link IPAddress} of the client application, optionally set in the server configuration */
@@ -1470,7 +1496,12 @@ class ClientApplication implements IEquals {
 
 }
 
-class AppSensorClient {
+/**
+ * AppSensor core class for accessing client-side components. 
+ * However, the configuration portions are setup in 
+ * the appsensor-client-config.json file.
+ */
+ class AppSensorClient {
 	
 	private configuration: ClientConfiguration | null = null;
 	
@@ -1516,7 +1547,12 @@ class AppSensorClient {
 	
 }
 
-class AppSensorServer {
+/**
+ * AppSensor core class for accessing server-side components. 
+ * However, the configuration portions are setup in 
+ * the appsensor-server-config.json file.
+ */
+ class AppSensorServer {
 	
 	private configuration: ServerConfiguration | null = null;
 	
@@ -1536,10 +1572,6 @@ class AppSensorServer {
 	
 	public constructor() { }
 	
-	/**
-	 * Accessor for ServerConfiguration object
-	 * @return ServerConfiguration object
-	 */
 	public getConfiguration(): ServerConfiguration | null {
 		return this.configuration;
 	}
@@ -1606,16 +1638,21 @@ class AppSensorServer {
 	
 }
 
+/**
+ * Utility methods
+ */ 
 class Utils {
-	//expected entities of same type 
+
+	/** Tests wether two objects are equal */ 
 	public static equalsEntitys(ent1: IEquals | null | undefined, 
 		                        ent2: IEquals | null | undefined): boolean {
 		return (ent1 === ent2) ||
 		       (ent1 !== null && ent1 !== undefined && ent1.equals(ent2))
 	}
 
-	public static equalsArrayEntitys(ent1: IEquals[] | null | undefined, 
-		                             ent2: IEquals[] | null | undefined): boolean {
+	/** Tests wether two arrays of objects are equal */ 
+	 public static equalsArrayEntitys(ent1: IEquals[] | null | undefined, 
+		                              ent2: IEquals[] | null | undefined): boolean {
 		if (ent1 === ent2) {
 			return true;
 		} else if (ent1 !== null && ent2 !== null && 
@@ -1635,10 +1672,11 @@ class Utils {
 		}
 	}
 
-	public static equalsOnProperties(obj1: Object | null | undefined, 
-						 			 obj2: Object | null | undefined, 
-									 propMap: Map<string, string[]>,
-						 			 propertyNamesFunc: (obj: Object, propMap: Map<string, string[]>) => string[]): boolean {
+	/** Tests wether two objects are equal according to specified properties returned by a function */ 
+	 public static equalsOnProperties(obj1: Object | null | undefined, 
+						 			  obj2: Object | null | undefined, 
+									  propMap: Map<string, string[]>,
+						 			  propertyNamesFunc: (obj: Object, propMap: Map<string, string[]>) => string[]): boolean {
 		if (obj1 === obj2) {
 			return true;
 		}
@@ -1703,10 +1741,11 @@ class Utils {
 		return equal;	
 	}
 
-	public static equalsArrayEntitysOnProperties(obj1: Object[] | null | undefined, 
-		                             			 obj2: Object[] | null | undefined,
-												 propMap: Map<string, string[]>,
-												 propertyNamesFunc: (obj: Object, propMap: Map<string, string[]>) => string[]): boolean {
+	/** Tests wether two arrays of objects are equal according to specified properties returned by a function */
+	 public static equalsArrayEntitysOnProperties(obj1: Object[] | null | undefined, 
+		                             			  obj2: Object[] | null | undefined,
+												  propMap: Map<string, string[]>,
+												  propertyNamesFunc: (obj: Object, propMap: Map<string, string[]>) => string[]): boolean {
 		if (obj1 === obj2) {
 			return true;
 		} else if (obj1 !== null && obj2 !== null && 
@@ -1726,8 +1765,12 @@ class Utils {
 		}
 	}
 
-	public static allOrOnlySpecifiedProperties(obj: Object | null | undefined, 
-											   onlyPropertiesToCompareMap: Map<string, string[]>): string[] {
+	/**
+	 * Function returning the object's own properties or specified properties defined in a map.
+	 * The map's key is the object's constructor name.
+	 */ 
+	 public static allOrOnlySpecifiedProperties(obj: Object | null | undefined, 
+											    onlyPropertiesToCompareMap: Map<string, string[]>): string[] {
 		let propertiesToCompare: string[] = [];
 		if (obj) {
 			propertiesToCompare = Object.getOwnPropertyNames(obj);
@@ -1746,7 +1789,11 @@ class Utils {
 	}
 
 
-	public static allOrWithoutExcludedProperties(obj: Object | null | undefined,
+	/**
+	 * Function returning the object's own properties or own properties without the properties defined in a map.
+	 * The map's key is the object's constructor name.
+	 */ 
+	 public static allOrWithoutExcludedProperties(obj: Object | null | undefined,
 												 excludedPropertiesFromCompareMap: Map<string, string[]>): string[] {
 		
 		let propertiesToCompare: string[] = [];
@@ -1783,6 +1830,7 @@ class Utils {
 		return detPointLabel;
 	}
 
+	/** Access control {@link Action} to {@link RequestHandler} method name mapping*/
 	public static getMethodFromAction(action: Action): string {
 		let method = "unknown";
 		switch (action) {
@@ -1802,6 +1850,7 @@ class Utils {
 		return method;
 	}
 
+	/** {@link RequestHandler} method name to access control {@link Action} mapping*/
 	public static getActionFromMethod(method: string): Action {
 		let action: Action = Action.UNKNOWN;
 		switch (method) {
@@ -1824,11 +1873,14 @@ class Utils {
    /**
 	* Finder for attacks in the AttackStore.
 	*
-	* @param criteria the {@link org.owasp.appsensor.core.criteria.SearchCriteria} object to search by
-	* @param attack the {@link Attack} object to match on
-	* @return true or false depending on the matching of the search criteria to the {@link Attack}
+	* This method was moved here out of AttackStore in order the same logic to be
+	* utilized in other places as well
+	*	
+	* @param criteria the SearchCriteria object to search by
+	* @param attack the Attack object to match on
+	* @return true or false depending on the matching of the search criteria to the attack
 	*/
-	public static isMatchingAttack(criteria: SearchCriteria, attack: Attack ): boolean {
+	public static isMatchingAttack(criteria: SearchCriteria, attack: Attack): boolean {
 	   let match: boolean = false;
 
 	   const user: User | null = criteria.getUser();
@@ -1882,8 +1934,11 @@ class Utils {
 	/**
 	 * A finder for Event objects in the EventStore
 	 *
-	 * @param criteria the {@link org.owasp.appsensor.core.criteria.SearchCriteria} object to search by
-	 * @param event the {@link Event} object to match on
+	 * This method was moved here out of EventStore in order the same logic to be
+	 * utilized in other places as well
+	 * 
+	 * @param criteria the SearchCriteria object to search by
+	 * @param event the AppSensorEvent object to match on
 	 * @return true or false depending on the matching of the search criteria to the event
 	 */
 	 public static isMatchingEvent(criteria: SearchCriteria, event: AppSensorEvent): boolean {
@@ -1937,7 +1992,17 @@ class Utils {
 		return match;
 	}
 
-	public static isMatchingResponse(criteria: SearchCriteria, response: Response): boolean {
+	/**
+	 * A finder for Response objects in the ResponseStore
+	 *
+	 * This method was moved here out of ResponseStore in order the same logic to be
+	 * utilized in other places as well
+	 * 
+	 * @param criteria the SearchCriteria object to search by
+	 * @param event the Response object to match on
+	 * @return true or false depending on the matching of the search criteria to the response
+	 */
+	 public static isMatchingResponse(criteria: SearchCriteria, response: Response): boolean {
 		let match: boolean = false;
 
 		const user: User | null = criteria.getUser();

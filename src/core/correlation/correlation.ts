@@ -1,6 +1,16 @@
 import { IEquals } from "../core.js";
 
-class CorrelationSet implements IEquals {
+/**
+ * The CorrelationSet represents a set of {@link ClientApplication}s that 
+ * should be considered to share the same {@link User} base. 
+ * 
+ * For example if server1 and server2 are part of a correlation set, 
+ * then client1/userA is considered the same {@link User} as client2/userA. 
+ * 
+ * This can be useful for simple tracking of {@link User} activity across multiple
+ * {@link ClientApplication}s.
+ */
+ class CorrelationSet implements IEquals {
 
 	/** {@link ClientApplication}s that are represented in this correlation set */
 	private clientApplications: string[] = [];
@@ -18,14 +28,6 @@ class CorrelationSet implements IEquals {
 		return this;
 	}
 
-	// @Override
-	// public int hashCode() {
-	// 	return new HashCodeBuilder(17,31).
-	// 			append(clientApplications).
-	// 			toHashCode();
-	// }
-	
-	// @Override
 	public equals(obj: Object): boolean {
 		if (this === obj)
 			return true;
@@ -55,13 +57,6 @@ class CorrelationSet implements IEquals {
 
 	}
 	
-	// @Override
-	// public String toString() {
-	// 	return new ToStringBuilder(this).
-	// 		       append("clientApplications", clientApplications).
-	// 		       toString();
-	// }
-
 }
 
 export {CorrelationSet};

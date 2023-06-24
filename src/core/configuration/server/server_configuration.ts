@@ -1,18 +1,27 @@
 import { AppSensorEvent, ClientApplication, DetectionPoint, DetectionSystem, IPAddress, IValidateInitialize, Utils } from "../../core.js";
 import { CorrelationSet } from "../../correlation/correlation.js";
-import { Rule } from "../../rule/rule.js";
+import { Expression, MonitorPoint, Rule } from "../../rule/rule.js";
 
+/**
+ * Client specific detection points
+ */
 interface IClient {
 	clientName: string;
 	detectionPoints: DetectionPoint[];
 }
 
+/**
+ * Client specific detection points and regular detection points
+ */
 interface IDetectionPoints {
 	clients?: IClient[]; 
 	detectionPoints: DetectionPoint[];
 } 
 
-interface IServerConfiguration extends IValidateInitialize {
+/**
+ * Represents the configuration for server-side components. 
+ */
+ interface IServerConfiguration extends IValidateInitialize {
 
 	configurationFile?: string;
 
@@ -38,7 +47,12 @@ interface IServerConfiguration extends IValidateInitialize {
 
 }
 
-abstract class ServerConfiguration implements IServerConfiguration {
+/**
+ * Represents the configuration for server-side components. Additionally,
+ * contains various helper methods for common configuration-related
+ * actions.
+ */
+ abstract class ServerConfiguration implements IServerConfiguration {
 
 	configurationFile: string | undefined;
 
@@ -178,7 +192,7 @@ abstract class ServerConfiguration implements IServerConfiguration {
 	 * This simply means those systems that have been configured along with the
 	 * specified system id as part of a correlation set.
 	 *
-	 * @param detectionSystemId system ID to evaluate and find correlated systems
+	 * @param detectionSystem system ID to evaluate and find correlated systems
 	 * @return collection of strings representing correlation set, INCLUDING specified system ID
 	 */
 	public getRelatedDetectionSystems(detectionSystem: DetectionSystem | null): string[] {
@@ -240,12 +254,12 @@ abstract class ServerConfiguration implements IServerConfiguration {
 	}
 
 	/**
-	 * Finds all {@link Rule}s that could have been triggered by the {@link Event}. A
-	 * trigger {@link Event} must be the final {@link Event} so if the corresponding
-	 * {@link MonitorPoint} is in the {@link Rule}'s final {@link Expression} it should
-	 * be evaluated.
+	 * Finds all {@link Rule}s that could have been triggered by the {@link AppSensorEvent}. 
+	 * A trigger {@link AppSensorEvent} must be the final {@link AppSensorEvent} so 
+	 * if the corresponding {@link MonitorPoint} is in the {@link Rule}'s final {@link Expression} 
+	 * it should be evaluated.
 	 *
-	 * @param triggerEvent the {@link Event} that triggered the {@link Rule}
+	 * @param triggerEvent the {@link AppSensorEvent} that triggered the {@link Rule}
 	 * @return a list of {@link Rule}s applicable to triggerEvent
 	 */
 	public findRules(triggerEvent: AppSensorEvent): Rule[] {
@@ -296,22 +310,6 @@ abstract class ServerConfiguration implements IServerConfiguration {
 		return clientApplication;
 	}
 
-	// @Override
-	// public int hashCode() {
-	// 	return new HashCodeBuilder(17,31).
-	// 			append(detectionPoints).
-	// 			append(correlationSets).
-	// 			append(clientApplicationIdentificationHeaderName).
-	// 			append(clientApplications).
-	// 			append(serverHostName).
-	// 			append(serverPort).
-	// 			append(serverSocketTimeout).
-	// 			append(geolocateIpAddresses).
-	// 			append(geolocationDatabasePath).
-	// 			toHashCode();
-	// }
-
-	// @Override
 	public equals(obj: Object): boolean {
 		if (this === obj)
 			return true;
@@ -334,23 +332,19 @@ abstract class ServerConfiguration implements IServerConfiguration {
 			//    this.geolocationDatabasePath === other.getGeolocationDatabasePath();
 	}
 
-	// @Override
-	// public String toString() {
-	// 	return new ToStringBuilder(this).
-	// 		    append("detectionPoints", detectionPoints).
-	// 		    append("correlationSets", correlationSets).
-	// 		    append("clientApplicationIdentificationHeaderName", clientApplicationIdentificationHeaderName).
-	// 		    append("clientApplications", clientApplications).
-	// 		    append("serverHostName", serverHostName).
-	// 		    append("serverPort", serverPort).
-	// 		    append("serverSocketTimeout", serverSocketTimeout).
-	// 		    append("geolocateIpAddresses", geolocateIpAddresses).
-	// 		    append("geolocationDatabasePath", geolocationDatabasePath).
-	// 		    toString();
-	// }
-
 }
 
+/**
+ * This interface is to be fulfilled by implementations that load a configuration 
+ * file and provide an object representation of it. 
+ * 
+ * The current implementation only consists of an XML configuration that utilizes a 
+ * standardized XSD schema. However, there is nothing in the interface requiring the 
+ * XML implementation. Most standard users will likely stick to the standard implementation. 
+ * 
+ * TODO: may update this interface is we move to something other than "reading" 
+ * the config, ie. supporting configs from data stores/cloud, etc.
+ */
 interface ServerConfigurationReader {
 	
 	/**

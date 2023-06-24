@@ -1,6 +1,9 @@
 import {AppsensorEntity} from '../core.js'
 
-class GeoLocation extends AppsensorEntity {
+/**
+ * General object representing geo-location. 
+ */
+ class GeoLocation extends AppsensorEntity {
 
 	protected latitude: number = 0.0;
 	protected longitude: number = 0.0;
@@ -30,14 +33,6 @@ class GeoLocation extends AppsensorEntity {
 		
 		return this;
 	}
-
-	// @Override
-	// public int hashCode() {
-	// 	return new HashCodeBuilder(17,31).
-	// 			append(latitude).
-	// 			append(longitude).
-	// 			toHashCode();
-	// }
 	
 	public override equals(obj: Object | null): boolean {
 		if (!super.equals(obj))
@@ -51,17 +46,16 @@ class GeoLocation extends AppsensorEntity {
 			   this.longitude === other.getLongitude();
 	}
 	
-	// @Override
-	// public String toString() {
-	// 	return new ToStringBuilder(this).
-	// 			append("latitude", latitude).
-	// 			append("longitude", longitude).
-	// 		    toString();
-	// }
-	
 }
 
-interface GeoLocator {
+/**
+ * A geo-locator performs a lookup of an IP address and converts it to a {@link GeoLocation}. 
+ * 
+ * Different implementations will use different geo-location libraries.
+ * 
+ * In contrast to the ORIGINAL code here methods are asynchronous returning Promise<T>.
+ */
+ interface GeoLocator {
 	
 	/**
 	 * Perform a lookup of an IP address and return a {@link GeoLocation}.
@@ -70,7 +64,6 @@ interface GeoLocator {
 	 * 
 	 * @return populated {@link GeoLocation} object.
 	 */
-	// public GeoLocation readLocation(InetAddress address);
 	readLocation(address: string): Promise<GeoLocation | null>;
 }
 

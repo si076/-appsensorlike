@@ -1,6 +1,12 @@
-import {AppsensorEntity, Interval, Response, DetectionPoint, Utils, INTERVAL_UNITS, ObjectValidationError} from '../core.js'
+import {AppsensorEntity, AppSensorEvent, Attack, Interval, Response, DetectionPoint, Utils, INTERVAL_UNITS, ObjectValidationError} from '../core.js'
 
-class Notification extends Interval {
+/**
+ * A Notification represents the {@link Interval} of time between a series
+ * of {@link AppSensorEvent}s that trigger a {@link MonitorPoint}. 
+ * Where a {@link DetectionPoint} generates an {@link Attack}, 
+ *       a {@link MonitorPoint} generates a Notification.
+ */
+ class Notification extends Interval {
 
 	/** the start time of the interval */
 	private startTime: Date  = new Date();
@@ -37,21 +43,6 @@ class Notification extends Interval {
 		this.monitorPoint = monitorPoint;
 	}
 
-	// public static Comparator<Notification> getStartTimeAscendingComparator() {
-	// 	return new Comparator<Notification>() {
-	// 		public int compare(Notification n1, Notification n2) {
-	// 			if (n1.getStartTime().isBefore(n2.getStartTime())) {
-	// 				return -1;
-	// 			}
-	// 			else if (n1.getStartTime().isAfter(n2.getStartTime())) {
-	// 				return 1;
-	// 			}
-	// 			else {
-	// 				return 0;
-	// 			}
-	// 		}
-	// 	};
-	// }
 	public static getStartTimeAscendingComparator(n1: Notification, n2: Notification): number {
 		if (n1 === null || n2 === null ) {
 			throw new Error("n1 and n2 cannot be null");
@@ -91,7 +82,11 @@ class Notification extends Interval {
 	}
 }
 
-class MonitorPoint extends DetectionPoint {
+/**
+ * A MonitorPoint is a {@link DetectionPoint} that does not generate attacks,
+ * but is rather a component of a {@link Rule} which generates attacks.
+ */
+ class MonitorPoint extends DetectionPoint {
 	
 	public constructor(detectionPoint: DetectionPoint, guid: string = '') {
 		super(detectionPoint.getCategory(),
@@ -108,7 +103,17 @@ class MonitorPoint extends DetectionPoint {
 	}
 }
 
-class Clause  extends AppsensorEntity {
+/**
+ * A Clause represents the terms in an {@link Expression} separated by an "OR" operator.
+ * Each {@link MonitorPoint} in the monitorPoints field are the variables joined
+ * by "AND" operators.
+ *
+ * For example:
+ * 		In the expression: "MP1 AND MP2 OR MP3 AND MP4"
+ *
+ * 		"MP1 AND MP2" would be a single clause and "MP3 AND MP4" would be another.
+ */
+ class Clause  extends AppsensorEntity {
 
 	/** The monitor points being checked as variables in an Expression */
 	private monitorPoints: DetectionPoint[] = [];
@@ -138,15 +143,22 @@ class Clause  extends AppsensorEntity {
 		return Utils.equalsArrayEntitys(this.monitorPoints, other.getMonitorPoints());
 	}
 
-	// @Override
-	// public String toString() {
-	// 	return new ToStringBuilder(this).
-	// 			   append("detectionPoints", monitorPoints).
-	// 		       toString();
-	// }
 }
 
-class Expression extends AppsensorEntity{
+/**
+ * An Expression is a logical boolean expression where the variables are {@link MonitorPoint}s.
+ * Each Expression in a {@link Rule} is separated by the "THEN" operator.
+ *
+ * An Expression contains a set of {@link Clause}s. Only one {@link Clause} needs to evaluate to true
+ * for an Expression to evaluate to true.
+ *
+ * For example:
+ * 		In the Rule: "MP1 AND MP2 THEN MP3 OR mP4"
+ *
+ * 		"MP1 AND MP2" would be the first Expression with a single Clause
+ * 		and "MP3 OR MP4" would a second Expression with two Clauses.
+ */
+ class Expression extends AppsensorEntity {
 
 	/** The window of time a Clause must be triggered within */
 	private window: Interval | null = null;
@@ -202,47 +214,46 @@ class Expression extends AppsensorEntity{
 		       Utils.equalsArrayEntitys(this.clauses, other.getClauses());
 	}
 
-	// @Override
-	// public String toString() {
-	// 	return new ToStringBuilder(this).
-	// 			   append("window", window).
-	// 		       append("clauses", clauses).
-	// 		       toString();
-	// }
 }
 
-class Rule extends AppsensorEntity {
+/**
+ * A Rule defines a logical aggregation of {@link MonitorPoint}s to determine if an
+ * {@link Attack} is occurring. A Rule uses the boolean operators "AND" and "OR" as well
+ * as the temporal operator "THEN" in joining {@link MonitorPoint}s into a Rule.
+ *
+ * For example:
+ * 		A rule could be as simple as: "MP1 AND MP2"
+ * 		Where the Rule will generate an attack if both MonitorPoint 1 and 2
+ * 		are violated within the Rule's window.
+ *
+ * 		More complex: "MP1 AND MP2 THEN MP3 OR MP4"
+ *
+ * 		Even more complex: "MP1 AND MP2 THEN MP3 OR MP4 THEN MP5 AND MP6 OR MP7"
+ */
+ class Rule extends AppsensorEntity {
 
 	/**
 	 * Unique identifier
 	 */
-	// @Column
 	private guid: string = '';
 
 	/** An optional human-friendly name for the Rule */
-	// @Column
 	private name: string = '';
 
 	/**
 	 * The window is the time all {@link Expression}s must be triggered within.
 	 * A Rule's window must be greater than or equal to the total of it's Expressions' windows.
 	 */
-	// @ManyToOne(cascade = CascadeType.ALL)
-	// @JsonProperty("window")
 	private window: Interval | null = null;
 
 	/** The {@link Expression}s that build up a Rule
 	 * 	The order of the list corresponds to the temporal order of the expressions.
 	 */
-	// @Transient
-	// @JsonProperty("expressions")
 	private expressions: Expression[] = [];
 
 	/**
 	 * Set of {@link Response}s associated with given Rule.
 	 */
-	// @Transient
-	// @JsonProperty("responses")
 	private responses: Response[] = [];
 
 	public constructor(guid: string = '', 
@@ -276,37 +287,28 @@ class Rule extends AppsensorEntity {
 		return this;
 	}
 
-	// @XmlTransient
-	// @JsonProperty("window")
 	public getWindow(): Interval | null {
 		return this.window;
 	}
 
-	// @JsonProperty("window")
 	public setWindow(window: Interval | null): Rule {
 		this.window = window;
 		return this;
 	}
 
-	// @XmlTransient
-	// @JsonProperty("expressions")
 	public getExpressions(): Expression[] {
 		return this.expressions;
 	}
 
-	// @JsonProperty("expressions")
 	public setExpressions(expression: Expression[]): Rule {
 		this.expressions = expression;
 		return this;
 	}
 
-	// @XmlTransient
-	// @JsonProperty("responses")
 	public getResponses(): Response[] {
 		return this.responses;
 	}
 
-	// @JsonProperty("responses")
 	public setResponses(responses: Response[]): Rule {
 		this.responses = responses;
 		return this;
@@ -406,16 +408,7 @@ class Rule extends AppsensorEntity {
 			this.window.checkValidInitialize();
 		}
 	}
-	// @Override
-	// public String toString() {
-	// 	return new ToStringBuilder(this).
-	// 			   append("window", window).
-	// 		       append("expressions", expressions).
-	// 		       append("responses", responses).
-	// 		       append("guid", guid).
-	// 		       append("name", name).
-	// 		       toString();
-	// }
+
 }
 
 export {Rule, Expression, Clause, Notification, MonitorPoint};

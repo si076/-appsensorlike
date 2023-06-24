@@ -1,33 +1,33 @@
-import { AppSensorEvent, Attack, DetectionPoint, Response, User, Utils } from "../core.js";
+import { AppSensorEvent, Attack, Response, Utils } from "../core.js";
 import { SearchCriteria } from "../criteria/criteria.js";
 import { AttackListener, EventListener, ResponseListener } from "../listener/listener.js";
-import { Rule } from "../rule/rule.js";
 
-interface AttackStoreListener {
-}
 
-interface EventStoreListener {
-}
-
-interface ResponseStoreListener {
-}
-
-abstract class AttackStore {
+/**
+ * A store is an observable object.
+ *
+ * It is watched by implementations of the {@link AttackListener} interfaces.
+ *
+ * In this case the analysis engines watch the *Store interfaces of AppSensor.
+ * 
+ * In contrast to the ORIGINAL code here methods add/find/notify are asynchronous returning Promise<T>.
+ */
+ abstract class AttackStore {
 
 	private listeners: AttackListener[] = [];
 
 	/**
 	 * Add an attack to the AttackStore
 	 *
-	 * @param attack the {@link org.owasp.appsensor.core.Attack} object to add to the AttackStore
+	 * @param attack the {@link Attack} object to add to the AttackStore
 	 */
 	public abstract addAttack(attack: Attack): Promise<void>;
 
 	/**
 	 * Finder for attacks in the AttackStore.
 	 *
-	 * @param criteria the {@link org.owasp.appsensor.core.criteria.SearchCriteria} object to search by
-	 * @return a {@link java.util.Collection} of {@link org.owasp.appsensor.core.Attack} objects matching the search criteria.
+	 * @param criteria the {@link SearchCriteria} object to search by
+	 * @return a Promise which resolves to {@link Attack}[] objects matching the search criteria.
 	 */
 	public abstract findAttacks(criteria: SearchCriteria): Promise<Attack[]>;
 
@@ -35,9 +35,10 @@ abstract class AttackStore {
 	public abstract countAttacks(criteria: SearchCriteria): Promise<number>;
 
 	/**
-	 * Register an {@link AttackListener} to notify when {@link Attack}s are added
+	 * Register an {@link AttackListener} to notify when Attacks are added
 	 *
 	 * @param listener the {@link AttackListener} to register
+	 * @param atBeginning if the listener has to be added at the first position, i.e. to be notified first
 	 */
 	public registerListener(listener: AttackListener, atBeginning: boolean = false): void {
 		if (this.listeners.indexOf(listener) === -1) {
@@ -61,9 +62,9 @@ abstract class AttackStore {
 	}
 
 	/**
-	 * Notify each {@link AttackListener} of the specified {@link Attack}
+	 * Notify each {@link AttackListener} of the specified Attack
 	 *
-	 * @param response the {@link Attack} to notify each {@link AttackListener} about
+	 * @param attack the {@link Attack} to notify each AttackListener about
 	 */
 	public async notifyListeners(attack: Attack) {
 		for (const listener of this.listeners) {
@@ -72,11 +73,10 @@ abstract class AttackStore {
 	}
 
 	/**
-	 * Automatically inject any {@link AttackStoreListener}s, which are implementations of
-	 * {@link AttackListener} so they can be notified of changes.
+	 * Set {@link AttackListener}s so they can be notified of changes.
 	 *
-	 * @param collection of {@link AttackListener}s that are injected to be
-	 * 			listeners on the {@link @AttackStore}
+	 * @param listeners of {@link AttackListener}s that are set to be listeners on the AttackStore
+	 * @param atBeginning if the listener has to be added at the first position, i.e. to be notified first
 	 */
 	public setListeners(listeners: AttackListener[], atBeginning: boolean = false): void {
 		for (const listener of listeners) {
@@ -86,10 +86,10 @@ abstract class AttackStore {
 
 	/**
 	 * Finder for attacks in the AttackStore.
-	 *
-	 * @param criteria the {@link org.owasp.appsensor.core.criteria.SearchCriteria} object to search by
+	 * 
+	 * @param criteria the {@link SearchCriteria} object to search by
 	 * @param attacks the {@link Attack} objects to match on - supplied by subclasses
-	 * @return a {@link java.util.Collection} of {@link org.owasp.appsensor.core.Attack} objects matching the search criteria.
+	 * @return Attack[] objects matching the search criteria.
 	 */
 	protected _findAttacks(criteria: SearchCriteria, attacks: Attack[]): Attack[] {
 		if (criteria == null) {
@@ -108,7 +108,16 @@ abstract class AttackStore {
 		return matches;
 	}
 
-	protected _countAttacks(criteria: SearchCriteria, attacks: Attack[]): number {
+	/**
+	 * Count how many attacks in the AttackStore match the search criteria.
+	 * 
+	 * ADDITION TO THE ORIGINAL CODE
+	 * 
+	 * @param criteria the {@link SearchCriteria} object to search by
+	 * @param attacks the {@link Attack} objects to match on - supplied by subclasses
+	 * @return count of {@link Attack}s matching the search criteria.
+	 */
+	 protected _countAttacks(criteria: SearchCriteria, attacks: Attack[]): number {
 		if (criteria == null) {
 			throw new Error("criteria must be non-null");
 		}
@@ -129,80 +138,44 @@ abstract class AttackStore {
 	/**
 	 * Finder for attacks in the AttackStore.
 	 *
-	 * @param criteria the {@link org.owasp.appsensor.core.criteria.SearchCriteria} object to search by
+	 * The code was moved to {@link Utils} in order the same logic to be
+	 * utilized in other places as well
+	 * 
+	 * @param criteria the {@link SearchCriteria} object to search by
 	 * @param attack the {@link Attack} object to match on
 	 * @return true or false depending on the matching of the search criteria to the {@link Attack}
 	 */
 	protected isMatchingAttack(criteria: SearchCriteria, attack: Attack ): boolean {
-		// let match: boolean = false;
-
-		// const user: User | null = criteria.getUser();
-		// const detectionPoint: DetectionPoint | null = criteria.getDetectionPoint();
-		// const detectionSystemIds: string[] = criteria.getDetectionSystemIds();
-		// const earliest: Date | null = criteria.getEarliest();
-		// const rule: Rule | null = criteria.getRule();
-
-		// // check user match if user specified
-		// const userMatch: boolean = (user != null) ? user.equals(attack.getUser()) : true;
-
-		// //check detection system match if detection systems specified
-		// let detectionSystemMatch: boolean = true;
-		// const attDetSystemId = attack.getDetectionSystem();
-		// if (detectionSystemIds != null && detectionSystemIds.length > 0 && attDetSystemId !== null) {
-		// 	detectionSystemMatch = detectionSystemIds.indexOf(attDetSystemId.getDetectionSystemId()) > -1 ;
-		// }
-
-		// //check detection point match if detection point specified
-		// let detectionPointMatch: boolean = true;
-		// if (detectionPoint !== null) {
-		// 	const attDetoint = attack.getDetectionPoint();
-
-		// 	detectionPointMatch = (attDetoint !== null) ?
-		// 			detectionPoint.typeAndThresholdMatches(attDetoint) : false;
-		// }
-
-		// //check rule match if rule specified
-		// let ruleMatch: boolean = true;
-		// if (rule !== null) {
-		// 	const attRule = attack.getRule();
-		// 	ruleMatch = (attRule !== null) ? rule.guidMatches(attRule) : false;
-		// }
-
-		// let earliestMatch: boolean = true; 
-		// if (earliest !== null) {
-
-		// 	const attackTimestampMillis = attack.getTimestamp().getTime();
-		// 	const earliestMillis = earliest.getTime();
-
-		// 	earliestMatch = (earliestMillis < attackTimestampMillis || earliestMillis === attackTimestampMillis)
-		// }
-
-		// if (userMatch && detectionSystemMatch && detectionPointMatch && ruleMatch && earliestMatch) {
-		// 	match = true;
-		// }
-
-		// return match;
 		return Utils.isMatchingAttack(criteria, attack);
 	}
 
 }
 
-abstract class EventStore {
+/**
+ * A store is an observable object.
+ *
+ * It is watched by implementations of the {@link EventListener} interfaces.
+ *
+ * In this case the analysis engines watch the *Store interfaces of AppSensor.
+ * 
+ * In contrast to the ORIGINAL code here methods add/find/notify are asynchronous returning Promise<T>.
+ */
+ abstract class EventStore {
 
 	private listeners: EventListener[] = [];
 
 	/**
-	 * Add an {@link org.owasp.appsensor.core.Event} to the EventStore
+	 * Add an {@link AppSensorEvent} to the EventStore
 	 *
-	 * @param event the {@link org.owasp.appsensor.core.Event} to add to the EventStore
+	 * @param event the {@link AppSensorEvent} to add to the EventStore
 	 */
 	public abstract addEvent(event: AppSensorEvent): Promise<void>;
 
 	/**
-	 * A finder for Event objects in the EventStore
+	 * A finder for {@link AppSensorEvent} objects in the EventStore
 	 *
-	 * @param criteria the {@link org.owasp.appsensor.core.criteria.SearchCriteria} object to search by
-	 * @return a {@link java.util.Collection} of {@link org.owasp.appsensor.core.Event} objects matching the search criteria.
+	 * @param criteria the {@link SearchCriteria} object to search by
+	 * @return a Promise which resolves to {@link AppSensorEvent}[] objects matching the search criteria.
 	 */
 	public abstract findEvents(criteria: SearchCriteria): Promise<AppSensorEvent[]>;
 
@@ -210,9 +183,10 @@ abstract class EventStore {
 	public abstract countEvents(criteria: SearchCriteria): Promise<number>;
 
 	/**
-	 * Register an {@link EventListener} to notify when {@link Event}s are added
+	 * Register an {@link EventListener} to notify when {@link AppSensorEvent}s are added
 	 *
 	 * @param listener the {@link EventListener} to register
+	 * @param atBeginning if the listener has to be added at the first position, i.e. to be notified first
 	 */
 	public registerListener(listener: EventListener, atBeginning: boolean = false): void {
 		if (this.listeners.indexOf(listener) === -1) {
@@ -236,9 +210,9 @@ abstract class EventStore {
 	}
 
 	/**
-	 * Notify each {@link EventListener} of the specified {@link Event}
+	 * Notify each {@link EventListener} of the specified {@link AppSensorEvent}
 	 *
-	 * @param response the {@link Event} to notify each {@link EventListener} about
+	 * @param event the {@link AppSensorEvent} to notify each {@link EventListener} about
 	 */
 	public async notifyListeners(event: AppSensorEvent) {
 		for (const listener of this.listeners) {
@@ -247,11 +221,10 @@ abstract class EventStore {
 	}
 
 	/**
-	 * Automatically inject any {@link EventStoreListener}s, which are implementations of
-	 * {@link EventListener} so they can be notified of changes.
+	 * Set {@link EventListener}s so they can be notified of changes.
 	 *
-	 * @param collection of {@link EventListener}s that are injected to be
-	 * 			listeners on the {@link @EventStore}
+	 * @param listeners of {@link EventListener}s that are set to be listeners on the EventStore
+	 * @param atBeginning if the listener has to be added at the first position, i.e. to be notified first
 	 */
 	public setListeners(listeners: EventListener[], atBeginning: boolean = false) {
 		for (const listener of listeners) {
@@ -262,9 +235,9 @@ abstract class EventStore {
 	/**
 	 * A finder for Event objects in the EventStore
 	 *
-	 * @param criteria the {@link org.owasp.appsensor.core.criteria.SearchCriteria} object to search by
-	 * @param events the {@link Event} objects to match on - supplied by subclasses
-	 * @return a {@link java.util.Collection} of {@link org.owasp.appsensor.core.Event} objects matching the search criteria.
+	 * @param criteria the {@link SearchCriteria} object to search by
+	 * @param events the {@link AppSensorEvent} objects to match on - supplied by subclasses
+	 * @return AppSensorEvent[] objects matching the search criteria.
 	 */
 	public _findEvents(criteria: SearchCriteria, events: AppSensorEvent[]): AppSensorEvent[] {
 		if (criteria == null) {
@@ -282,7 +255,16 @@ abstract class EventStore {
 		return matches;
 	}
 
-	public _countEvents(criteria: SearchCriteria, events: AppSensorEvent[]): number {
+	/**
+	 * Count how many events in the EventStore match the search criteria.
+	 * 
+	 * ADDITION TO THE ORIGINAL CODE
+	 * 
+	 * @param criteria the {@link SearchCriteria} object to search by
+	 * @param events the {@link AppSensorEvent} objects to match on - supplied by subclasses
+	 * @return count of {@link AppSensorEvent}s matching the search criteria.
+	 */
+	 public _countEvents(criteria: SearchCriteria, events: AppSensorEvent[]): number {
 		if (criteria == null) {
 			throw new Error("criteria must be non-null");
 		}
@@ -301,72 +283,37 @@ abstract class EventStore {
 	/**
 	 * A finder for Event objects in the EventStore
 	 *
-	 * @param criteria the {@link org.owasp.appsensor.core.criteria.SearchCriteria} object to search by
-	 * @param event the {@link Event} object to match on
+	 * The code was moved to {@link Utils} in order the same logic to be
+	 * utilized in other places as well
+	 * 
+	 * @param criteria the {@link SearchCriteria} object to search by
+	 * @param event the {@link AppSensorEvent} object to match on
 	 * @return true or false depending on the matching of the search criteria to the event
 	 */
 	protected isMatchingEvent(criteria: SearchCriteria, event: AppSensorEvent): boolean {
-		// let match: boolean = false;
-
-		// const user: User | null = criteria.getUser();
-		// const detectionPoint: DetectionPoint | null = criteria.getDetectionPoint();
-		// const detectionSystemIds: string[] = criteria.getDetectionSystemIds();
-		// const earliest: Date | null = criteria.getEarliest();
-		// const rule: Rule | null = criteria.getRule();
-
-		// // check user match if user specified
-		// const userMatch: boolean = (user != null) ? user.equals(event.getUser()) : true;
-
-		// //check detection system match if detection systems specified
-		// let detectionSystemMatch: boolean = true;
-		// const eventDetSystemId = event.getDetectionSystem();
-		// if (detectionSystemIds != null && detectionSystemIds.length > 0 && eventDetSystemId !== null) {
-		// 	detectionSystemMatch = detectionSystemIds.indexOf(eventDetSystemId.getDetectionSystemId()) > -1 ;
-		// }
-
-		// //check detection point match if detection point specified
-		// let detectionPointMatch: boolean = true;
-		// if (detectionPoint !== null) {
-		// 	const attDetoint = event.getDetectionPoint();
-
-		// 	detectionPointMatch = (attDetoint !== null) ?
-		// 			detectionPoint.typeAndThresholdMatches(attDetoint) : false;
-		// }
-
-		// // check rule match if rule specified
-		// let ruleMatch: boolean = true;
-		// if (rule !== null) {
-		// 	const detPoint = event.getDetectionPoint();
-		// 	ruleMatch = (detPoint !== null) ? rule.typeAndThresholdContainsDetectionPoint(detPoint) : false;
-		// }
-
-		// let earliestMatch: boolean = true; 
-		// if (earliest !== null) {
-
-		// 	const eventTimestampMillis = event.getTimestamp().getTime();
-		// 	const earliestMillis = earliest.getTime();
-
-		// 	earliestMatch =	(earliestMillis < eventTimestampMillis || earliestMillis === eventTimestampMillis)
-		// }
-		
-		// if (userMatch && detectionSystemMatch && detectionPointMatch && ruleMatch && earliestMatch) {
-		// 	match = true;
-		// }
-
-		// return match;
 		return Utils.isMatchingEvent(criteria, event);
 	}
 
 }
 
-abstract class ResponseStore {
+/**
+ * A store is an observable object. 
+ * 
+ * It is watched by implementations of the {@link ResponseListener} interfaces. 
+ * 
+ * In this case the analysis engines watch the *Store interfaces of AppSensor.
+ * 
+ * In contrast to the ORIGINAL code here methods add/find/notify are asynchronous returning Promise<T>.
+ * 
+ */
+ abstract class ResponseStore {
 	
 	private listeners: ResponseListener[] = [];
 	
 	/**
 	 * Add a response to the ResponseStore
 	 * 
-	 * @param response {@link org.owasp.appsensor.core.Response} to add to the ResponseStore
+	 * @param response {@link Response} to add to the ResponseStore
 	 */
 	public abstract addResponse(response: Response): Promise<void>;
 	
@@ -374,8 +321,8 @@ abstract class ResponseStore {
 	/**
 	 * Finder for responses in the ResponseStore
 	 * 
-	 * @param criteria the {@link org.owasp.appsensor.core.criteria.SearchCriteria} object to search by
-	 * @return a {@link java.util.Collection} of {@link org.owasp.appsensor.core.Response} objects matching the search criteria.
+	 * @param criteria the {@link SearchCriteria} object to search by
+	 * @return a Promise which resolves to {@link Response}[] objects matching the search criteria.
 	 */
 	public abstract findResponses(criteria: SearchCriteria): Promise<Response[]>;
 	
@@ -385,8 +332,8 @@ abstract class ResponseStore {
 	/**
 	 * Finder for responses in the ResponseStore
 	 * 
-	 * @param criteria the {@link org.owasp.appsensor.core.criteria.SearchCriteria} object to search by
-	 * @return a {@link java.util.Collection} of {@link org.owasp.appsensor.core.Response} objects matching the search criteria.
+	 * @param criteria the {@link SearchCriteria} object to search by
+	 * @return Response[] objects matching the search criteria.
 	 */
 	public _findResponses(criteria: SearchCriteria, responses: Response[]): Response[] {
 		if (criteria == null) {
@@ -404,7 +351,16 @@ abstract class ResponseStore {
 		return matches;
 	}
 
-	public _countResponses(criteria: SearchCriteria, responses: Response[]): number {
+	/**
+	 * Count how many responses in the ResponseStore match the search criteria.
+	 * 
+	 * ADDITION TO THE ORIGINAL CODE
+	 * 
+	 * @param criteria the {@link SearchCriteria} object to search by
+	 * @param responses the {@link Response} objects to match on - supplied by subclasses
+	 * @return count of {@link Response}s matching the search criteria.
+	 */
+	 public _countResponses(criteria: SearchCriteria, responses: Response[]): number {
 		if (criteria == null) {
 			throw new Error("criteria must be non-null");
 		}
@@ -458,11 +414,10 @@ abstract class ResponseStore {
 	}
 	
 	/**
-	 * Automatically inject any {@link ResponseStoreListener}s, which are implementations of 
-	 * {@link ResponseListener} so they can be notified of changes.
-	 * 
-	 * @param collection of {@link ResponseListener}s that are injected to be 
-	 * 			listeners on the {@link ResponseStore}
+	 * Set {@link ResponseListener}s so they can be notified of changes.
+	 *
+	 * @param listeners of {@link ResponseListener}s that are set to be listeners on the ResponseStore
+	 * @param atBeginning if the listener has to be added at the first position, i.e. to be notified first
 	 */
 	public setListeners(listeners: ResponseListener[], atBeginning: boolean = false): void {
 		for (const listener of listeners) {
@@ -470,66 +425,20 @@ abstract class ResponseStore {
 		}
 	}
 
-	protected isMatchingResponse(criteria: SearchCriteria, response: Response): boolean {
-		// let match: boolean = false;
-
-		// const user: User | null = criteria.getUser();
-		// const detectionSystemIds: string[] = criteria.getDetectionSystemIds();
-		// const earliest: Date | null = criteria.getEarliest();
-
-		// const detectionPoint: DetectionPoint | null = criteria.getDetectionPoint();
-		// const rule: Rule | null = criteria.getRule();
-
-		// // check user match if user specified
-		// const userMatch: boolean = (user != null) ? user.equals(response.getUser()) : true;
-
-		// //check detection system match if detection systems specified
-		// let detectionSystemMatch: boolean = true;
-		// const respDetSystemId = response.getDetectionSystem();
-		// if (detectionSystemIds && detectionSystemIds.length > 0 && 
-		// 	respDetSystemId) {
-		// 	detectionSystemMatch = detectionSystemIds.indexOf(respDetSystemId.getDetectionSystemId()) > -1 ;
-		// }
-		
-		// const responseTimestamp = response.getTimestamp();
-
-		// let earliestMatch: boolean = true; 
-		// if (earliest !== null && responseTimestamp instanceof Date) {
-
-		// 	const responseTimestampMillis = responseTimestamp.getTime();
-		// 	const earliestMillis = earliest.getTime();
-
-		// 	earliestMatch =	(earliestMillis < responseTimestampMillis || earliestMillis === responseTimestampMillis)
-		// }
-			
-		// //ADDITION TO THE ORIGINAL CODE TO TRACE WHAT CAUSED THIS RESPONSE
-		// //ESSENTIAL FOR REPORTING
-		// //check detection point match if detection point specified
-		// let detectionPointMatch: boolean = true;
-		// if (detectionPoint !== null) {
-		// 	const attDetoint = response.getDetectionPoint();
-
-		// 	detectionPointMatch = (attDetoint !== null) ?
-		// 			detectionPoint.typeAndThresholdMatches(attDetoint) : false;
-		// }
-
-		// //ADDITION TO THE ORIGINAL CODE TO TRACE WHAT CAUSED THIS RESPONSE
-		// //ESSENTIAL FOR REPORTING
-		// //check rule match if rule specified
-		// let ruleMatch: boolean = true;
-		// if (rule !== null) {
-		// 	const attRule = response.getRule();
-		// 	ruleMatch = (attRule !== null) ? rule.guidMatches(attRule) : false;
-		// }
-
-		// if (userMatch && detectionSystemMatch && earliestMatch && detectionPointMatch && ruleMatch) {
-		// 	match = true;
-		// }
-
-		// return match;
+	/**
+	 * A finder for Response objects in the ResponseStore
+	 *
+	 * The code was moved to {@link Utils} in order the same logic to be
+	 * utilized in other places as well
+	 * 
+	 * @param criteria the {@link SearchCriteria} object to search by
+	 * @param response the {@link Response} object to match on
+	 * @return true or false depending on the matching of the search criteria to the event
+	 */
+	 protected isMatchingResponse(criteria: SearchCriteria, response: Response): boolean {
 		return Utils.isMatchingResponse(criteria, response);
 	}
 
 }
 
-export {AttackStoreListener, AttackStore, EventStoreListener, EventStore, ResponseStoreListener, ResponseStore};
+export {AttackStore, EventStore, ResponseStore};

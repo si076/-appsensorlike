@@ -1,8 +1,17 @@
 import { AppSensorEvent, Attack, Response } from "../core.js";
 import { AttackListener, EventListener, ResponseListener } from "../listener/listener.js";
 
-// @AttackStoreListener
-abstract class AttackAnalysisEngine implements AttackListener {
+/**
+ * The attack analysis engine is an implementation of the Observer pattern. 
+ * 
+ * In this case the analysis engines watches the {@link AttackStore} interface.
+ * 
+ * AnalysisEngine implementations are the components of AppSensor that 
+ * constitute the "brain" of the system. 
+ * 
+ * In contrast to the ORIGINAL code here methods are asynchronous returning Promise<T>.
+ */
+ abstract class AttackAnalysisEngine implements AttackListener {
 	
 	public async onAdd(attack: Attack) {
 		await this.analyze(attack);
@@ -12,8 +21,17 @@ abstract class AttackAnalysisEngine implements AttackListener {
 	
 }
 
-// @EventStoreListener
-abstract class EventAnalysisEngine implements EventListener {
+/**
+ * The event analysis engine is an implementation of the Observer pattern. 
+ * 
+ * In this case the analysis engines watches the {@link EventStore} interface.
+ * 
+ * AnalysisEngine implementations are the components of AppSensor that 
+ * constitute the "brain" of the system. 
+ * 
+ * In contrast to the ORIGINAL code here methods are asynchronous returning Promise<T>.
+ */
+ abstract class EventAnalysisEngine implements EventListener {
 
 	public async onAdd(event: AppSensorEvent) {
 		await this.analyze(event);
@@ -23,8 +41,17 @@ abstract class EventAnalysisEngine implements EventListener {
 	
 }
 
-// @ResponseStoreListener
-abstract class ResponseAnalysisEngine implements ResponseListener {
+/**
+ * The response analysis engine is an implementation of the Observer pattern. 
+ * 
+ * In this case the analysis engines watches the {@link ResponseStore} interface.
+ * 
+ * AnalysisEngine implementations are the components of AppSensor that 
+ * constitute the "brain" of the system. 
+ * 
+ * In contrast to the ORIGINAL code here methods are asynchronous returning Promise<T>.
+ */
+ abstract class ResponseAnalysisEngine implements ResponseListener {
 
 	public async onAdd(response: Response) {
 		await this.analyze(response);

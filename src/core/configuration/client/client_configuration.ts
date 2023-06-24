@@ -1,6 +1,17 @@
 import { IEquals } from "../../core.js";
 
-interface ClientConfigurationReader {
+/**
+ * This interface is to be fulfilled by implementations that load a configuration 
+ * file and provide an object representation of it. 
+ * 
+ * The current implementation only consists of an XML configuration that utilizes a 
+ * standardized XSD schema. However, there is nothing in the interface requiring the 
+ * XML implementation. Most standard users will likely stick to the standard implementation. 
+ * 
+ * TODO: may update this interface is we move to something other than "reading" 
+ * the config, ie. supporting configs from data stores/cloud, etc.
+ */
+ interface ClientConfigurationReader {
 	
 	/**
 	 * Read content using default locations of: 
@@ -23,7 +34,10 @@ interface ClientConfigurationReader {
 	read(configurationLocation: string, validatorLocation: string | null, reload: boolean): ClientConfiguration | null;
 }
 
-class ServerConnection implements IEquals {
+/**
+ * Represents a connection to a server from a {@link ClientApplication}. 
+ */
+ class ServerConnection implements IEquals {
 	
 	public static DEFAULT_HEADER_NAME = "X-Appsensor-Client-Application-Name";
 	
@@ -111,19 +125,6 @@ class ServerConnection implements IEquals {
 		return this;
 	}
 
-	// @Override
-	// public int hashCode() {
-	// 	return new HashCodeBuilder(17,31).
-	// 			append(type).
-	// 			append(url).
-	// 			append(clientApplicationIdentificationHeaderName).
-	// 			append(clientApplicationIdentificationHeaderValue).
-	// 			append(port).
-	// 			append(socketTimeout).
-	// 			toHashCode();
-	// }
-	
-	// @Override
 	public equals(obj: Object | null): boolean {
 		if (this === obj)
 			return true;
@@ -142,21 +143,12 @@ class ServerConnection implements IEquals {
 			   this.socketTimeout === other.getSocketTimeout();
 	}
 	
-	// @Override
-	// public String toString() {
-	// 	return new ToStringBuilder(this).
-	// 			append("type", type).
-	// 			append("url", url).
-	// 			append("clientApplicationIdentificationHeaderName", clientApplicationIdentificationHeaderName).
-	// 			append("clientApplicationIdentificationHeaderValue", clientApplicationIdentificationHeaderValue).
-	// 			append("port", port).
-	// 			append("socketTimeout", socketTimeout).
-	// 		    toString();
-	// }
-	
 }
 
-class ClientConfiguration implements IEquals {
+/**
+ * Represents the configuration for client-side components. 
+ */
+ class ClientConfiguration implements IEquals {
 
 	private configurationFile?: string;
 	
@@ -181,14 +173,6 @@ class ClientConfiguration implements IEquals {
 		return this;
 	}
 
-	// @Override
-	// public int hashCode() {
-	// 	return new HashCodeBuilder(17,31).
-	// 			append(serverConnection).
-	// 			toHashCode();
-	// }
-	
-	// @Override
 	public equals(obj: Object): boolean {
 		if (this === obj)
 			return true;
@@ -201,13 +185,6 @@ class ClientConfiguration implements IEquals {
 		
 		return (this.serverConnection !== null) ? this.serverConnection.equals(other.getServerConnection()): false;
 	}
-	
-	// @Override
-	// public String toString() {
-	// 	return new ToStringBuilder(this).
-	// 			append("serverConnection", serverConnection).
-	// 		    toString();
-	// }
 
 }
 
