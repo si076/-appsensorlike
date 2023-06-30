@@ -8,6 +8,7 @@ import { ActionRequest } from "../../../websocket/appsensor-websocket.js";
 import { Action, Context } from "../../../core/accesscontrol/accesscontrol.js";
 
 import { IncomingMessage } from "http";
+import { JSONServerConfigurationReader } from "../../../configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
 
 class ReportingWebSocketServerConfigReader  extends JSONConfigReadValidate {
 
@@ -466,10 +467,19 @@ class AppSensorReportingWebSocketServer extends AppSensorWebSocketServer impleme
     }
 
     getServerConfigurationAsJson(): Promise<string> {
-        return Promise.resolve(JSON.stringify(this.appSensorServer.getConfiguration()));
+        const config = new JSONServerConfigurationReader().prepareToJSON(this.appSensorServer.getConfiguration()!);
+        return Promise.resolve(JSON.stringify(config));
     }
 
     getBase64EncodedServerConfigurationFileContent(): KeyValuePair {
+        throw new Error("Method not implemented.");
+    }
+
+    addOnAddListener(listener: (event: AppSensorEvent | Attack | Response) => void): void {
+        throw new Error("Method not implemented.");
+    }
+
+    removeOnAddListener(listener: (event: AppSensorEvent | Attack | Response) => void): void {
         throw new Error("Method not implemented.");
     }
 

@@ -1,3 +1,4 @@
+import { AppSensorEvent, Attack, Response } from "../core/core.js";
 import { ReportingEngine } from "../core/reporting/reporting.js";
 
 
@@ -9,6 +10,9 @@ interface ReportingEngineExt extends ReportingEngine {
 	
 	countResponsesByCategoryLabel(earliest: string, category: string, label: string): Promise<number>;
 
+	addOnAddListener(listener: (event: AppSensorEvent | Attack | Response) => void): void;
+
+	removeOnAddListener(listener: (event: AppSensorEvent | Attack | Response) => void): void;
 }
 
 

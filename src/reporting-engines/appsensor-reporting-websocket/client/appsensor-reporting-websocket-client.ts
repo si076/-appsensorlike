@@ -7,6 +7,7 @@ import { AppSensorWebSocketClient, WebSocketClientConfig } from "../../../websoc
 import { ClientRequestArgs } from "http";
 import { EventEmitter } from "events";
 import WebSocket from "ws";
+import { Logger } from "../../../logging/logging.js";
 
 class ReportingWebSocketClientConfigReader  extends JSONConfigReadValidate {
 
@@ -31,28 +32,38 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
 
         if (response.actionName === 'onAdd') {
 
-            switch (response.resultElementClass) {
-                case 'AppSensorEvent': {
-                    Utils.setPrototypeInDepth(response.result as Object, Utils.appSensorEventPrototypeSample);
-                    Utils.setTimestampFromJSONParsedObject(response.result as AppSensorEvent, response.result as Object);
-                    break;
+            try {
+                switch (response.resultElementClass) {
+                    case 'AppSensorEvent': {
+                        Utils.setPrototypeInDepth(response.result as Object, Utils.appSensorEventPrototypeSample);
+                        Utils.setTimestampFromJSONParsedObject(response.result as AppSensorEvent, response.result as Object);
+                        break;
+                    }
+                    case 'Attack': {
+                        Utils.setPrototypeInDepth(response.result as Object, Utils.attackPrototypeSample);
+                        Utils.setTimestampFromJSONParsedObject(response.result as Attack, response.result as Object);
+                        break;
+                    }
+                    case 'Response': {
+                        Utils.setPrototypeInDepth(response.result as Object, Utils.responsePrototypeSample);
+                        Utils.setTimestampFromJSONParsedObject(response.result as Response, response.result as Object);
+                        break;
+                    }
                 }
-                case 'Attack': {
-                    Utils.setPrototypeInDepth(response.result as Object, Utils.attackPrototypeSample);
-                    Utils.setTimestampFromJSONParsedObject(response.result as Attack, response.result as Object);
-                    break;
-                }
-                case 'Response': {
-                    Utils.setPrototypeInDepth(response.result as Object, Utils.responsePrototypeSample);
-                    Utils.setTimestampFromJSONParsedObject(response.result as Response, response.result as Object);
-                    break;
-                }
+    
+                this.onAdd(response.result as (AppSensorEvent | Attack | Response));
+    
+                //also emit and event as well
+                AppSensorReportingWebSocketClient.eventEmmiter.emit(AppSensorReportingWebSocketClient.ON_ADD_EVENT, 
+                                                                    response.result as (AppSensorEvent | Attack | Response));
+
+            } catch (error) {
+                //could be thrown an error if the received object is not valid
+                //just log to be checked where is the error
+                //doesn't completely halt the running app
+                Logger.getClientLogger().error('AppSensorReportingWebSocketClient.onServerResponse', error);
             }
 
-            this.onAdd(response.result as (AppSensorEvent | Attack | Response));
-
-            //also emit and event as well
-            AppSensorReportingWebSocketClient.eventEmmiter.emit(AppSensorReportingWebSocketClient.ON_ADD_EVENT, response.result as (AppSensorEvent | Attack | Response));
         } else {
 
             AppSensorReportingWebSocketClient.eventEmmiter.emit(response.id, response);
