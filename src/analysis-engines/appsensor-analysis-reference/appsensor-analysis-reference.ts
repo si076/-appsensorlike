@@ -1,5 +1,5 @@
 import { AttackAnalysisEngine, EventAnalysisEngine, ResponseAnalysisEngine } from "../../core/analysis/analysis.js";
-import { AppSensorEvent, AppSensorServer, Attack, DetectionPoint, Interval, Response, Utils } from "../../core/core.js";
+import { AppSensorEvent, AppSensorServer, Attack, DetectionPoint, DetectionSystem, Interval, Response, Utils } from "../../core/core.js";
 import { SearchCriteria } from "../../core/criteria/criteria.js";
 import { Logger } from "../../logging/logging.js";
 
@@ -76,7 +76,9 @@ class ReferenceAttackAnalysisEngine extends AttackAnalysisEngine {
 		let responseAction: string = '';
 		let interval: Interval | null | undefined = null; 
 
-		const possibleResponses: Response[] = this.findPossibleResponses(triggeringDetectionPoint);
+		const possibleResponses: Response[] = this.findPossibleResponses(triggeringDetectionPoint, 
+																		 attack.getDetectionSystem() //ADDITION TO THE ORIGINAL CODE
+																		);
 
 		if (existingResponses === null || existingResponses.length === 0) {
 			//no responses yet, just grab first configured response from detection point
@@ -126,7 +128,9 @@ class ReferenceAttackAnalysisEngine extends AttackAnalysisEngine {
 	 * @param triggeringDetectionPoint {@link DetectionPoint} that triggered {@link Attack}
 	 * @return collection of {@link Response} objects for given {@link DetectionPoint}
 	 */
-	protected findPossibleResponses(triggeringDetectionPoint: DetectionPoint | null): Response[] {
+	protected findPossibleResponses(triggeringDetectionPoint: DetectionPoint | null,
+									detectionSystem: DetectionSystem | null, //ADDITION TO THE ORIGINAL CODE
+									 ): Response[] {
 		let possibleResponses: Response[] = [];
 
         const serverConfig = this.appSensorServer.getConfiguration();
@@ -137,6 +141,20 @@ class ReferenceAttackAnalysisEngine extends AttackAnalysisEngine {
                     break;
                 }
             }
+
+			//ADDITION TO THE ORIGINAL CODE
+			if (detectionSystem) {
+				const detectionSystemId = detectionSystem.getDetectionSystemId();
+				const customDetectionPoints = serverConfig.getCustomDetectionPoints().get(detectionSystemId);
+				if (customDetectionPoints) {
+					for (const customDetectionPoint of customDetectionPoints) {
+						if (customDetectionPoint.typeAndThresholdMatches(triggeringDetectionPoint)) {
+							possibleResponses = customDetectionPoint.getResponses();
+							break;
+						}
+					}
+				}
+			}
         }
 
 		return possibleResponses;
