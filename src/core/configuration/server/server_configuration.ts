@@ -3,7 +3,7 @@ import { CorrelationSet } from "../../correlation/correlation.js";
 import { Expression, MonitorPoint, Rule } from "../../rule/rule.js";
 
 /**
- * Client specific detection points
+ * Client/custom detection points (override some aspects for a client or brand new detection points).
  */
 interface IClient {
 	clientName: string;
@@ -11,10 +11,10 @@ interface IClient {
 }
 
 /**
- * Client specific detection points and regular detection points
+ * Client/custom detection points and regular detection points
  */
 interface IDetectionPoints {
-	clients?: IClient[]; 
+	clients?: IClient[];
 	detectionPoints: DetectionPoint[];
 } 
 
@@ -91,6 +91,8 @@ interface IDetectionPoints {
 		if (!this.clientApplications) {
 			this.clientApplications = [];	
 		}
+
+		this.customDetectionPoints = new Map<string, DetectionPoint[]>();
 	}
 
 	public getCustomDetectionPoints(): Map<string, DetectionPoint[]> {

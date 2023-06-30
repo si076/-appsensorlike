@@ -71,15 +71,29 @@ class JSONServerConfigurationReader extends JSONConfigReadValidate implements Se
     protected adjustConfig(config: ServerConfiguration | null, configurationLocation: string | null = null) {
         if (config) {
             Utils.setPrototypeInDepth(config, JSONServerConfigurationReader.configPrototypesSample);
-
-            this.customPoints(config);
+    
+            if (Utils.isIValidateInitialize(config)) {
+                config.checkValidInitialize();
+            }
+    
 
             //set detection points' label to be as id 
             //for more details about that change in the original java code 
             //see https://github.com/jtmelton/appsensor/issues/18
+            //
+            if (config.detectionPoints.clients) {
+                config.detectionPoints.clients.forEach(el => {
+                    this.adjustDetectionPoints(el.detectionPoints);
+                });
+            }
+            //
             this.adjustDetectionPoints(config.getDetectionPoints());
-
+            //
             this.adjustRulesMonitorPoints(config);
+
+
+            this.customPoints(config);
+
 
             if (configurationLocation !== null) { //to distinguish when the config has been loaded from a file
                 const configLocation = this.getConfigLocation(configurationLocation);
@@ -89,21 +103,11 @@ class JSONServerConfigurationReader extends JSONConfigReadValidate implements Se
         }
     }
 
-    private customPoints(config: ServerConfiguration) {
-        const customDetectionPoints = new Map<string, DetectionPoint[]>();
-
+     private customPoints(config: ServerConfiguration) {
         if (config.detectionPoints.clients) {
             config.detectionPoints.clients.forEach(el => {
-
-                //set detection points' label to be as id 
-                //for more details about that change in the original java code 
-                //see https://github.com/jtmelton/appsensor/issues/18
-                this.adjustDetectionPoints(el.detectionPoints);
-
-                customDetectionPoints.set(el.clientName, el.detectionPoints);
+                config.customDetectionPoints.set(el.clientName, el.detectionPoints);
             });
-
-            config.setCustomDetectionPoints(customDetectionPoints);
         }
     }
 
@@ -138,6 +142,26 @@ class JSONServerConfigurationReader extends JSONConfigReadValidate implements Se
             });
         }
     }
+
+	/**
+	 * When saving to a json config file or transferring config as a JSON, 
+	 * do some preparatory work.
+	 */
+     public prepareToJSON(config: ServerConfiguration): ServerConfiguration {
+		//mind to reflect customDetectionPoints map to detectionPoints.clients
+		//as they carry client/custom detection points information 
+		//when saving to a json config file or transferring config as a JSON string
+		if (config.customDetectionPoints.size > 0) {
+			config.detectionPoints.clients = [];
+			const entries = config.customDetectionPoints.entries();
+			for (const entry of entries) {
+				config.detectionPoints.clients.push({clientName: entry[0], detectionPoints: entry[1]});
+			}
+		}
+
+		return config;
+	}
+
 
     public static test() {
         const inst = new JSONServerConfigurationReader();

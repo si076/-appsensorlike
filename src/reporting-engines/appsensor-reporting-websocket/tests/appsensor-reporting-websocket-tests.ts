@@ -55,9 +55,7 @@ class AppSensorReportingWebsocketClientTest {
 
 		const configStr = await this.wsClient.getServerConfigurationAsJson();
 
-		const config = JSON.parse(configStr);
-
-		Utils.setPrototypeInDepth(config, JSONServerConfigurationReader.configPrototypesSample);
+		const config: ServerConfiguration | null = new JSONServerConfigurationReader().readFromString(configStr);
 
 		console.log(config);
     }
@@ -122,7 +120,7 @@ class AppSensorReportingWebsocketTests {
 		await this.wsServer.startServer();
 	}
 
-    public async populateData() {
+    public async populateData(withCustomPoints: boolean = false) {
         const ipAddress1 = await IPAddress.fromString("5.45.80.10", this.geoLocator);
 		const user1 = new User("user1", ipAddress1);
 
@@ -148,7 +146,7 @@ class AppSensorReportingWebsocketTests {
 		
 		const configuredDetPoint = this.loadMockedDetectionPoints();
 		this.appSensorServer.getConfiguration()!.setDetectionPoints(configuredDetPoint);
-		
+
 		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
                     .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
@@ -242,8 +240,31 @@ class AppSensorReportingWebsocketTests {
 		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 		await this.appSensorClient.getEventManager()!
                     .addEvent(new AppSensorEvent(users[1], detectionPointRE7, detectionSystems[1]));
-					
-		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);	
+		
+
+		if (withCustomPoints) {
+			const customDetPoint = this.loadCustomMockedDetectionPoints();
+			this.appSensorServer.getConfiguration()!.setCustomDetectionPoints(customDetPoint);
+						
+			//generate random events of custom detection points
+			const clients = [detectionSystems[0].getDetectionSystemId(), 
+							 detectionSystems[1].getDetectionSystemId()];
+			while (true) {
+				await Utils.sleep(Math.floor(Math.random() * 1000 * 40)  + 500);
+	
+				const random = this.getRandomInt(2);
+				const client = clients[random];
+	
+				const detPoints = customDetPoint.get(client);
+				if (detPoints) {
+					await this.appSensorClient.getEventManager()!
+							.addEvent(new AppSensorEvent(users[this.getRandomInt(4)], 
+														 detPoints[this.getRandomInt(detPoints.length)], 
+														 detectionSystems[random]));
+				}
+			}
+		}
+			
 	}
     
     private getRandomInt(max: number) {
@@ -395,6 +416,40 @@ class AppSensorReportingWebsocketTests {
 		return configuredDetectionPoints;
 	}    
 
+	public loadCustomMockedDetectionPoints(): Map<string, DetectionPoint[]> {
+		const customDetectionPoints = new Map<string, DetectionPoint[]>();
+
+		const minutes5 = new Interval(5, INTERVAL_UNITS.MINUTES);
+		const minutes6 = new Interval(6, INTERVAL_UNITS.MINUTES);
+
+		const events3minutes5 = new Threshold(3, minutes5);
+		const events4minutes6 = new Threshold(4, minutes6);
+
+		const logout = new Response();
+		logout.setAction("logout");
+		
+		const disableUser = new Response();
+		disableUser.setAction("disableUser");
+
+		const point1Responses: Response[] = [];
+		point1Responses.push(logout);
+
+		const point1 = new DetectionPoint("Custom", "Z1", events3minutes5, point1Responses);
+
+		customDetectionPoints.set("attacked server1", [point1]);
+
+		
+		const point2Responses: Response[] = [];
+		point2Responses.push(disableUser);
+
+		const point2 = new DetectionPoint("Custom", "Z2", events4minutes6, point2Responses);
+
+		customDetectionPoints.set("attacked server2", [point2]);
+
+
+		return customDetectionPoints;
+	}
+
 	public async initializeMySQLStorage() {
 		await this.clearMySQLStorageTables();
 
@@ -451,13 +506,13 @@ class AppSensorReportingWebsocketTests {
 	}
 }
 
-async function runTestWithHttpServer(earliest: string) {
+async function runTestWithHttpServer(earliest: string, withCustomPoints: boolean) {
 	console.log('----- With Http Server -----');
 	let configLocation = './reporting-engines/appsensor-reporting-websocket/tests/appsensor-reporting-websocket-server-config1.json';
     const server = new AppSensorReportingWebsocketTests(configLocation);
 	await server.startServer();
     await server.initializeMySQLStorage();
-    await server.populateData();
+    await server.populateData(withCustomPoints);
 
 	configLocation = './reporting-engines/appsensor-reporting-websocket/tests/appsensor-reporting-websocket-client-config1.json';
 	const client = new AppSensorReportingWebsocketClientTest(configLocation);
@@ -468,13 +523,13 @@ async function runTestWithHttpServer(earliest: string) {
 	await server.closeServer();
 }
 
-async function runTestWithHttpsServer(earliest: string) {
+async function runTestWithHttpsServer(earliest: string, withCustomPoints: boolean) {
 	console.log('----- With Https Server -----');
 	let configLocation = './reporting-engines/appsensor-reporting-websocket/tests/appsensor-reporting-websocket-server-config2.json';
     const server = new AppSensorReportingWebsocketTests(configLocation);
 	await server.startServer();
     await server.initializeMySQLStorage();
-    await server.populateData();
+    await server.populateData(withCustomPoints);
 
 	configLocation = './reporting-engines/appsensor-reporting-websocket/tests/appsensor-reporting-websocket-client-config2.json';
 	const client = new AppSensorReportingWebsocketClientTest(configLocation);
@@ -485,18 +540,18 @@ async function runTestWithHttpsServer(earliest: string) {
 	await server.closeServer();
 }
 
-async function runTests() {
+async function runTests(withCustomPoints: boolean = false) {
     console.log('----- Run AppSensorReportingWebsocketTests -----');
 	const earliest = new Date().toISOString();
-	await runTestWithHttpServer(earliest);
-	await runTestWithHttpsServer(earliest);
+	await runTestWithHttpServer(earliest, withCustomPoints);
+	await runTestWithHttpsServer(earliest, withCustomPoints);
 }
 
-async function runServerSeparately() {
+async function runServerSeparately(withCustomPoints: boolean = false) {
     const inst = new AppSensorReportingWebsocketTests();
 	await inst.startServer();
     await inst.initializeMySQLStorage();
-    await inst.populateData();
+    await inst.populateData(withCustomPoints);
 }
 
 async function runClientSeparately() {
