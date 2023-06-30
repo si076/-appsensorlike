@@ -1,7 +1,9 @@
 import { TableUserConfig } from "table";
 
-import { DetectionPoint } from "../../core/core.js";
+import { AppSensorEvent, Attack, DetectionPoint, Response, Utils } from "../../core/core.js";
+import { ReportingEngineExt } from "../../reporting-engines/reporting-engines.js";
 import { DetectionPointReport } from "../reports/DetectionPointReport.js";
+import { NAME_EVENT_COUNT } from "../reports/Reports.js";
 import { UserReport } from "../reports/UserReport.js";
 import { AppSensorUIConsoleSettings } from "./appsensor-console-ui.js";
 import { ConsoleReport } from "./ConsoleReport.js";
@@ -9,29 +11,36 @@ import { ConsoleReport } from "./ConsoleReport.js";
 class ConsoleMostActiveUsersReport extends ConsoleReport {
 
     private userReport: UserReport;
-    private earliest?: string;
-    private topUsers: string[] = [];
+    private userEventCount: NAME_EVENT_COUNT = {};
 
-    constructor(userReport: UserReport) {
-        super();
-        this.userReport = userReport;
+    constructor(reportingEngine: ReportingEngineExt,
+                autoReload: boolean) {
+        super(reportingEngine, autoReload);
+        this.userReport = new UserReport(reportingEngine);
         this.setHeader(["", "User Name (count of events)"]);
     }
 
-    override async loadItems(settings: AppSensorUIConsoleSettings): Promise<void> {
-        const lastCheckStr = settings.lastCheck!.toISOString();
-        if (this.earliest !== lastCheckStr) {
+    override async loadItems(earliest: string,
+                             settings: AppSensorUIConsoleSettings): Promise<void> {
+        if (this.earliest !== earliest || this.hasToReload || this.newItemReceived) {
+            
             this.initData();
             
             this.startSpinner();
 
-            this.earliest = lastCheckStr;
-            const userEventCount = await this.userReport.topUsers(this.earliest);
+            //consider that all of the flags could be set till this report was not touched
+            //if only newItemReceived is set, do not reload 
+            if (this.earliest !== earliest || this.hasToReload) {
+                this.earliest = earliest;
+                this.userEventCount = await this.userReport.topUsers(this.earliest);
+            }
+
+            this.hasToReload = false;
+            this.newItemReceived = false;
 
             let index = 0;
-            for (let key in userEventCount) {
-                const line = `${key}  (${userEventCount[key]} events)`;
-                this.topUsers.push(line);
+            for (let key in this.userEventCount) {
+                const line = `${key}  (${this.userEventCount[key]} events)`;
 
                 const indexStr = new Number(index + 1).toString();
 
@@ -44,6 +53,19 @@ class ConsoleMostActiveUsersReport extends ConsoleReport {
             }
 
             this.stopSpinner();
+        }
+    }
+
+    protected onAdd(event: AppSensorEvent | Attack | Response): void {
+        super.onAdd(event);
+
+        if (event instanceof AppSensorEvent) {
+            const userName = Utils.getUserName(event.getUser());
+            if (!(userName in this.userEventCount)) {
+                this.userEventCount[userName] = 0;
+            } 
+    
+            this.userEventCount[userName]++;
         }
     }
 
@@ -66,32 +88,39 @@ class ConsoleMostActiveUsersReport extends ConsoleReport {
 class ConsoleMostActiveDetectionPointsReport extends ConsoleReport {
 
     private detectionPointReport: DetectionPointReport;
-    private earliest?: string;
-    private topDetectionPoints: string[] = [];
+    private detPointEventCount: NAME_EVENT_COUNT = {};
 
-    constructor(detectionPointReport: DetectionPointReport) {
-        super();
-        this.detectionPointReport = detectionPointReport;
+    constructor(reportingEngine: ReportingEngineExt,
+                autoReload: boolean) {
+        super(reportingEngine, autoReload);
+        this.detectionPointReport = new DetectionPointReport(reportingEngine);
         this.setHeader(["", "Detection Point Label(Category) (count of events)"]);
     }
 
-    override async loadItems(settings: AppSensorUIConsoleSettings): Promise<void> {
-        const lastCheckStr = settings.lastCheck!.toISOString();
-        if (this.earliest !== lastCheckStr) {
+    override async loadItems(earliest: string,
+                             settings: AppSensorUIConsoleSettings): Promise<void> {
+        if (this.earliest !== earliest || this.hasToReload || this.newItemReceived) {
+
             this.initData();
 
             this.startSpinner();
 
-            this.earliest = lastCheckStr;
-            const detPointEventCount = await this.detectionPointReport.topDetectionPoints(this.earliest);
+            //consider that all of the flags could be set till this report was not touched
+            //if only newItemReceived is set, do not reload 
+            if (this.earliest !== earliest || this.hasToReload) {
+                this.earliest = earliest;
+                this.detPointEventCount = await this.detectionPointReport.topDetectionPoints(this.earliest);
+            }
+            
+            this.hasToReload = false;
+            this.newItemReceived = false;
 
             let index = 0;
-            for (let key in detPointEventCount) {
+            for (let key in this.detPointEventCount) {
                 const detPoint: DetectionPoint = JSON.parse(key);
                 Object.setPrototypeOf(detPoint, DetectionPoint.prototype);
                 
-                const line = `${detPoint.getLabel()}(${detPoint.getCategory()}) (${detPointEventCount[key]} events)`;
-                this.topDetectionPoints.push(line);
+                const line = `${detPoint.getLabel()}(${detPoint.getCategory()}) (${this.detPointEventCount[key]} events)`;
 
                 const indexStr = new Number(index + 1).toString();
 
@@ -104,6 +133,19 @@ class ConsoleMostActiveDetectionPointsReport extends ConsoleReport {
             }
     
             this.stopSpinner();
+        }
+    }
+
+    protected onAdd(event: AppSensorEvent | Attack | Response): void {
+        super.onAdd(event);
+
+        if (event instanceof AppSensorEvent) {
+            const key = JSON.stringify(event.getDetectionPoint());
+            if (!(key in this.detPointEventCount)) {
+                this.detPointEventCount[key] = 0;
+            } 
+    
+            this.detPointEventCount[key]++;
         }
     }
 

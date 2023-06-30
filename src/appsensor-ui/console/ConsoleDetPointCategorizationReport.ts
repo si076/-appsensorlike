@@ -1,7 +1,9 @@
 import { ColumnUserConfig, SpanningCellConfig, TableUserConfig } from "table";
+import { ReportingEngineExt } from "../../reporting-engines/reporting-engines.js";
 
-import { AppSensorUIConsoleSettings, DetectionPointDescriptions, DET_POINT_CATEGORIZATION_DESCR, EXCEL4NODE_CELL_STYLE, EXCEL_CELLS_TO_MERGE } from "./appsensor-console-ui.js";
+import { AppSensorUIConsoleSettings, EXCEL4NODE_CELL_STYLE } from "./appsensor-console-ui.js";
 import { ConsoleReport } from "./ConsoleReport.js";
+import { DetectionPointDescriptions, DET_POINT_CATEGORIZATION_DESCR } from "./DetectionPointDescriptions.js";
 
 class ConsoleDetPointCategorizationReport extends ConsoleReport {
 
@@ -10,72 +12,125 @@ class ConsoleDetPointCategorizationReport extends ConsoleReport {
     private detectionPointDescriptions: DetectionPointDescriptions;
     private loaded = false;
 
-    constructor(detectionPointDescriptions: DetectionPointDescriptions) {
-        super();
+    constructor(reportingEngine: ReportingEngineExt,
+                autoReload: boolean,
+                detectionPointDescriptions: DetectionPointDescriptions) {
+        super(reportingEngine, autoReload);
         this.detectionPointDescriptions = detectionPointDescriptions;
 
         this.setHeader(["Category", "Description", "Affected Users", "Detection Points"]);
     }
 
-    async loadItems(settings: AppSensorUIConsoleSettings): Promise<void> {
+    async loadItems(earliest: string,
+                    settings: AppSensorUIConsoleSettings): Promise<void> {
         if (!this.loaded) {
            
             const centerStyle: EXCEL4NODE_CELL_STYLE = {alignment: {vertical: "center"}};
             const centerWrapStyle: EXCEL4NODE_CELL_STYLE = {alignment: {vertical: "center", wrapText: true}};
-            const topWrapStyle: EXCEL4NODE_CELL_STYLE = {alignment: {vertical: "top", wrapText: true}};
 
-            let pair = 0;
-            let rowIndex = 0;
+            let mergeStart = 1;
+
             const entries = Object.entries(this.detectionPointDescriptions.Categorization);
             for (let entry of entries) {
                 const categorization: DET_POINT_CATEGORIZATION_DESCR = entry[1];
 
+                //prepare console report data
+                //
                 let detPointsStr = this.getDetectionPoints(categorization.one_user);
 
                 let row = [entry[0], categorization.description, "One User", detPointsStr];
 
-                this.adjustRowHeightForExcel(this.excelCellsConfig.rowHeightInLinse, rowIndex, row);
-
                 this.addDataRow(row);
-
-                rowIndex++;
 
 
                 detPointsStr = this.getDetectionPoints(categorization.all_users);
 
                 row = [entry[0], categorization.description, "All User", detPointsStr];
 
-                this.adjustRowHeightForExcel(this.excelCellsConfig.rowHeightInLinse, rowIndex, row);
-
                 this.addDataRow(row);
 
-                rowIndex++;
+
+                // prepare excel data
+                //
+                // in contrasto to console data we want 
+                // each detection point to be on a separate row for a better scrolling in excel
+                // 
+                categorization.one_user.forEach((el) => {
+                    let detPointStr = "";
+                    const propDesc = Object.getOwnPropertyDescriptor(this.detectionPointDescriptions.IDs, el);
+                    if (propDesc) {
+                        detPointStr += `${el}(${propDesc.value})`;
+                    }
+
+                    const row = [entry[0], categorization.description, "One User", detPointStr];
+
+                    this.addExcelDataRow(row);
+                });
+
+                let rowSpan = categorization.one_user.length;
+                if (rowSpan === 0) {
+                    this.addExcelDataRow([entry[0], categorization.description, "One User", ""]);
+                    rowSpan = 1;
+                }
+
+                //merge on "Affected Users" column
+                //
+                let row1 = mergeStart;
+                let row2 = row1 + rowSpan - 1;
+                this.excelCellsConfig.dataCellsToMerge.push({row1: row1, col1: 3, row2: row2, col2: 3});
+                this.excelCellsConfig.dataCellsStyle.push({row: row1, col: 3, styleOptions: centerStyle});
 
 
-                //excel cell options
-                const row1 = pair * 2 + 2; //+1 for the header and + 1 since in excel numbering starts from 1
-                const row2 = pair * 2 + 3; //+1 for the header and + 1 since in excel numbering starts from 1 + 1 for the next row
-                this.excelCellsConfig.cellsToMerge.push({row1: row1, 
-                                                         col1: 1, 
-                                                         row2: row2, 
-                                                         col2: 1});
-                this.excelCellsConfig.cellsToMerge.push({row1: row1, 
-                                                         col1: 2, 
-                                                         row2: row2, 
-                                                         col2: 2});
+                mergeStart += rowSpan;
+    
 
-                this.excelCellsConfig.cellStyle.push({row: row1, col: 1, styleOprions: centerStyle});
-                this.excelCellsConfig.cellStyle.push({row: row1, col: 2, styleOprions: centerWrapStyle});
-                this.excelCellsConfig.cellStyle.push({row: row1, col: 3, styleOprions: centerStyle});
-                this.excelCellsConfig.cellStyle.push({row: row2, col: 3, styleOprions: centerStyle});
-                this.excelCellsConfig.cellStyle.push({row: row1, col: 4, styleOprions: topWrapStyle});
-                this.excelCellsConfig.cellStyle.push({row: row2, col: 4, styleOprions: topWrapStyle});
+                categorization.all_users.forEach((el) => {
+                    let detPointStr = "";
+                    const propDesc = Object.getOwnPropertyDescriptor(this.detectionPointDescriptions.IDs, el);
+                    if (propDesc) {
+                        detPointStr += `${el}(${propDesc.value})`;
+                    }
 
-                pair++;
+                    let row = [entry[0], categorization.description, "All User", detPointStr];
+
+                    this.addExcelDataRow(row);
+                });
+                
+                rowSpan = categorization.all_users.length;
+                if (rowSpan === 0) {
+                    this.addExcelDataRow([entry[0], categorization.description, "All User", ""]);
+                    rowSpan = 1;
+                }
+
+                //merge on "Affected Users" column
+                //
+                row1 = mergeStart;
+                row2 = row1 + rowSpan - 1;
+                this.excelCellsConfig.dataCellsToMerge.push({row1: row1, col1: 3, row2: row2, col2: 3});
+                this.excelCellsConfig.dataCellsStyle.push({row: row1, col: 3, styleOptions: centerStyle});
+
+
+                mergeStart += rowSpan;
+
+
+                //merge on "Category", "Description" columns
+                //
+                rowSpan = (categorization.one_user.length > 0 ? categorization.one_user.length : 1)  + 
+                          (categorization.all_users.length > 0 ? categorization.all_users.length : 1);
+                const start = mergeStart - rowSpan;
+
+                row1 = start;
+                row2 = row1 + rowSpan - 1;
+                this.excelCellsConfig.dataCellsToMerge.push({row1: row1, col1: 1, row2: row2, col2: 1});
+                this.excelCellsConfig.dataCellsStyle.push({row: row1, col: 1, styleOptions: centerWrapStyle});
+                this.excelCellsConfig.dataCellsToMerge.push({row1: row1, col1: 2, row2: row2, col2: 2});
+                this.excelCellsConfig.dataCellsStyle.push({row: row1, col: 2, styleOptions: centerWrapStyle});
+
             } 
 
             //mind that we set a fixed width of Description column in getDisplayTableConfig method
             this.colMaxCharacters[1] = ConsoleDetPointCategorizationReport.DESCRIPTION_COLUMN_WIDTH;
+            
 
             this.loaded = true;
         }
@@ -124,7 +179,6 @@ class ConsoleDetPointCategorizationReport extends ConsoleReport {
         const columns: {[index: number]:ColumnUserConfig} = {1: {width:ConsoleDetPointCategorizationReport.DESCRIPTION_COLUMN_WIDTH, 
                                                                  wrapWord: true},
                                                              2: {verticalAlignment: "middle"}};
-
 
         return {columns: columns, spanningCells: spanningCells};
     }

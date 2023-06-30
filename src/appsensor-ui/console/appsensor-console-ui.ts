@@ -1,53 +1,56 @@
-import { JSONServerConfigurationReader } from "../../configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
 import { ReportingEngineExt, } from "../../reporting-engines/reporting-engines.js";
 import { AppSensorReportingWebSocketClient } from "../../reporting-engines/appsensor-reporting-websocket/client/appsensor-reporting-websocket-client.js";
-import { AppSensorEvent, Attack, DetectionSystem, Response, User} from "../../core/core.js";
+import { AppSensorEvent, Attack, IValidateInitialize, Response} from "../../core/core.js";
 import { JSONConfigReadValidate } from "../../utils/Utils.js";
+import { ConsoleRecentReport } from "./ConsoleRecentReport.js";
+import { ConsoleMostActiveDetectionPointsReport, ConsoleMostActiveUsersReport } from "./ConsoleMostActiveReports.js";
+import { ConsoleDetPointCategorizationReport } from "./ConsoleDetPointCategorizationReport.js";
+import { ConsoleReport } from "./ConsoleReport.js";
+import { ConsoleTrendsReport } from "./ConsoleTrendsReport.js";
+import { ConsoleDetPointConfigReport } from "./ConsoleDetPointConfigReport.js";
+import { DetectionPointDescriptions, DetectionPointDescriptionsReader } from "./DetectionPointDescriptions.js";
 
 import { table } from 'table';
 // @ts-ignore
 import { input, select } from '@inquirer/prompts';
+// @ts-ignore
+import {CancelablePromise} from '@inquirer';
 // import InterruptedPrompt from 'inquirer-interrupted-prompt';
 // import DatePrompt from "inquirer-date-prompt/index.js";
 
+import fs from 'fs';
 import readline from 'readline';
 
 // @ts-ignore
 import excel4node from 'excel4node/distribution/index.js';
 
-import { BaseReport } from "../reports/BaseReport.js";
+import chalk from 'chalk';
+import { MonthDay, Year } from "@js-joda/core";
 
-import fs from 'fs';
-import { UserReport } from "../reports/UserReport.js";
-import { DetectionPointReport } from "../reports/DetectionPointReport.js";
-import { ConsoleRecentReport } from "./ConsoleRecentReport.js";
-import { ConsoleMostActiveDetectionPointsReport, ConsoleMostActiveUsersReport } from "./ConsoleMostActiveReports.js";
-import { ConsoleDetPointCategorizationReport } from "./ConsoleDetPointCategorizationReport.js";
-import { ConsoleReport } from "./ConsoleReport.js";
-import { TrendsDashboardReport } from "../reports/TrendsDashboardReport.js";
-import { ConsoleTrendsReport } from "./ConsoleTrendsReport.js";
-// inquirer.registerPrompt("search-list", SearchBox);
-// @ts-ignore
-// inquirer.registerPrompt("date", DatePrompt);
-
-// InterruptedPrompt.fromAll(inquirer);
 
 class AppSensorUIConsoleSettings implements IValidateInitialize {
     lastCheck?: Date;
-    viewRefreshTimeMs?: number;
+    autoReload?: boolean;
+    autoReloadTimeMs?: number;
     maxDisplayedItems?: number;
 
     checkValidInitialize(): void {
         if (!this.lastCheck) {
             this.lastCheck = new Date(0);
+        } else {
+            this.lastCheck = new Date(this.lastCheck);
         }
 
-        if (!this.viewRefreshTimeMs) {
-            this.viewRefreshTimeMs = 10000;
+        if (!this.autoReload) {
+            this.autoReload = false;
+        }
+
+        if (!this.autoReloadTimeMs) {
+            this.autoReloadTimeMs = 30000;
         }
 
         if (!this.maxDisplayedItems) {
-            this.maxDisplayedItems = 10;
+            this.maxDisplayedItems = 5;
         }
     }
 }
@@ -77,79 +80,6 @@ class AppSensorUIConsoleSettingsLoader extends JSONConfigReadValidate {
     }
 }
 
-type DET_POINT_CATEGORIZATION_DESCR = { description: string, one_user: string[], all_users: string[] };
-
-class DetectionPointDescriptions {
-    IDs: {
-        [id: string]:string
-    } = {};
-    Categorization: {
-        Suspicious: DET_POINT_CATEGORIZATION_DESCR,
-        Attack: DET_POINT_CATEGORIZATION_DESCR,
-        Discrete: DET_POINT_CATEGORIZATION_DESCR,
-        Aggregating: DET_POINT_CATEGORIZATION_DESCR,
-        Modifying: DET_POINT_CATEGORIZATION_DESCR,
-    } = {
-        Suspicious: {description: '', one_user:[], all_users: []},
-        Attack: {description: '', one_user:[], all_users: []},
-        Discrete: {description: '', one_user:[], all_users: []},
-        Aggregating: {description: '', one_user:[], all_users: []},
-        Modifying: {description: '', one_user:[], all_users: []}
-    };
-}
-
-class DetectionPointDescriptionsReader extends JSONConfigReadValidate {
-    constructor() {
-        super('appsensor-detection-point-descriptions.json', null, DetectionPointDescriptions.prototype);
-    }
-}
-
-type RESPONSE_CATEGORIZATION_EXECUTION = { always: string[], sometimes: string[] };
-
-class ResponseDescriptions {
-    IDs: {
-        [id: string]:string
-    } = {};
-    Categorization: {
-        Purpose: {
-            Logging: RESPONSE_CATEGORIZATION_EXECUTION,
-            Notifying: RESPONSE_CATEGORIZATION_EXECUTION,
-            Disrupting: RESPONSE_CATEGORIZATION_EXECUTION,
-            Blocking: RESPONSE_CATEGORIZATION_EXECUTION,
-        },
-        Target_User: {
-            One: RESPONSE_CATEGORIZATION_EXECUTION,
-            All: RESPONSE_CATEGORIZATION_EXECUTION
-        },
-        Response_Duration: {
-            Instantaneous: RESPONSE_CATEGORIZATION_EXECUTION,
-            Period: RESPONSE_CATEGORIZATION_EXECUTION,
-            Permanent: RESPONSE_CATEGORIZATION_EXECUTION
-        }
-    } = {
-        Purpose: {
-            Logging: { always: [], sometimes: [] },
-            Notifying: { always: [], sometimes: [] },
-            Disrupting: { always: [], sometimes: [] },
-            Blocking: { always: [], sometimes: [] }
-        },
-        Target_User: {
-            One: { always: [], sometimes: [] },
-            All: { always: [], sometimes: [] },
-        },
-        Response_Duration: {
-            Instantaneous: { always: [], sometimes: [] },
-            Period: { always: [], sometimes: [] },
-            Permanent: { always: [], sometimes: [] },
-        }
-    };
-}
-
-class ResponseDescriptionsReader extends JSONConfigReadValidate {
-    constructor() {
-        super('appsensor-responses-descriptions.json', null, ResponseDescriptions.prototype);
-    }
-}
 
 type EXCEL4NODE_CELL_STYLE =     {
     alignment?: { // §18.8.1
@@ -222,133 +152,236 @@ type EXCEL4NODE_CELL_STYLE =     {
     numberFormat?: number | string // §18.8.30 numFmt (Number Format)
 }
 
+
 type EXCEL_CELLS_TO_MERGE = {row1: number, col1: number, row2: number, col2: number};
-type EXCEL_CELL_STYLE = {row: number, col: number, styleOprions: EXCEL4NODE_CELL_STYLE}
-type EXCEL_CELLS_CONFIG = {cellsToMerge: EXCEL_CELLS_TO_MERGE[],
-                           cellStyle: EXCEL_CELL_STYLE[],
-                           rowHeightInLinse: number[]};
+type EXCEL_CELL_STYLE = {row: number, col: number, styleOptions: EXCEL4NODE_CELL_STYLE}
+type EXCEL_CELLS_CONFIG = {headerRowHeight: number, //in lines
+                           headerCellsStyle: EXCEL4NODE_CELL_STYLE[], 
+                           dataCellsToMerge: EXCEL_CELLS_TO_MERGE[],
+                           dataCellsStyle: EXCEL_CELL_STYLE[],
+                           dataRowsHeight: number[]}; //in lines
 
 class ReportingConsole {
 
     private reportingEngine: ReportingEngineExt;
 
+    private settings: AppSensorUIConsoleSettings = new AppSensorUIConsoleSettings();
     private repotingSettingsLoader = new AppSensorUIConsoleSettingsLoader();
 
-    private events: AppSensorEvent[] = [];
-    private attacks: Attack[] = [];
-    private responses: Response[] = [];
-    private users: User[] = [];
-    private detectionSystems: DetectionSystem[] = [];
-
     private detectionPointDescriptions: DetectionPointDescriptions;
+
+    private earliest: string;
+    private reports: ConsoleReport[] = [];
+    private currentReport: ConsoleReport;
+    private actionPromise: CancelablePromise | null = null;
+    private timeoutID: NodeJS.Timeout | null = null;
 
     constructor(reportingEngine: ReportingEngineExt) {
         this.reportingEngine = reportingEngine;
 
+        this.settings = this.repotingSettingsLoader.loadSettings();
         this.detectionPointDescriptions = new DetectionPointDescriptionsReader().read();
+
+        this.earliest = this.settings.lastCheck!.toISOString();
+
+        this.setReports();
+
+        this.currentReport = this.reports[0];
+
+        if (!this.settings.autoReload) {
+            //let new events only buble if autoRefresh is off 
+            this.reportingEngine.addOnAddListener(this.onAdd.bind(this));
+        }
+    }
+
+    setReports(reportName: string = "") {
+        switch (reportName) {
+            case "":
+            case "Recent": {
+                this.reports.push(new ConsoleRecentReport(this.reportingEngine, 
+                                                          this.settings.autoReload!, 
+                                                          this.detectionPointDescriptions));
+                if (reportName !== "") {
+                    break;
+                }
+            }
+            case "":
+            case "MostActiveDetectionPoints": {
+                this.reports.push(new ConsoleMostActiveDetectionPointsReport(this.reportingEngine, 
+                                                                             this.settings.autoReload!));
+                if (reportName !== "") {
+                    break;
+                }
+            }
+            case "":
+            case "MostActiveUsers": {
+                this.reports.push(new ConsoleMostActiveUsersReport(this.reportingEngine, 
+                                                                   this.settings.autoReload!));
+                if (reportName !== "") {
+                    break;
+                }
+            }
+            case "":
+            case "Trends": {
+                this.reports.push(new ConsoleTrendsReport(this.reportingEngine, 
+                                                          this.settings.autoReload!));
+                if (reportName !== "") {
+                    break;
+                }
+            }
+            case "":
+            case "DetPointConfig": {
+                this.reports.push(new ConsoleDetPointConfigReport(this.reportingEngine,
+                                                                  this.settings.autoReload!));
+                if (reportName !== "") {
+                    break;
+                }
+            }
+            case "":
+            case "DetPointCategorization": {
+                this.reports.push(new ConsoleDetPointCategorizationReport(this.reportingEngine, 
+                                                                          this.settings.autoReload!, 
+                                                                          this.detectionPointDescriptions));
+                if (reportName !== "") {
+                    break;
+                }
+            }
+        }
     }
 
     public async reportLoop() {
-        const settings = this.repotingSettingsLoader.loadSettings();
-
-        const configAsString = await this.reportingEngine.getServerConfigurationAsJson();
-
-        const config = new JSONServerConfigurationReader().readFromString(configAsString);
-
-        const reports: ConsoleReport[] = [];
-        reports.push(new ConsoleRecentReport(new BaseReport(this.reportingEngine), this.detectionPointDescriptions));
-        reports.push(new ConsoleMostActiveDetectionPointsReport(new DetectionPointReport(this.reportingEngine)));
-        reports.push(new ConsoleMostActiveUsersReport(new UserReport(this.reportingEngine)));
-        reports.push(new ConsoleTrendsReport(new TrendsDashboardReport(this.reportingEngine)));
-        reports.push(new ConsoleDetPointCategorizationReport(this.detectionPointDescriptions));
-
-        let selectedReport = 0;
 
         let answer = null;
         while (answer !== 'exit') {
             console.clear();
             
-            const currentReport = reports[selectedReport];
-            await currentReport.loadItems(settings);
+            await this.currentReport.loadItems(this.earliest, this.settings);
 
             console.clear();
 
-            console.log(this.prepareMainTable(settings, selectedReport, currentReport));
+            console.log(this.prepareMainTable(this.settings, this.currentReport));
 
-            try {
-                await this.prepareActionsMenu(settings, currentReport)
-                .then(async (answer) => {
+            this.actionPromise = this.prepareActionsMenu(this.settings, this.currentReport);
+
+            const reloadPromise = this.reloadAfter(this.settings.autoReloadTimeMs!);
+
+            const promises: Promise<string>[] = [this.actionPromise];
+            if (this.settings.autoReload) {
+                promises.splice(0, 0, reloadPromise);
+            }
+
+            const action = await Promise.race(promises).
+                                    catch(error => {
+                                        if (error instanceof Error &&
+                                            error.message === 'Prompt was canceled') {
+                                            //do nothing
+                                        }
+                                    });
+
+            this.actionPromise = null;
+            if (this.timeoutID) {
+                clearTimeout(this.timeoutID);
+            }              
+                 
+            await this.onAction(action!, this.settings);
+        }     
+           
+    }
+
+	public reloadAfter(timeOutInMilis: number): Promise<string> {
+		return new Promise((resolve, reject) => {
+			this.timeoutID = setTimeout(() => {
+                                if (this.actionPromise !== null) {
+                                    this.actionPromise.cancel();
+                                }
+                                resolve('reloadNow');
+                            }, timeOutInMilis);
+		});
+
+	}
+
+    protected onAdd(event: AppSensorEvent | Attack | Response): void {
+        //allow console to reload
+        if (this.actionPromise !== null) {
+            this.actionPromise.cancel();
+        }
+    }
+
+    async onAction(action: string, 
+                   settings: AppSensorUIConsoleSettings) {
+        switch (action) {
+            case 'chooseReport': {
+                await this.prepareReportsMenu(this.reports)
+                .then((answer) => {
+                    if (answer) {
+                        let selectedReport = Number.parseInt(answer);
+                        selectedReport -= 1;
+
+                        this.currentReport = this.reports[selectedReport];
+                    }
+                })
+                .catch();
+                
+                break
+            }
+            case 'earliestDate': {
+                await this.prepareEarliestDate(settings)
+                .then((answer) => {
+                    this.earliest = answer.replace(' ', 'T') + 'Z';
+                })
+                .catch();
+                break
+            }
+            case 'itemsNavigation': {
+                await this.prepareItemsNavigation(this.currentReport)
+                .then((answer) => {
                     switch (answer) {
-                        case 'chooseReport': {
-                            await this.prepareReportsMenu(reports)
-                            .then((answer) => {
-                                if (answer) {
-                                    selectedReport = Number.parseInt(answer);
-                                    selectedReport -= 1;
-                                }
-                            })
-                            .catch();
-                            
-                            break
-                        }
-                        case 'earliestDate': {
-                            await this.prepareEarliestDate(settings)
-                            .then((answer) => {
-
-                            })
-                            .catch();
-                            break
-                        }
-                        case 'itemsNavigation': {
-                            await this.prepareItemsNavigation(currentReport)
-                            .then((answer) => {
-                                switch (answer) {
-                                    case 'P': 
-                                    case 'p': {
-                                        currentReport.toPreviousItems(settings);
-                                        break;
-                                    }
-                                    case 'N': 
-                                    case 'n': {
-                                        currentReport.toNextItems(settings);
-                                        break;
-                                    }
-                                    default: {
-                                        const itemIndex = Number.parseInt(answer);
-                                        currentReport.toItem(settings, itemIndex);
-                                        break;
-                                    }
-                                }
-                            })
-                            .catch();
-    
-    
-                            break
-                        }
-                        case 'saveReports': {
-                            await this.exportToExcel(settings, reports);
-
+                        case 'P': 
+                        case 'p': {
+                            this.currentReport.toPreviousItems(settings);
                             break;
                         }
-                        case 'exit': {
-                            process.exit(0);
-
+                        case 'N': 
+                        case 'n': {
+                            this.currentReport.toNextItems(settings);
+                            break;
+                        }
+                        default: {
+                            const itemIndex = Number.parseInt(answer);
+                            this.currentReport.toItem(settings, itemIndex);
                             break;
                         }
                     }
                 })
                 .catch();
-    
-            } catch (e) {
-    
-            }
 
-            
-        }     
-           
+
+                break
+            }
+            case 'exportReports': {
+                await this.exportToExcel(settings, this.reports);
+
+                break;
+            }
+            case 'reloadNow': {
+                this.reports.forEach(el => {
+                    el.setHasToReload();
+                });
+
+                break;
+            }
+            case 'exit': {
+                settings.lastCheck = new Date();
+                this.repotingSettingsLoader.saveSettings(settings);
+
+                process.exit(0);
+
+                break;
+            }
+        }
     }
 
-    prepareActionsMenu(settings: AppSensorUIConsoleSettings, report: ConsoleReport): Promise<string> {
+    prepareActionsMenu(settings: AppSensorUIConsoleSettings, report: ConsoleReport): CancelablePromise<string> {
         let itemsNavigationDisabled = true;
         if (report.getItemsCount() > settings.maxDisplayedItems!) {
             itemsNavigationDisabled = false;
@@ -363,11 +396,11 @@ class ReportingConsole {
                         //short: 'Press <Shift + F> to back to main menu!'
                     },
                     {
-                        value: 'saveReports',
-                        name: 'Save reports'
+                        value: 'exportReports',
+                        name: 'Export reports to an excel file in the working directory'
                         //short: 'Press <Shift + F> to back to main menu!'
                     },
-                    {
+                    { 
                         value: 'itemsNavigation',
                         name: 'Items navigation (when more than currently displayed)',
                         disabled: itemsNavigationDisabled
@@ -376,6 +409,11 @@ class ReportingConsole {
                     {
                         value: 'earliestDate',
                         name: 'Change the report earliest date'
+                        //short: 'Press <Shift + F> to back to main menu!'
+                    },
+                    {
+                        value: 'reloadNow',
+                        name: 'Reload now'
                         //short: 'Press <Shift + F> to back to main menu!'
                     },
                     {
@@ -403,7 +441,7 @@ class ReportingConsole {
         const reportItemsCount = report.getItemsCount();
         const itemsFromTo = '1 - ' + reportItemsCount;
         return input({
-            message: `Go to: previous items by typing 'P' or 'p'; next items by typing 'N' or 'n'; an arbitrary item by entering a number [${itemsFromTo}]:`,
+            message: `Go to items by typing: 'P'/'p'(previous); 'N'/'n'(next); a number in range [${itemsFromTo}]:`,
             // interruptedKeyName: 'shift+f',
             validate: (userInput: any) => {
                 if (userInput !== 'p' &&
@@ -412,7 +450,7 @@ class ReportingConsole {
                     userInput !== 'N' &&
                     Number.isNaN(userInput) &&
                     (userInput < 1 || userInput > reportItemsCount)) {
-                    return "You have to type: 'P' or 'p'; 'N' or 'n'; number between 1 - " + reportItemsCount;
+                    return "You have to type: 'P' or 'p'; 'N' or 'n'; a number in range [1 - " + reportItemsCount + "]";
                 }
                 return true;
             }
@@ -421,17 +459,65 @@ class ReportingConsole {
 
     prepareEarliestDate(settings: AppSensorUIConsoleSettings): Promise<string> {
         return input({
-            message: 'Report earliest date :'
-            // interruptedKeyName: 'shift+f'
+            message: 'Report earliest date (server UTC) in format YYYY-MM-DD HH:mm:ss.sss (fraction part .sss is optional):',
+            validate: (userInput: any) => {
+                const regExpr = "([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2})\:([0-9]{2})\:([0-9]{2})(\.([0-9]{3}))*";
+                if (userInput) {
+                    const match = userInput.match(regExpr);
+                    if (match) {
+                        const yearStr             = match[1];
+                        const monthStr            = match[2];
+                        const dayStr              = match[3];
+                        const hourStr             = match[4];
+                        const minutesStr          = match[5];
+                        const secondsStr          = match[6];
+
+                        const month = Number.parseInt(monthStr);
+                        if (month < 1 || month > 12) {
+                            return `Invalid month: ${month}; Month has to be in range [01-12]`
+                        }
+
+                        const day = Number.parseInt(dayStr);
+                        if (day < 1 || day > 31) {
+                            return `Invalid day of month: ${day}; Day has to be in range [01-31]`
+                        }
+
+                        const year = Number.parseInt(yearStr);
+                        const yearJoda = Year.of(year);
+                        if (!yearJoda.isValidMonthDay(MonthDay.of(month, day))) {
+                            return `${day} is not a valid day for the combination of year and month ${year}-${month}`;
+                        }
+
+                        const hour = Number.parseInt(hourStr);
+                        if (hour > 23) {
+                            return `Invalid hour: ${hour}; Hour has to be in range [00-23]`;
+                        }
+                        
+                        const minutes = Number.parseInt(minutesStr);
+                        if (minutes > 59) {
+                            return `Invalid minutes: ${minutes}; Minutes has to be in range [00-59]`;
+                        }
+                        
+                        const seconds = Number.parseInt(secondsStr);
+                        if (seconds > 59) {
+                            return `Invalid seconds: ${seconds}`;
+                        }
+                        
+                    } else {
+                        return "Invalid date format";
+                    }
+                }
+                return true;
+            }
         });
     }
 
-    prepareMainTable(settings: AppSensorUIConsoleSettings, selectedMenuItem: number = 0, report: ConsoleReport): string {
+    prepareMainTable(settings: AppSensorUIConsoleSettings, report: ConsoleReport): string {
         const data: string[][] = [];
 
         
         data.push([report.getReportName()]);
-        data.push(["Report since: " + ConsoleReport.formatTimestamp(settings.lastCheck) + "\n" +
+        data.push(["Report since: " + ConsoleReport.formatTimestamp(new Date(this.earliest)) + "\n" +
                    "User: All\n" + 
                    "Detection System: All"]);
         data.push([report.display(settings)]);
@@ -455,9 +541,26 @@ class ReportingConsole {
 
         const maxDisplayedItemsAtOnce = new Number(settings.maxDisplayedItems!).toString();
 
-        data.push(["Showing items: " + itemsCountStr + "; Maximum displayed items at once: " + maxDisplayedItemsAtOnce]);
+        let footer = "Showing items: " + itemsCountStr + "; Maximum displayed items at once: " + maxDisplayedItemsAtOnce;
+        const newObjectSinceLastReload = report.getNewObjectSinceLastReload();
+        if (newObjectSinceLastReload) {
+            footer += "; New Since Last Reload: " + 
+                      "Events: " + chalk.yellow.bgWhite(this.formatNumber(newObjectSinceLastReload.events)) + " " + 
+                      "Attacks: " + chalk.red.bgWhite(this.formatNumber(newObjectSinceLastReload.attacks)) + " " +
+                      "Responses: " + chalk.green.bgWhite(this.formatNumber(newObjectSinceLastReload.responses));
+        } 
+
+        data.push([footer]);
 
         return table(data);//, config);
+    }
+
+    formatNumber(num: number): string {
+        let formated = "" + num;
+        while(formated.length < 3) {
+            formated = " " + formated;
+        }
+        return formated;
     }
 
     clearLine (stream: NodeJS.WritableStream) {
@@ -473,61 +576,64 @@ class ReportingConsole {
 
         const wb = new excel4node.Workbook();
 
-        const headerStyle = wb.createStyle({
-            font: {
-              color: '#9d9d9d',
-              bold: true,
-              size: 12,
-            },
-            fill: {
-                type: 'pattern',
-                patternType: 'solid',
-                bgColor: '#2E2E2E'
-            }
-        });
         // Add Worksheets to the workbook
         for (let report of reports) {
             const ws = wb.addWorksheet(report.getReportName());
-            const header = report.getHeader();
-            const data = await report.getData(settings);
+            let excelData = await report.getExcelData(this.earliest, settings);
+            if (excelData.length === 0) {
+                excelData = await report.getData(this.earliest, settings);
+            }
+            //in some cases header is populated dynamicaly of data
+            //if report hasn't been touched since this point, it will be empty
+            // at first, let load of data 
+            const header = report.getHeader(); 
             const colMaxCharacters = report.getColMaxCharacters();
             const excelCellsConfig = report.getExcelCellsConfig();
 
+
             let row = 1;
+            //header cells
             for (let i = 0; i < header.length; i++) {
                 const column = i + 1;
 
                 ws.column(column).setWidth(colMaxCharacters[i] + 2);
 
+                ws.cell(row, column).style(excelCellsConfig.headerCellsStyle[i]);
+
                 ws.cell(row, column).string(header[i]);
             }
 
-            ws.cell(row, 1, row, header.length).style(headerStyle);
+            if (excelCellsConfig.headerRowHeight > 0) {
+                ws.row(row).setHeight(excelCellsConfig.headerRowHeight * rowHeight);
+            }
 
-            for (let i = 0; i < data.length; i++) {
+            //data cells
+            for (let i = 0; i < excelData.length; i++) {
                 row++;
 
-                const dataRow = data[i];
+                const dataRow = excelData[i];
                 for (let j = 0; j < dataRow.length; j++) {
                     ws.cell(row, j + 1).string(dataRow[j]);
                 }
 
-                if (excelCellsConfig.rowHeightInLinse.length > 0) {
-                    ws.row(row).setHeight(excelCellsConfig.rowHeightInLinse[row - 2] * rowHeight);
+                if (excelCellsConfig.dataRowsHeight.length > 0) {
+                    ws.row(row).setHeight(excelCellsConfig.dataRowsHeight[row - 2] * rowHeight);
                 }
             }
 
-            excelCellsConfig.cellsToMerge.forEach((el) => {
-                ws.cell(el.row1, el.col1, el.row2, el.col2, true);
+            excelCellsConfig.dataCellsToMerge.forEach((el) => {
+                //mind the header row + 1
+                ws.cell(el.row1 + 1, el.col1, el.row2 + 1, el.col2, true);
             });
-            excelCellsConfig.cellStyle.forEach((el) => {
-                const style = wb.createStyle(el.styleOprions);
-                ws.cell(el.row, el.col).style(style);
+            excelCellsConfig.dataCellsStyle.forEach((el) => {
+                //mind the header row + 1
+                const style = wb.createStyle(el.styleOptions);
+                ws.cell(el.row + 1, el.col).style(style);
             });
         }
 
-        const fromDateStr = ConsoleReport.formatTimestamp(settings.lastCheck!, false, false);
-        const toDateStr = ConsoleReport.formatTimestamp(new Date(), false, false);
+        const fromDateStr = ConsoleReport.formatTimestamp(new Date(this.earliest));
+        const toDateStr = ConsoleReport.formatTimestamp(new Date());
 
         let fileName = `AppSensor_Reports_${fromDateStr}-${toDateStr}.xlsx`;
         fileName = fileName.replace(new RegExp(' ', 'g'), '_').replace(new RegExp(':', 'g'), '-');
@@ -542,6 +648,5 @@ function run() {
 
 run();
 
-export {ConsoleReport, DET_POINT_CATEGORIZATION_DESCR, DetectionPointDescriptions, DetectionPointDescriptionsReader, 
-        RESPONSE_CATEGORIZATION_EXECUTION, AppSensorUIConsoleSettings, 
+export {ConsoleReport, AppSensorUIConsoleSettings, 
         EXCEL_CELLS_TO_MERGE, EXCEL_CELL_STYLE, EXCEL4NODE_CELL_STYLE, EXCEL_CELLS_CONFIG};

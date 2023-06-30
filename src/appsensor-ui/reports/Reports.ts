@@ -155,10 +155,6 @@ class ViewObject<VALUE> {
     
     public constructor(timestampCategoryCounts: {[k: string]: string | VALUE}[], categories: string[]) { //categoryKeyMappings: Map<string, string>) {
 
-        // for (const category of categoryKeyMappings.keys()) {
-        //     this.ykeys.push(categoryKeyMappings.get(category)!);
-        //     this.labels.push(category);
-        // }
         categories.forEach(el => {
             this.ykeys.push(el);
             this.labels.push(el);

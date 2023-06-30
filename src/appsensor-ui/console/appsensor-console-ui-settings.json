@@ -1,4 +1,5 @@
 {
-    "viewRefreshTimeMs": 3000,
-    "maxDisplayedItems": 2
+    "autoReload": false,
+    "autoReloadTimeMs": 30000,
+    "maxDisplayedItems": 5
 }

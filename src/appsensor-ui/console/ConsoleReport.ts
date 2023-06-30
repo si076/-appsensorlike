@@ -1,7 +1,11 @@
 import { Spinner } from "cli-spinner";
 import { ColumnUserConfig, table, TableUserConfig } from "table";
+import { AppSensorEvent, Attack, Response } from "../../core/core.js";
+import { ReportingEngineExt } from "../../reporting-engines/reporting-engines.js";
 
-import { AppSensorUIConsoleSettings, EXCEL_CELLS_CONFIG, EXCEL_CELLS_TO_MERGE } from "./appsensor-console-ui.js";
+import { AppSensorUIConsoleSettings, EXCEL4NODE_CELL_STYLE, EXCEL_CELLS_CONFIG, EXCEL_CELLS_TO_MERGE, EXCEL_CELL_STYLE } from "./appsensor-console-ui.js";
+
+type NEW_OBJECTS_SINCE_LAST_RELOAD = {events: number, attacks: number, responses: number};
 
 abstract class ConsoleReport {
     protected DEFAULT_DISPLAY_TABLE_WIDTH = 150; //character
@@ -9,27 +13,68 @@ abstract class ConsoleReport {
     protected topItemIndex: number = 0;
     protected itemCount: number = 0;
 
+    protected earliest?: string;
+
     //displayed data
     protected header: string[] = [];
     protected data: string[][] = [];
     //collects max. number of characters per column
     protected colMaxCharacters: number[] = [];
 
-    protected excelCellsConfig: EXCEL_CELLS_CONFIG = {cellStyle: [], cellsToMerge: [], rowHeightInLinse: []};
+    //excel data, most of the time is same as data
+    protected excelData: string[][] = [];
+    protected excelCellsConfig: EXCEL_CELLS_CONFIG = {headerRowHeight: 0,
+                                                      headerCellsStyle: [],
+                                                      dataCellsStyle: [], 
+                                                      dataCellsToMerge: [], 
+                                                      dataRowsHeight: []};
+
+    protected hasToReload = false;
+    protected newObjectSinceLastReload: NEW_OBJECTS_SINCE_LAST_RELOAD | null = null;
+
+    protected newItemReceived = false;
+    protected reportingEngine: ReportingEngineExt;
 
     protected spinner = new Spinner("Loading ...");
 
-    constructor() {
+    constructor(reportingEngine: ReportingEngineExt, 
+                autoReload: boolean) {
+        this.reportingEngine = reportingEngine;
+
+        if (!autoReload) {
+            //let new events only buble if autoRefresh is off 
+            this.reportingEngine.addOnAddListener(this.onAdd.bind(this));
+        }
+
         this.spinner.setSpinnerString(18);
     }
 
-    async loadItems(settings: AppSensorUIConsoleSettings) {};
+    async loadItems(earliest: string,
+                    settings: AppSensorUIConsoleSettings) {};
+
+    setHasToReload() {
+        this.newObjectSinceLastReload = null;
+        this.hasToReload = true;
+    }
+
+    getNewObjectSinceLastReload(): NEW_OBJECTS_SINCE_LAST_RELOAD | null {
+        return this.newObjectSinceLastReload;
+    }
                                                                                                                            
-    async getData(settings: AppSensorUIConsoleSettings): Promise<string[][]> {
-        if (this.data.length === 0) {
-            await this.loadItems(settings); //if the report hasn't been touched yet, load the data
+    async getData(earliest: string,
+                  settings: AppSensorUIConsoleSettings): Promise<string[][]> {
+        if (this.data.length === 0 || this.earliest !== earliest) {
+            await this.loadItems(earliest, settings); //if the report hasn't been touched yet, load the data
         }
         return this.data;
+    }
+
+    async getExcelData(earliest: string,
+                       settings: AppSensorUIConsoleSettings): Promise<string[][]> {
+        if (this.excelData.length === 0 || this.earliest !== earliest) {
+            await this.loadItems(earliest, settings); //if the report hasn't been touched yet, load the data
+        }
+        return this.excelData;
     }
 
     getHeader(): string[] {
@@ -85,11 +130,18 @@ abstract class ConsoleReport {
         this.adjustColMaxCharacters(row);
 
         this.header = row;
+
+        this.setExcelDefaultsForHeader(this.header);
     }
 
     protected initData() {
         this.data = [];
         this.itemCount = 0;
+
+        this.excelData = [];
+        this.excelCellsConfig.dataRowsHeight = [];
+        this.excelCellsConfig.dataCellsStyle = [];
+        this.excelCellsConfig.dataCellsToMerge = [];
     }
 
     protected addDataRow(row: string[]) {
@@ -98,6 +150,10 @@ abstract class ConsoleReport {
         this.data.push(row);
                 
         this.itemCount = this.data.length;
+    }
+
+    protected addExcelDataRow(row: string[]) {
+        this.excelData.push(row);
     }
 
     protected getDisplayTableConfig(columnCount: number, 
@@ -118,6 +174,8 @@ abstract class ConsoleReport {
 
             columnWidth = (this.DEFAULT_DISPLAY_TABLE_WIDTH - specificWidthsTotal - ((columnCount - specWidthCount) * colPaddingBorder)) / (columnCount - specWidthCount);
         }
+
+        columnWidth = Math.floor(columnWidth);
 
         const columns: {[index: number]:ColumnUserConfig} = {};
         for (let i = 0; i < columnCount; i++) {
@@ -209,12 +267,70 @@ abstract class ConsoleReport {
         return this.excelCellsConfig;
     }
 
+    setExcelDefaultsForHeader(header: string[]) {
+        const headerStyle: EXCEL4NODE_CELL_STYLE = {
+            font: {
+              color: '#9d9d9d',
+              bold: true,
+              size: 12,
+            },
+            fill: {
+                type: 'pattern',
+                patternType: 'solid',
+                fgColor: '#2E2E2E'
+            }
+        };
+
+        this.excelCellsConfig.headerRowHeight = 1;
+        this.excelCellsConfig.headerCellsStyle = [];
+
+        header.forEach((el) => {
+            this.excelCellsConfig.headerCellsStyle.push(headerStyle);
+
+            const splitted = el.split("\n");
+            if (splitted.length > this.excelCellsConfig.headerRowHeight) {
+                this.excelCellsConfig.headerRowHeight = splitted.length;
+            }
+    
+        });
+    }
+
+    protected startSpinner() {
+        this.spinner.start();
+    }
+
+    protected stopSpinner() {
+        this.spinner.stop();
+    }
+
+    protected onAdd(event: AppSensorEvent | Attack | Response): void {
+        this.newItemReceived = true;
+        //new event has just been generated on server and 
+        //here we receive it
+        //to be handled accordingly in interested roport
+        
+    }
+
+    public static mergeObjects(obj1: {[key: string]: any}, 
+                               obj2: {[key: string]: any}, 
+                               overwrite: boolean = false) {
+        for (const key in obj2) {
+            if (overwrite) {
+                obj1[key] = obj2[key];
+            } else {
+                if (obj1[key] === undefined) {
+                    obj1[key] = obj2[key];
+                }
+            }
+        }
+    }
+
     public static formatTimestamp(timestamp: Date | undefined,
                                   includeSecondFraction: boolean = true,
-                                  includeTimeZoneOffset: boolean = true): string {
+                                  timezoneOffsetInMinutes: number = 0,
+                                  includeTimeZoneOffset: boolean = false): string {
         let timestampStr = "";
         if (timestamp) {
-            const timezoneOffsetInMinutes = timestamp.getTimezoneOffset();
 
             const timestampLocal = new Date(timestamp.getTime() + (timezoneOffsetInMinutes * -1 * 60 * 1000));
             timestampStr = timestampLocal.toISOString().replace('T', ' ').replace('Z', '');
@@ -237,14 +353,6 @@ abstract class ConsoleReport {
             }
         }
         return timestampStr;
-    }
-
-    protected startSpinner() {
-        this.spinner.start();
-    }
-
-    protected stopSpinner() {
-        this.spinner.stop();
     }
 }
 

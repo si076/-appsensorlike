@@ -1,10 +1,14 @@
 import { AppSensorEvent, Attack, Response, Utils as coreUtils } from "../../core/core.js";
 import { Rule } from "../../core/rule/rule.js";
 import { BaseReport } from "../reports/BaseReport.js";
-import { DetectionPointDescriptions, AppSensorUIConsoleSettings } from "./appsensor-console-ui.js";
+import { AppSensorUIConsoleSettings, EXCEL4NODE_CELL_STYLE } from "./appsensor-console-ui.js";
 import { ConsoleReport } from "./ConsoleReport.js";
 
 import { TableUserConfig, ColumnUserConfig } from 'table';
+
+import chalk from 'chalk';
+import { DetectionPointDescriptions } from "./DetectionPointDescriptions.js";
+import { ReportingEngineExt } from "../../reporting-engines/reporting-engines.js";
 
 class ConsoleRecentReport extends ConsoleReport {
 
@@ -17,28 +21,74 @@ class ConsoleRecentReport extends ConsoleReport {
 
     private baseReport: BaseReport;
 
-    private earliest?: string;
 
-    constructor(baseReport: BaseReport,
+    constructor(reportingEngine: ReportingEngineExt,
+                autoReload: boolean,
                 detectionPointDescriptions: DetectionPointDescriptions) {
-        super();
-        this.baseReport = baseReport;
+        super(reportingEngine, autoReload);
+        this.baseReport = new BaseReport(reportingEngine);
         this.detectionPointDescriptions = detectionPointDescriptions;
 
         this.setHeader(["", "Type", "Category", "Id", "From", "To", "Timestamp", "Description"]);
     }
 
-    override async loadItems(settings: AppSensorUIConsoleSettings): Promise<void> {
-        const lastCheckStr = settings.lastCheck!.toISOString();
-        if (this.earliest !== lastCheckStr) {
+    override async loadItems(earliest: string,
+                             settings: AppSensorUIConsoleSettings): Promise<void> {
+        if (this.earliest !== earliest || this.hasToReload || this.newItemReceived) {
+            this.newObjectSinceLastReload = null;
+
+            let timestamp: Date | undefined = undefined;
+            if (this.hasToReload) {
+                this.newObjectSinceLastReload = {events: 0, attacks: 0, responses: 0};
+
+                if (this.items.length > 0) {
+                    timestamp = this.items[0].getTimestamp();
+                }
+            }
+
+            
             this.initData();
 
             this.startSpinner();
 
-            this.earliest = lastCheckStr;
-            this.items = await this.baseReport.getRecent(this.earliest);
+            //consider that all of the flags could be set till this report was not touched
+            //if only newItemReceived is set, do not reload 
+            if (this.earliest !== earliest || this.hasToReload) {
+                this.earliest = earliest;
+                //pull the data from the server
+                this.items = await this.baseReport.getRecent(this.earliest);
+            }
+            
+            this.hasToReload = false;
+            this.newItemReceived = false;
 
+            const eventStyle: EXCEL4NODE_CELL_STYLE = {fill: {type: "pattern", patternType: "solid", fgColor: "#FFFF00"}};
+            const attackStyle: EXCEL4NODE_CELL_STYLE = {fill: {type: "pattern", patternType: "solid", fgColor: "#FF0000"}};
+            const responseStyle: EXCEL4NODE_CELL_STYLE = {fill: {type: "pattern", patternType: "solid", fgColor: "#008000"}};
+            
+
+            //go thru all items to prepare data and excelData
+            //this has to be done even when one item is received 
+            //in order numbering and correct rows to be set in excelCellsConfig
+            //
             this.items.forEach((item, index) => {
+                let newSinceLastReload = false;
+
+                const itemTimestamp = item.getTimestamp();
+                if (timestamp && itemTimestamp && 
+                    timestamp.getTime() < itemTimestamp.getTime() &&
+                    this.newObjectSinceLastReload) {
+
+                    newSinceLastReload = true;
+
+                    if (item instanceof AppSensorEvent) {
+                        this.newObjectSinceLastReload.events++;
+                    } else if (item instanceof Attack) {
+                        this.newObjectSinceLastReload.attacks++;
+                    } else {
+                        this.newObjectSinceLastReload.responses++;
+                    }
+                }
 
                 const detSystem = item.getDetectionSystem();
                 const detSystemId = detSystem ? detSystem.getDetectionSystemId(): "unknown detection system";
@@ -90,7 +140,7 @@ class ConsoleRecentReport extends ConsoleReport {
                 const indexStr = new Number(index + 1).toString();
 
                 //["", "Type", "Category", "Id", "From", "To", "Timestamp", "Description"]
-                const row = [indexStr,
+                let row = [indexStr,
                              type, 
                              category,
                              id, 
@@ -99,12 +149,65 @@ class ConsoleRecentReport extends ConsoleReport {
                              timestampStr,
                              detectionPointDescr];
                 
+                
+                this.addExcelDataRow(row);
+
+                //assign new array otherwise following mutations of the elements will reflect to excel data as well
+                row = [indexStr,
+                       type, 
+                       category,
+                       id, 
+                       from,
+                       to, 
+                       timestampStr,
+                       detectionPointDescr];
+
+                if (item instanceof AppSensorEvent) {
+                    this.excelCellsConfig.dataCellsStyle.push({row: index + 1, 
+                                                               col: 2, 
+                                                               styleOptions: eventStyle});
+
+                    type = chalk.yellow("Event");
+                } else if (item instanceof Attack) {
+                    this.excelCellsConfig.dataCellsStyle.push({row: index + 1, 
+                                                               col: 2, 
+                                                               styleOptions: attackStyle});
+
+                    type = chalk.red.bold("Attack");
+                } else {
+                    this.excelCellsConfig.dataCellsStyle.push({row: index + 1, 
+                                                               col: 2, 
+                                                               styleOptions: responseStyle});
+
+                    type = chalk.green.bold("Response");
+                }
+
+                row[1] = type; //chalked
+                
+                if (newSinceLastReload) {
+                    //change the background of the new row
+                    for (let r = 0; r < row.length; r++) {
+                        if (r !== 1) {
+                            chalk.black.bgWhite(row[r]);
+                        } else {
+                            chalk.bgWhite(row[r]);
+                        }
+                    }
+                }
+
                 this.addDataRow(row);
     
             });
+            
 
             this.stopSpinner();
         }
+    }
+
+    protected onAdd(event: AppSensorEvent | Attack | Response): void {
+        super.onAdd(event);
+        //add the item at the beginning since the items come from server in descending order by timestamp
+        this.items.splice(0 , 0, event);
     }
 
     protected override getDisplayTableConfig(columnCount: number,

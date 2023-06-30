@@ -1,8 +1,9 @@
 import { DateTimeFormatter, LocalDateTime } from "@js-joda/core";
+import { ReportingEngineExt } from "../../reporting-engines/reporting-engines.js";
 
 import { TimeUnitUtil, TrendDirection, TrendItem } from "../reports/Reports.js";
 import { TrendsDashboardReport } from "../reports/TrendsDashboardReport.js";
-import { AppSensorUIConsoleSettings } from "./appsensor-console-ui.js";
+import { AppSensorUIConsoleSettings, EXCEL4NODE_CELL_STYLE } from "./appsensor-console-ui.js";
 import { ConsoleReport } from "./ConsoleReport.js";
 
 class ConsoleTrendsReport extends ConsoleReport {
@@ -11,14 +12,19 @@ class ConsoleTrendsReport extends ConsoleReport {
 
     private loaded = false;
 
-    constructor(report: TrendsDashboardReport) {
-        super();
+    constructor(reportingEngine: ReportingEngineExt,
+                autoReload: boolean) {
+        super(reportingEngine, autoReload);
 
-        this.report = report;
+        this.report = new TrendsDashboardReport(reportingEngine);
     }
 
-    async loadItems(settings: AppSensorUIConsoleSettings): Promise<void> {
-        if (!this.loaded) {
+    async loadItems(earliest: string,
+                    settings: AppSensorUIConsoleSettings): Promise<void> {
+        if (!this.loaded || this.hasToReload || this.newItemReceived) {
+            this.hasToReload = false;
+            this.newItemReceived = false;
+            
             this.initData();
 
             const trendItems = await this.report.countEvents();
@@ -39,6 +45,14 @@ class ConsoleTrendsReport extends ConsoleReport {
             const hourIntervalStr  = hourAgo.format(HHmm) + ' - ' + now.format(HHmm);
 
             this.setHeader(["", monthIntervalStr, weekIntervalStr, dayIntervalStr, shiftIntervalStr, hourIntervalStr]);
+            
+            const topWrapStyle: EXCEL4NODE_CELL_STYLE = {alignment: {vertical: "top", wrapText: true}};
+            const topStyle: EXCEL4NODE_CELL_STYLE = {alignment: {vertical: "top"}};
+            ConsoleReport.mergeObjects(this.excelCellsConfig.headerCellsStyle[1], topWrapStyle);
+            ConsoleReport.mergeObjects(this.excelCellsConfig.headerCellsStyle[2], topWrapStyle);
+            ConsoleReport.mergeObjects(this.excelCellsConfig.headerCellsStyle[3], topWrapStyle);
+            ConsoleReport.mergeObjects(this.excelCellsConfig.headerCellsStyle[4], topStyle);
+            ConsoleReport.mergeObjects(this.excelCellsConfig.headerCellsStyle[5], topStyle);
 
 
             const typeTrendItemsMap = new Map<string, TrendItem[]>();
@@ -61,9 +75,10 @@ class ConsoleTrendsReport extends ConsoleReport {
                     const hours = TimeUnitUtil.toHours(trendItem.getUnit());
 
                     if (elHours > hours) {
-                        insertionIndex = i;
                         break;
                     }
+
+                    insertionIndex++; //catches also position after the last element
                 }
 
                 typeTrendItems.splice(insertionIndex, 0, el);
@@ -77,8 +92,13 @@ class ConsoleTrendsReport extends ConsoleReport {
                 for (let e = 0; e < entry[1].length; e++) {
                     const trendDirection = entry[1][e].getDirection();
                     const directionSign = trendDirection === TrendDirection.SAME ? "=" :
-                                            trendDirection === TrendDirection.HIGHER ? "↑" : "↓";   
-                    row.push(new Number(entry[1][e].getCount()).toFixed(4) + " " + directionSign);
+                                            trendDirection === TrendDirection.HIGHER ? "↑" : "↓"; 
+                    const count = entry[1][e].getCount();
+                    let countStr = new Number(count).toFixed(4); 
+                    if (Number.isInteger(count)) {
+                        countStr = new Number(count).toFixed();
+                    } 
+                    row.push(countStr + " " + directionSign);
                 }
 
                 this.addDataRow(row);    
