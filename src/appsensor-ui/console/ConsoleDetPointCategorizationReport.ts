@@ -1,11 +1,13 @@
 import { ColumnUserConfig, SpanningCellConfig, TableUserConfig } from "table";
 import { ReportingEngineExt } from "../../reporting-engines/reporting-engines.js";
 
-import { AppSensorUIConsoleSettings, EXCEL4NODE_CELL_STYLE } from "./appsensor-console-ui.js";
+import { AppSensorUIConsoleSettings, EXCEL4NODE_CELL_STYLE } from "./appsensor-ui-console.js";
 import { ConsoleReport } from "./ConsoleReport.js";
 import { DetectionPointDescriptions, DET_POINT_CATEGORIZATION_DESCR } from "./DetectionPointDescriptions.js";
 
 class ConsoleDetPointCategorizationReport extends ConsoleReport {
+
+    public static ID = 'DetPointCategorization';
 
     private static DESCRIPTION_COLUMN_WIDTH = 30;
 
@@ -13,9 +15,8 @@ class ConsoleDetPointCategorizationReport extends ConsoleReport {
     private loaded = false;
 
     constructor(reportingEngine: ReportingEngineExt,
-                autoReload: boolean,
                 detectionPointDescriptions: DetectionPointDescriptions) {
-        super(reportingEngine, autoReload);
+        super(reportingEngine);
         this.detectionPointDescriptions = detectionPointDescriptions;
 
         this.setHeader(["Category", "Description", "Affected Users", "Detection Points"]);

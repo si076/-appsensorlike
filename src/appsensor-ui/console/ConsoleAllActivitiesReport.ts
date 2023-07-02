@@ -1,7 +1,7 @@
 import { AppSensorEvent, Attack, Response, Utils as coreUtils } from "../../core/core.js";
 import { Rule } from "../../core/rule/rule.js";
 import { BaseReport } from "../reports/BaseReport.js";
-import { AppSensorUIConsoleSettings, EXCEL4NODE_CELL_STYLE } from "./appsensor-console-ui.js";
+import { AppSensorUIConsoleSettings, EXCEL4NODE_CELL_STYLE } from "./appsensor-ui-console.js";
 import { ConsoleReport } from "./ConsoleReport.js";
 
 import { TableUserConfig, ColumnUserConfig } from 'table';
@@ -10,9 +10,9 @@ import chalk from 'chalk';
 import { DetectionPointDescriptions } from "./DetectionPointDescriptions.js";
 import { ReportingEngineExt } from "../../reporting-engines/reporting-engines.js";
 
-class ConsoleRecentReport extends ConsoleReport {
+class ConsoleAllActivitiesReport extends ConsoleReport {
 
-    private static SEPARATOR = ':';
+    public static ID = 'AllActivities';
 
     private items: (AppSensorEvent | Attack | Response)[] = [];
 
@@ -23,9 +23,8 @@ class ConsoleRecentReport extends ConsoleReport {
 
 
     constructor(reportingEngine: ReportingEngineExt,
-                autoReload: boolean,
                 detectionPointDescriptions: DetectionPointDescriptions) {
-        super(reportingEngine, autoReload);
+        super(reportingEngine);
         this.baseReport = new BaseReport(reportingEngine);
         this.detectionPointDescriptions = detectionPointDescriptions;
 
@@ -204,7 +203,7 @@ class ConsoleRecentReport extends ConsoleReport {
         }
     }
 
-    protected onAdd(event: AppSensorEvent | Attack | Response): void {
+    onAdd(event: AppSensorEvent | Attack | Response): void {
         super.onAdd(event);
         //add the item at the beginning since the items come from server in descending order by timestamp
         this.items.splice(0 , 0, event);
@@ -228,4 +227,4 @@ class ConsoleRecentReport extends ConsoleReport {
     }
 }
 
-export {ConsoleRecentReport};
+export {ConsoleAllActivitiesReport};

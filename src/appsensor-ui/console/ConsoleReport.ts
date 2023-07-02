@@ -3,7 +3,7 @@ import { ColumnUserConfig, table, TableUserConfig } from "table";
 import { AppSensorEvent, Attack, Response } from "../../core/core.js";
 import { ReportingEngineExt } from "../../reporting-engines/reporting-engines.js";
 
-import { AppSensorUIConsoleSettings, EXCEL4NODE_CELL_STYLE, EXCEL_CELLS_CONFIG, EXCEL_CELLS_TO_MERGE, EXCEL_CELL_STYLE } from "./appsensor-console-ui.js";
+import { AppSensorUIConsoleSettings, EXCEL4NODE_CELL_STYLE, EXCEL_CELLS_CONFIG, EXCEL_CELLS_TO_MERGE, EXCEL_CELL_STYLE } from "./appsensor-ui-console.js";
 
 type NEW_OBJECTS_SINCE_LAST_RELOAD = {events: number, attacks: number, responses: number};
 
@@ -37,14 +37,8 @@ abstract class ConsoleReport {
 
     protected spinner = new Spinner("Loading ...");
 
-    constructor(reportingEngine: ReportingEngineExt, 
-                autoReload: boolean) {
+    constructor(reportingEngine: ReportingEngineExt) {
         this.reportingEngine = reportingEngine;
-
-        if (!autoReload) {
-            //let new events only buble if autoRefresh is off 
-            this.reportingEngine.addOnAddListener(this.onAdd.bind(this));
-        }
 
         this.spinner.setSpinnerString(18);
     }
@@ -303,7 +297,7 @@ abstract class ConsoleReport {
         this.spinner.stop();
     }
 
-    protected onAdd(event: AppSensorEvent | Attack | Response): void {
+    onAdd(event: AppSensorEvent | Attack | Response): void {
         this.newItemReceived = true;
         //new event has just been generated on server and 
         //here we receive it

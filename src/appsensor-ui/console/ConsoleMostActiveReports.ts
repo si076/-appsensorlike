@@ -5,17 +5,17 @@ import { ReportingEngineExt } from "../../reporting-engines/reporting-engines.js
 import { DetectionPointReport } from "../reports/DetectionPointReport.js";
 import { NAME_EVENT_COUNT } from "../reports/Reports.js";
 import { UserReport } from "../reports/UserReport.js";
-import { AppSensorUIConsoleSettings } from "./appsensor-console-ui.js";
+import { AppSensorUIConsoleSettings } from "./appsensor-ui-console.js";
 import { ConsoleReport } from "./ConsoleReport.js";
 
 class ConsoleMostActiveUsersReport extends ConsoleReport {
+    public static ID = 'MostActiveUsers';
 
     private userReport: UserReport;
     private userEventCount: NAME_EVENT_COUNT = {};
 
-    constructor(reportingEngine: ReportingEngineExt,
-                autoReload: boolean) {
-        super(reportingEngine, autoReload);
+    constructor(reportingEngine: ReportingEngineExt) {
+        super(reportingEngine);
         this.userReport = new UserReport(reportingEngine);
         this.setHeader(["", "User Name (count of events)"]);
     }
@@ -56,7 +56,7 @@ class ConsoleMostActiveUsersReport extends ConsoleReport {
         }
     }
 
-    protected onAdd(event: AppSensorEvent | Attack | Response): void {
+    onAdd(event: AppSensorEvent | Attack | Response): void {
         super.onAdd(event);
 
         if (event instanceof AppSensorEvent) {
@@ -85,14 +85,14 @@ class ConsoleMostActiveUsersReport extends ConsoleReport {
 
 }
 
-class ConsoleMostActiveDetectionPointsReport extends ConsoleReport {
+class ConsoleMostActiveDetPointsReport extends ConsoleReport {
+    public static ID = 'MostActiveDetPoints';
 
     private detectionPointReport: DetectionPointReport;
     private detPointEventCount: NAME_EVENT_COUNT = {};
 
-    constructor(reportingEngine: ReportingEngineExt,
-                autoReload: boolean) {
-        super(reportingEngine, autoReload);
+    constructor(reportingEngine: ReportingEngineExt) {
+        super(reportingEngine);
         this.detectionPointReport = new DetectionPointReport(reportingEngine);
         this.setHeader(["", "Detection Point Label(Category) (count of events)"]);
     }
@@ -136,7 +136,7 @@ class ConsoleMostActiveDetectionPointsReport extends ConsoleReport {
         }
     }
 
-    protected onAdd(event: AppSensorEvent | Attack | Response): void {
+    onAdd(event: AppSensorEvent | Attack | Response): void {
         super.onAdd(event);
 
         if (event instanceof AppSensorEvent) {
@@ -165,4 +165,4 @@ class ConsoleMostActiveDetectionPointsReport extends ConsoleReport {
 
 }
 
-export {ConsoleMostActiveUsersReport, ConsoleMostActiveDetectionPointsReport}
+export {ConsoleMostActiveUsersReport, ConsoleMostActiveDetPointsReport}

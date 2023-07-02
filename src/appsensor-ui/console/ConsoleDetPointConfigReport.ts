@@ -4,17 +4,17 @@ import { ServerConfiguration } from "../../core/configuration/server/server_conf
 import { DetectionPoint, Response, Utils } from "../../core/core.js";
 import { ReportingEngineExt } from "../../reporting-engines/reporting-engines.js";
 import { ConfigurationReport } from "../reports/ConfigurationReport.js";
-import { AppSensorUIConsoleSettings, EXCEL4NODE_CELL_STYLE } from "./appsensor-console-ui.js";
+import { AppSensorUIConsoleSettings, EXCEL4NODE_CELL_STYLE } from "./appsensor-ui-console.js";
 import { ConsoleReport } from "./ConsoleReport.js";
 
 class ConsoleDetPointConfigReport extends ConsoleReport {
+    public static ID = 'DetPointConfig';
 
     private report: ConfigurationReport;
     private loaded = false;
 
-    constructor(reportingEngine: ReportingEngineExt,
-                autoReload: boolean) {
-        super(reportingEngine, autoReload);
+    constructor(reportingEngine: ReportingEngineExt) {
+        super(reportingEngine);
 
         this.report = new ConfigurationReport(reportingEngine);
 

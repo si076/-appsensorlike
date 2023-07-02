@@ -3,18 +3,18 @@ import { ReportingEngineExt } from "../../reporting-engines/reporting-engines.js
 
 import { TimeUnitUtil, TrendDirection, TrendItem } from "../reports/Reports.js";
 import { TrendsDashboardReport } from "../reports/TrendsDashboardReport.js";
-import { AppSensorUIConsoleSettings, EXCEL4NODE_CELL_STYLE } from "./appsensor-console-ui.js";
+import { AppSensorUIConsoleSettings, EXCEL4NODE_CELL_STYLE } from "./appsensor-ui-console.js";
 import { ConsoleReport } from "./ConsoleReport.js";
 
 class ConsoleTrendsReport extends ConsoleReport {
+    public static ID = 'Trends';
 
     private report: TrendsDashboardReport;
 
     private loaded = false;
 
-    constructor(reportingEngine: ReportingEngineExt,
-                autoReload: boolean) {
-        super(reportingEngine, autoReload);
+    constructor(reportingEngine: ReportingEngineExt) {
+        super(reportingEngine);
 
         this.report = new TrendsDashboardReport(reportingEngine);
     }
