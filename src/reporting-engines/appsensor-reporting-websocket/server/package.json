@@ -1,0 +1,25 @@
+{
+  "name": "@si076/appsensorlike_reporting_websocket_server",
+  "version": "1.0.0",
+  "description": "AppSensorLike reporting websocket server",
+  "main": "appsensor-reporting-websocket-server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/si076/-appsensorlike.git"
+  },
+  "keywords": [
+    "js",
+    "AppSensor",
+    "Reporting",
+    "WebSocketServer"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/si076/-appsensorlike/issues"
+  },
+  "homepage": "https://github.com/si076/-appsensorlike#readme"
+}

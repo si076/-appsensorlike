@@ -1,0 +1,33 @@
+{
+  "name": "@si076/appsensorlike_ui",
+  "version": "1.0.0",
+  "description": "AppSensorLike UI classes/types shared among web and console UIs",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/si076/-appsensorlike.git"
+  },
+  "keywords": [
+    "js",
+    "AppSensorUI"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/si076/-appsensorlike/issues"
+  },
+  "homepage": "https://github.com/si076/-appsensorlike#readme",
+  "dependencies": {
+    "express": "^4.18.2",
+    "@js-joda/core": "^5.5.3",
+    "@js-joda/extra": "^0.11.3",
+    "lru-cache": "^10.0.0",
+    "mysql2": "^3.4.3"
+  }
+}

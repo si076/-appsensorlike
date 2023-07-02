@@ -1,0 +1,36 @@
+{
+  "name": "@si076/appsensorlike_ui_console",
+  "version": "1.0.0",
+  "description": "AppSensorLikeUI console implementation",
+  "main": "appsensor-ui-console.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/si076/-appsensorlike.git"
+  },
+  "keywords": [
+    "js",
+    "AppSensorUI",
+    "console"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/si076/-appsensorlike/issues"
+  },
+  "homepage": "https://github.com/si076/-appsensorlike#readme",
+  "dependencies": {
+    "@inquirer/prompts": "^1.2.3",
+    "chalk": "^5.2.0",
+    "cli-spinner": "^0.2.10",
+    "excel4node": "^1.8.2",
+    "table": "^6.8.1",
+    "ts-command-line-args": "^2.5.1"
+  },
+  "devDependencies": {
+    "@types/cli-spinner": "^0.2.1",
+    "@types/table": "^6.3.2"
+  }
+}

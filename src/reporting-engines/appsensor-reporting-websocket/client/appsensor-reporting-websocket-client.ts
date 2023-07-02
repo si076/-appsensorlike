@@ -4,9 +4,7 @@ import { ActionResponse } from "../../../websocket/appsensor-websocket.js";
 import { ReportingEngineExt } from "../../reporting-engines.js";
 import { AppSensorWebSocketClient, WebSocketClientConfig } from "../../../websocket/client/appsensor-websocket-client.js";
 
-import { ClientRequestArgs } from "http";
 import { EventEmitter } from "events";
-import WebSocket from "ws";
 import { Logger } from "../../../logging/logging.js";
 
 class ReportingWebSocketClientConfigReader  extends JSONConfigReadValidate {

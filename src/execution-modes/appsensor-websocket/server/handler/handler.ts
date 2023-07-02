@@ -1,5 +1,4 @@
 import { IncomingMessage } from "http";
-import WebSocket from "ws";
 import { Context } from "../../../../core/accesscontrol/accesscontrol.js";
 
 import { AppSensorEvent, RequestHandler, AppSensorServer, Attack, Response, IPAddress, Utils as coreUtils} from "../../../../core/core.js";

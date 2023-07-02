@@ -1,0 +1,25 @@
+{
+  "name": "@si076/appsensorlike_rest_client",
+  "version": "1.0.0",
+  "description": "A simple configuration object to access and interact with REST web app/services",
+  "main": "rest-client.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/si076/-appsensorlike.git"
+  },
+  "keywords": [
+    "js",
+    "AppSensor",
+    "REST",
+    "client"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/si076/-appsensorlike/issues"
+  },
+  "homepage": "https://github.com/si076/-appsensorlike#readme"
+}

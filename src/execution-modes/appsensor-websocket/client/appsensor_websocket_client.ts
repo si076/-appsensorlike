@@ -1,5 +1,3 @@
-import { ClientRequestArgs } from "http";
-import WebSocket from "ws";
 
 import { AppSensorClient } from "../../../core/core.js";
 import { NoopUserManager, ResponseHandler, UserManager } from "../../../core/response/response.js";

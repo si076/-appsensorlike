@@ -1040,7 +1040,7 @@ class Category {
  * is "suspicous" whereas an Attack has been determined to be "malicious" by some analysis.
  * 
  * The name of this class in the original Java code is Event. 
- * Since Javascript has own native Event class, this class has been renamed to AppSensorEvent (not to burden with namespace all the time).
+ * Since Javascript has own native Event class, this class has been renamed to AppSensorEvent (not to burden with the name all the time).
  */
  class AppSensorEvent extends AppsensorEntity {
 

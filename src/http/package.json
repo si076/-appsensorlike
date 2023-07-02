@@ -1,0 +1,23 @@
+{
+  "name": "@si076/appsensorlike_http",
+  "version": "1.0.0",
+  "description": "Utility classes to configure and start HTTP/S/2 server",
+  "main": "HttpS2Server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/si076/-appsensorlike.git"
+  },
+  "keywords": [
+    "js",
+    "http/s/2"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/si076/-appsensorlike/issues"
+  },
+  "homepage": "https://github.com/si076/-appsensorlike#readme"
+}

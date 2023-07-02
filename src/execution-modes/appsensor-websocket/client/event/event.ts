@@ -1,4 +1,3 @@
-import { ClientRequestArgs } from "http";
 import { AppSensorEvent, Attack, Response } from "../../../../core/core.js";
 import { EventManager } from "../../../../core/event/event.js";
 import { JSONConfigReadValidate, Utils } from "../../../../utils/Utils.js";
@@ -7,7 +6,6 @@ import { ActionResponse } from "../../../../websocket/appsensor-websocket.js";
 import { Logger } from "../../../../logging/logging.js";
 
 import EventEmitter from "events";
-import WebSocket from "ws";
 
 class WebSocketEventManagerConfigReader  extends JSONConfigReadValidate {
 
