@@ -20,13 +20,14 @@ One might ask why do we need another port as we have already got the Java implem
  ```
  Minimum Setup
  ---
+ Copy appsensor-server-config.json, appsensor-server-config_schema.json, appsensor-client-config.json, appsensor-client-config_schema.json, appsensor-logging-config.json and appsensor-logging-config_schema.json from /node_modules/@appsensorlike/appsensorlike/dist to your working directory.
  ```javascript
  import { AppSensorLocal } from '@appsensorlike/appsensorlike/execution-modes/appsensor-local/appsensor_local.js';
  import { AppSensorEvent, Category, DetectionPoint, DetectionSystem, User } from "@appsensorlike/appsensorlike/core/core.js";
 
 const appSensorLocal = new AppSensorLocal();
 //you are now able to get instance of AppSensorClient respectivly EventManager and to send events to the server
-const eventManager = appSensorLocal.getAppSensorServer().getEventManager();
+const eventManager = appSensorLocal.getAppSensorClient().getEventManager();
 
 //following lines are added just for purpose of demonstration
 //
@@ -38,13 +39,15 @@ const user1 = new User("user1");
 const detectionPoint = new DetectionPoint(Category.REQUEST, "RE7");
 const detectionSystem = new DetectionSystem("localhostme");
 
-eventManager.addEvent(new AppSensorEvent(user1, detectionPoint, detectionSystem)); 
-eventManager.addEvent(new AppSensorEvent(user1, detectionPoint, detectionSystem)); //new instance every time to set timestamp
+await eventManager.addEvent(new AppSensorEvent(user1, detectionPoint, detectionSystem)); 
+await eventManager.addEvent(new AppSensorEvent(user1, detectionPoint, detectionSystem)); //new instance every time to set timestamp
 
 //the response(in cese of an Attack) from the server will be available via
 //ResponseHandler set in AppSensorLocal constructor
 //default implementation just logs what actions expected to be performed by your app in response to the attack
 ```
+Watch console for generated attacks and responses.
+
 
 For a real world scenario you have to:
 ---
