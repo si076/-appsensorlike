@@ -55,7 +55,7 @@ For a real world scenario you have to:
 2) Choose or implement a storage provider, which holds AppSensorEvent, Attack, Response, etc., and pass it to AppSensorLocal constructor. This module comes with in-memory storage provider, which could be considered only for testing. As a separate module under the same scope @appsensorlike/appsensorlike_storage_mysql is provided MySQL storage provider.
 3) Implement ResponseHandler and pass it to the AppSensorLocal constructor. The ResponseHandler is responsible, on the app side, to modify behaviour of the app according to the response.
 
-Other modues
+Other modules
 ---
 **Storage-providers**
 
