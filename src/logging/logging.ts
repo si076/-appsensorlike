@@ -1,6 +1,3 @@
-import fs from 'fs';
-import EventEmitter from "events";
-import assert from 'assert';
 
 import log from "log4js";
 

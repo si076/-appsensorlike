@@ -2,8 +2,8 @@ import fs from 'fs';
 import EventEmitter from "events";
 import assert from 'assert';
 
-import Ajv, { AnySchemaObject, ErrorObject } from "ajv"
-import addFormats from "ajv-formats"
+import { default as Ajv, AnySchemaObject, ErrorObject } from "ajv"
+import { default as formatsPlugin} from "ajv-formats"
 
 import { AppSensorEvent, Attack, DetectionPoint, DetectionSystem, 
          Interval, IPAddress, KeyValuePair, Resource, Response, Threshold, 
@@ -232,7 +232,7 @@ class JSONConfigReadValidate {
         const schema = JSON.parse(fs.readFileSync(validatorLocation, 'utf8'));
 
         const ajv = new Ajv({strict:true, allowUnionTypes: true, allErrors:true});
-        addFormats(ajv);
+        formatsPlugin(ajv);
 
         const validate = ajv.compile(schema);
         validate(config);

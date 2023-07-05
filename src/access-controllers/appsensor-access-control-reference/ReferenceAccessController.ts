@@ -1,5 +1,5 @@
-import { AccessController, Action, Context } from "../../core/accesscontrol/accesscontrol";
-import { ClientApplication } from "../../core/core";
+import { AccessController, Action, Context } from "../../core/accesscontrol/accesscontrol.js";
+import { ClientApplication } from "../../core/core.js";
 
 class NotAuthorizedException extends Error {
     constructor(message: string) {

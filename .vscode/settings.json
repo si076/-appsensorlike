@@ -128,5 +128,7 @@
         }
 
                 
-    ]
+    ],
+    "js/ts.implicitProjectConfig.module": "NodeNext",
+    "typescript.tsdk": "node_modules\\typescript\\lib"
 }
