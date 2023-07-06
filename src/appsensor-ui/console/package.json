@@ -1,8 +1,9 @@
 {
-  "name": "@si076/appsensorlike_ui_console",
+  "name": "@appsensorlike/appsensorlike_ui_console",
   "version": "1.0.0",
   "description": "AppSensorLikeUI console implementation",
   "main": "appsensor-ui-console.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

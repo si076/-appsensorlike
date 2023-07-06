@@ -1,8 +1,0 @@
-{
-    "serverConnection": {
-        "type": "ws",
-        "url": "http://localhost:9000/myapp/",
-        "clientApplicationIdentificationHeaderValue": "my-sample-client"
-    }
-    
-}

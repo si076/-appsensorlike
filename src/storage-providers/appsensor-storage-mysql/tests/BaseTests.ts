@@ -1,4 +1,4 @@
-import { AppSensorClient, AppSensorServer, Category, DetectionPoint, DetectionSystem, Interval, INTERVAL_UNITS, KeyValuePair, Resource, Response, Threshold, User } from "../../../core/core.js";
+import { AppSensorClient, AppSensorServer, Category, DetectionPoint, DetectionSystem, Interval, INTERVAL_UNITS, KeyValuePair, Resource, Response, Threshold, User } from "@appsensorlike/appsensorlike/core/core.js";
 import { DOP } from "../DOP.js";
 import { Utils } from "../utils.js";
 

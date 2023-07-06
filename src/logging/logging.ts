@@ -28,13 +28,12 @@ class Logger {
     private static configFile       = 'appsensor-logging-config.json';
     private static configSchemeFile = 'appsensor-logging-config_schema.json';
 
-    private static configManager = new JSONConfigManager(new JSONConfigReadValidate(Logger.configFile, 
+    private static configManager = new JSONConfigManager(new JSONConfigReadValidate(import.meta.url,
+                                                                                    Logger.configFile, 
                                                                                     Logger.configSchemeFile, 
                                                                                     LoggingConfiguration.prototype), 
-                                                                                    null, 
+                                                                                    Logger.configFile, 
                                                                                     null,
-                                                                                    Logger.configFile,
-                                                                                    Logger.configSchemeFile,
                                                                                     true);
 
     private static log4js: log.Log4js = log.configure(new LoggingConfiguration().log4jsLoggers);

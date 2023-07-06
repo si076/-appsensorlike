@@ -1,8 +1,9 @@
 {
-  "name": "@si076/appsensorlike_ui_web",
+  "name": "@appsensorlike/appsensorlike_ui_web",
   "version": "1.0.0",
   "description": "AppSensorLikeUI web implementation",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

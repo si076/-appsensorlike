@@ -65,7 +65,7 @@ Other modules
 
 @appsensorlike/appsensorlike_rest_client - http/s client consuming the web service as defined in https://owasp.org/www-pdf-archive/Owasp-appsensor-guide-v2.pdf under Chapter 20
 
-@appsensorlike/appsensorlike-rest-server - http/s sever exposed as a web service as defined in https://owasp.org/www-pdf-archive/Owasp-appsensor-guide-v2.pdf under Chapter 20
+@appsensorlike/appsensorlike-rest-server - http/s server exposed as a web service as defined in https://owasp.org/www-pdf-archive/Owasp-appsensor-guide-v2.pdf under Chapter 20
 
 @appsensorlike/appsensorlike_websocket_client - client communicating with the server via WebSocket 
 

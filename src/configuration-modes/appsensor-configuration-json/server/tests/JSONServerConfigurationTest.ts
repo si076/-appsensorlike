@@ -7,11 +7,11 @@ import { Clause, Expression, MonitorPoint, Rule } from "../../../../core/rule/ru
 
 import assert from "assert";
 import fs from 'fs';
+import { JSONConfigReadValidate } from "../../../../utils/Utils.js";
 
 class JSONServerConfigurationTest {
 
-    private static TEST_CONFIG_LOCATION = 
-        './configuration-modes/appsensor-configuration-json/server/tests/appsensor-server-config.json';
+    private static TEST_CONFIG_LOCATION = 'appsensor-server-config.json';
 
     private testConfigurationReadOfAllElements(): void {
         console.log('--> testConfigurationReadOfAllElements');
@@ -207,10 +207,12 @@ class JSONServerConfigurationTest {
             configExpected.setCustomDetectionPoints(customDetectionPoints);
         }
 
-        configExpected.configurationFile = fs.realpathSync(JSONServerConfigurationTest.TEST_CONFIG_LOCATION);
+        const configFilePath = JSONConfigReadValidate.resolvePath(import.meta.url, JSONServerConfigurationTest.TEST_CONFIG_LOCATION);
+
+        configExpected.configurationFile = fs.realpathSync(configFilePath);
 
 
-        const configActual = new JSONServerConfigurationReader().read(JSONServerConfigurationTest.TEST_CONFIG_LOCATION);
+        const configActual = new JSONServerConfigurationReader().read(configFilePath);
 
         assert.deepStrictEqual(configActual, configExpected);
 

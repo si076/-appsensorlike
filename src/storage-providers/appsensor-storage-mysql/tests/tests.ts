@@ -1,11 +1,12 @@
-import { AppSensorLocal } from "../../../execution-modes/appsensor-local/appsensor_local.js";
+import { AppSensorLocal } from "@appsensorlike/appsensorlike/execution-modes/appsensor-local/appsensor_local.js";
+import { AppSensorClient, AppSensorServer } from "@appsensorlike/appsensorlike/core/core.js";
+
 import { MySQLAttackStore, MySQLEventStore, MySQLResponseStore } from "../appsensor-storage-mysql.js";
 import { AggregateEventAnalysisEngineIntegrationTest } from "./AggregateEventAnalysisEngineIntegrationTest.js";
 import { DOPTests } from "./DOPTests.js";
 import { MySQLStorageTests } from "./MySQLStorageTests.js";
-import { AppSensorClient, AppSensorServer } from "../../../core/core.js";
-import { AppSensorWebsocketExecServer } from "../../../execution-modes/appsensor-websocket/server/appsensor_websocket_server.js";
-import { AppSensorWebsocketExecClient } from "../../../execution-modes/appsensor-websocket/client/appsensor_websocket_client.js";
+// import { AppSensorWebsocketExecServer } from "../../../execution-modes/appsensor-websocket/server/appsensor_websocket_server.js";
+// import { AppSensorWebsocketExecClient } from "../../../execution-modes/appsensor-websocket/client/appsensor_websocket_client.js";
 
 import * as readline from 'readline';
 
@@ -72,24 +73,24 @@ async function runTestsLocally(readInf: readline.Interface | null = null) {
                    readInf);
 }
 
-async function runTestsWebSocket(readInf: readline.Interface | null = null) {
-    console.log('----- Run MySQL Storage Tests WebSocket Execution -----');
-    const appSensorWebSocketServer = 
-            new AppSensorWebsocketExecServer('', '', undefined,
-                                             new MySQLAttackStore(),
-                                             new MySQLEventStore(),
-                                             new MySQLResponseStore());
+// async function runTestsWebSocket(readInf: readline.Interface | null = null) {
+//     console.log('----- Run MySQL Storage Tests WebSocket Execution -----');
+//     const appSensorWebSocketServer = 
+//             new AppSensorWebsocketExecServer('', '', undefined,
+//                                              new MySQLAttackStore(),
+//                                              new MySQLEventStore(),
+//                                              new MySQLResponseStore());
                                              
-    const appSensorWebSocketClient = new AppSensorWebsocketExecClient();
+//     const appSensorWebSocketClient = new AppSensorWebsocketExecClient();
 
-    await appSensorWebSocketServer.startWebSocketServer();
+//     await appSensorWebSocketServer.startWebSocketServer();
 
-    await runTests(appSensorWebSocketServer.getAppSensorServer(), 
-                   appSensorWebSocketClient.getAppSensorClient(), 
-                   readInf);
+//     await runTests(appSensorWebSocketServer.getAppSensorServer(), 
+//                    appSensorWebSocketClient.getAppSensorClient(), 
+//                    readInf);
 
-    await appSensorWebSocketClient.closeWebSocket();
-    await appSensorWebSocketServer.closeWebSocketServer();
-}
+//     await appSensorWebSocketClient.closeWebSocket();
+//     await appSensorWebSocketServer.closeWebSocketServer();
+// }
 
-export {runTestsLocally, runTestsWebSocket}
+export {runTestsLocally} //,runTestsWebSocket}

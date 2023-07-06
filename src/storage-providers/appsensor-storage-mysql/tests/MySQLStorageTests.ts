@@ -1,6 +1,6 @@
 import { BaseTests } from "./BaseTests.js";
-import { AppSensorClient, AppSensorEvent, AppSensorServer, KeyValuePair } from "../../../core/core.js";
-import { SearchCriteria } from "../../../core/criteria/criteria.js";
+import { AppSensorClient, AppSensorEvent, AppSensorServer, KeyValuePair } from "@appsensorlike/appsensorlike/core/core.js";
+import { SearchCriteria } from "@appsensorlike/appsensorlike/core/criteria/criteria.js";
 
 import assert from "assert";
 

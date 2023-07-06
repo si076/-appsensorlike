@@ -46,8 +46,6 @@ class AppSensorRestServer {
         this.configManager = new JSONConfigManager(new JSONServerConfigurationReader(),
                                                    appServerConfigFile.trim(),
                                                    null,
-                                                   JSONServerConfigurationReader.DEFAULT_CONFIG_FILE, 
-                                                   JSONServerConfigurationReader.DEFAULT_CONFIG_SCHEMA_FILE,
                                                    true);
         this.configManager.listenForConfigurationChange((newConfig: any) => {
             this.appSensorServer.setConfiguration(this.configManager.getConfiguration());

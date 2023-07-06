@@ -4,7 +4,8 @@
   "description": "A skeleton for REST web app/services",
   "main": "rest-server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "gen_rest_server_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-rest-server-config_schema.json RestServerConfig"
   },
   "repository": {
     "type": "git",

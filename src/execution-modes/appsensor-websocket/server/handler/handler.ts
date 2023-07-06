@@ -11,8 +11,9 @@ import { AppSensorWebSocketServer, WebSocketExt, WebSocketServerConfig } from ".
 class WebSocketRequestHandlerConfigReader  extends JSONConfigReadValidate {
 
     constructor() {
-        super('./execution-modes/appsensor-websocket/server/handler/appsensor-websocket-request-handler-config.json',
-              './websocket/server/appsensor-websocket-server-config_schema.json',
+        super(import.meta.url,
+              'appsensor-websocket-request-handler-config.json',
+              'appsensor-websocket-server-config_schema.json',
               WebSocketServerConfig.prototype);
     }
 }

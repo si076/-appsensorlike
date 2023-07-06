@@ -1,6 +1,6 @@
 import { PoolConfig, PoolConnection, Pool, createPool } from 'mysql';
-import { Logger } from '../../logging/logging.js';
-import { JSONConfigManager, JSONConfigReadValidate } from '../../utils/Utils.js';
+import { Logger } from '@appsensorlike/appsensorlike/logging/logging.js';
+import { JSONConfigManager, JSONConfigReadValidate } from '@appsensorlike/appsensorlike/utils/Utils.js';
 
 class MySQLStorageConfig {
     poolConfig: PoolConfig = {};
@@ -10,19 +10,18 @@ class ConnectionManager {
 
     private static pool: Pool;
 
-    private static defaultConfigFile       = './storage-providers/appsensor-storage-mysql/appsensor-storage-mysql-config.json';
-    private static defaultConfigSchemeFile = './storage-providers/appsensor-storage-mysql/appsensor-storage-mysql-config_schema.json';
+    private static defaultConfigFile       = 'appsensor-storage-mysql-config.json';
+    private static defaultConfigSchemeFile = 'appsensor-storage-mysql-config_schema.json';
     private static configFile              = 'appsensor-storage-mysql-config.json';
     private static configSchemeFile        = './storage-providers/appsensor-storage-mysql/appsensor-storage-mysql-config_schema.json';
 
     private static configManager = 
-                        new JSONConfigManager(new JSONConfigReadValidate(ConnectionManager.defaultConfigFile, 
+                        new JSONConfigManager(new JSONConfigReadValidate(import.meta.url,
+                                                                         ConnectionManager.defaultConfigFile, 
                                                                          ConnectionManager.defaultConfigSchemeFile, 
                                                                          MySQLStorageConfig.prototype), 
                                                                          ConnectionManager.configFile, 
                                                                          ConnectionManager.configSchemeFile,
-                                                                         ConnectionManager.defaultConfigFile,
-                                                                         ConnectionManager.defaultConfigSchemeFile,
                                                                          true);
 
     private static createPool(poolConfig: PoolConfig) {

@@ -1,8 +1,9 @@
 {
-  "name": "@si076/appsensorlike_rest_client",
+  "name": "@appsensorlike/appsensorlike_rest_client",
   "version": "1.0.0",
   "description": "AppSensorLike execution mode REST; client part",
   "main": "appsensor_rest_client.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -1,14 +1,16 @@
-import { format, PoolConnection } from "mysql";
-import * as _core from "../../core/core.js";
-import * as _geolocation from "../../core/geolocation/geolocation.js";
-import * as _rule from "../../core/rule/rule.js";
+import * as _core from "@appsensorlike/appsensorlike/core/core.js";
+import * as _geolocation from "@appsensorlike/appsensorlike/core/geolocation/geolocation.js";
+import * as _rule from "@appsensorlike/appsensorlike/core/rule/rule.js";
+import { Logger } from "@appsensorlike/appsensorlike/logging/logging.js";
+
 import { ConnectionManager } from "./connection_manager.js";
 import { IArrayStoreTable, IPropertyMap, Mapping, MappingReader } from "./mapping.js";
 import { Utils } from './utils.js'
 
+import { format, PoolConnection } from "mysql";
 import { v4 as uuidv4 } from 'uuid';
+
 import EventEmitter from "events";
-import { Logger } from "../../logging/logging.js";
 
 class Graph {
     private ADJACENCY_MATRIX: number[][] = [];
@@ -959,7 +961,7 @@ class DOP {
 
         // console.log('<-- persistArray');
         
-        return uuid;
+        return uuid as string;
     }
 
 }

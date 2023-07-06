@@ -10,8 +10,9 @@ import EventEmitter from "events";
 class WebSocketEventManagerConfigReader  extends JSONConfigReadValidate {
 
     constructor() {
-        super('./execution-modes/appsensor-websocket/client/event/appsensor-websocket-event-manager-config.json',
-              './websocket/client/appsensor-websocket-client-config_schema.json',
+        super(import.meta.url,
+              'appsensor-websocket-event-manager-config.json',
+              'appsensor-websocket-client-config_schema.json',
               WebSocketClientConfig.prototype);
     }
 }

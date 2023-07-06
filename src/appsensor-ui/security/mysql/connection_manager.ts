@@ -12,19 +12,18 @@ class ConnectionManager {
 
     private static pool: msql.Pool;
 
-    private static defaultConfigFile       = './appsensor-ui/security/mysql/appsensor-ui-session-storage-mysql-config.json';
-    private static defaultConfigSchemeFile = './appsensor-ui/security/mysql/appsensor-ui-session-storage-mysql-config_schema.json';
+    private static defaultConfigFile       = 'appsensor-ui-session-storage-mysql-config.json';
+    private static defaultConfigSchemeFile = 'appsensor-ui-session-storage-mysql-config_schema.json';
     private static configFile              = 'appsensor-ui-session-storage-mysql-config.json';
-    private static configSchemeFile        = './appsensor-ui/security/mysql/appsensor-ui-session-storage-mysql-config_schema.json';
+    private static configSchemeFile        = 'appsensor-ui-session-storage-mysql-config_schema.json';
 
     private static configManager = 
-                        new JSONConfigManager(new JSONConfigReadValidate(ConnectionManager.defaultConfigFile, 
+                        new JSONConfigManager(new JSONConfigReadValidate(import.meta.url,
+                                                                         ConnectionManager.defaultConfigFile, 
                                                                          ConnectionManager.defaultConfigSchemeFile, 
                                                                          MySQLSesionStorageConfig.prototype), 
                                                                          ConnectionManager.configFile, 
                                                                          ConnectionManager.configSchemeFile,
-                                                                         ConnectionManager.defaultConfigFile,
-                                                                         ConnectionManager.defaultConfigSchemeFile,
                                                                          true);
 
     private static createPool(poolConfig: msql.PoolOptions) {

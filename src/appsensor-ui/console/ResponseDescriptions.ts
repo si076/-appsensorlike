@@ -43,7 +43,10 @@ class ResponseDescriptions {
 
 class ResponseDescriptionsReader extends JSONConfigReadValidate {
     constructor() {
-        super('appsensor-responses-descriptions.json', null, ResponseDescriptions.prototype);
+        super(import.meta.url,
+              'appsensor-responses-descriptions.json', 
+              null, 
+              ResponseDescriptions.prototype);
     }
 }
 

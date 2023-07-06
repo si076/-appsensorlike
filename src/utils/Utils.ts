@@ -1,6 +1,8 @@
 import fs from 'fs';
 import EventEmitter from "events";
 import assert from 'assert';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
 
 import { default as Ajv, AnySchemaObject, ErrorObject } from "ajv"
 import { default as formatsPlugin} from "ajv-formats"
@@ -47,8 +49,6 @@ class JSONConfigManager {
 
     protected configFile: string | null = null;
     protected configSchemaFile: string | null = null;
-    protected defaultConfigFile: string;
-    protected defaultConfigSchemeFile: string | null = null;
     protected watchConfigFile: boolean = false;
 
     protected currentConfig: any = null;
@@ -56,18 +56,14 @@ class JSONConfigManager {
     constructor(configReader: JSONConfigReadValidate,
                 configFile: string | null = null,
                 configSchemaFile: string | null = null,
-                defaultConfigFile: string,
-                defaultConfigSchemeFile: string | null = null,
                 watchConfigFile: boolean = false) {
         this.configReader = configReader;
         this.configFile = configFile;
         this.configSchemaFile = configSchemaFile;
-        this.defaultConfigFile = defaultConfigFile;
-        this.defaultConfigSchemeFile = defaultConfigSchemeFile;
         this.watchConfigFile = watchConfigFile;
         
         if (watchConfigFile) {
-            let fileToWatch = this.defaultConfigFile;
+            let fileToWatch = this.configReader.getDefaultConfigFile();
             if (this.configFile) {
                 fileToWatch = this.configFile;
             }
@@ -129,12 +125,21 @@ class JSONConfigReadValidate {
 
     protected prototypeOfConfigObj: Object | null | undefined;
 
-    constructor(defaultConfigFile: string, 
+    constructor(defaultRelativeTo: string,
+                defaultConfigFile: string, 
                 defaultConfigSchemaFile: string | null = null, 
                 prototypeOfConfigObj?: Object | null) {
-        this.defaultConfigFile = defaultConfigFile;
-        this.defaultConfigSchemaFile = defaultConfigSchemaFile;
+        this.defaultConfigFile = JSONConfigReadValidate.resolvePath(defaultRelativeTo, defaultConfigFile);
+        this.defaultConfigSchemaFile = defaultConfigSchemaFile ? JSONConfigReadValidate.resolvePath(defaultRelativeTo, defaultConfigSchemaFile) : null;
         this.prototypeOfConfigObj = prototypeOfConfigObj;
+    }
+
+    public getDefaultConfigFile(): string {
+        return this.defaultConfigFile;
+    }
+
+    public getDefaultConfigSchemaFile(): string | null {
+        return this.defaultConfigSchemaFile;
     }
 
     public getConfigLocation(configLocation: string | null = null): string {
@@ -161,6 +166,16 @@ class JSONConfigReadValidate {
         return validatorLocation;
     }
 
+    /**
+     * Read configuration file and validate.
+     * If a configuration file is not provided, default is taken
+     * If a validator(schema) is not provided, default is taken. 
+     * If default schema is not set, loaded configuration is not validated
+     * @param configLocation a configuration file path relative to the working directory or an absolute path
+     * @param validatorLocation a validator(schema) 
+     * @param reload true when configuration file has been changed since loaded in memory
+     * @returns a configuration object
+     */
     public read(configLocation: string | null = null, 
                 validatorLocation: string | null = null, 
                 reload: boolean  = false): any {
@@ -202,6 +217,12 @@ class JSONConfigReadValidate {
         return config;
     }
 
+    /**
+     * Read configuration from a string and validate.
+     * @param configAsString a string containing the configuration in JSON format
+     * @param validatorLocation a validator(schema); if it is null, doesn't validate
+     * @returns a configuration object
+     */
     public readFromString(configAsString: string, 
                           validatorLocation: string | null = null) {
         let config = JSON.parse(configAsString);
@@ -266,6 +287,20 @@ class JSONConfigReadValidate {
 
         return valid;
     }
+
+    public static resolvePath(relativeToFileURL: string, fileLocation: string): string {
+        let __dirname = process.cwd();
+        if (relativeToFileURL.length > 0) {
+            const __filename = fileURLToPath(relativeToFileURL);
+            __dirname = dirname(__filename);
+        }
+
+        const resolvedPath = resolve(__dirname, fileLocation);
+
+        console.log(resolvedPath);
+
+        return resolvedPath;
+    } 
 
 }
 

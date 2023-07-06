@@ -63,12 +63,15 @@ class AppSensorUIConsoleSettings extends BaseSettings implements IValidateInitia
 }
 
 class AppSensorUIConsoleSettingsLoader extends JSONConfigReadValidate {
-    static DEFAULT_FILE: string = './appsensor-ui/console/appsensor-console-ui-settings.json'; 
+    static DEFAULT_FILE: string = 'appsensor-console-ui-settings.json'; 
 
     protected settingsFile?: string
 
     constructor(settingsFile?: string) {
-        super(AppSensorUIConsoleSettingsLoader.DEFAULT_FILE, null, AppSensorUIConsoleSettings.prototype);
+        super(import.meta.url,
+              AppSensorUIConsoleSettingsLoader.DEFAULT_FILE, 
+              null, 
+              AppSensorUIConsoleSettings.prototype);
 
         this.settingsFile = settingsFile;
     }

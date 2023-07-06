@@ -38,7 +38,8 @@ class JSONServerConfigurationReader extends JSONConfigReadValidate implements Se
     }
 
     constructor() {
-        super(JSONServerConfigurationReader.DEFAULT_CONFIG_FILE, 
+        super(import.meta.url,
+              JSONServerConfigurationReader.DEFAULT_CONFIG_FILE, 
               JSONServerConfigurationReader.DEFAULT_CONFIG_SCHEMA_FILE);
     }
 

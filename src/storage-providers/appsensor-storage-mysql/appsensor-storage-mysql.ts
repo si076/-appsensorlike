@@ -1,10 +1,10 @@
-import { SearchCriteria } from "../../core/criteria/criteria.js";
-import { AttackStore, EventStore, ResponseStore } from "../../core/storage/storage.js";
-import { AppSensorEvent, Attack, DetectionPoint, DetectionSystem, Response, User, Utils as coreUtils } from "../../core/core.js";
-import { DOP, TYPE_FILTER_FUNCTION } from "./DOP.js";
-import { Rule } from "../../core/rule/rule.js";
-import { Logger } from "../../logging/logging.js";
+import { SearchCriteria } from "@appsensorlike/appsensorlike/core/criteria/criteria.js";
+import { AttackStore, EventStore, ResponseStore } from "@appsensorlike/appsensorlike/core/storage/storage.js";
+import { AppSensorEvent, Attack, DetectionPoint, DetectionSystem, Response, User, Utils as coreUtils } from "@appsensorlike/appsensorlike/core/core.js";
+import { Rule } from "@appsensorlike/appsensorlike/core/rule/rule.js";
+import { Logger } from "@appsensorlike/appsensorlike/logging/logging.js";
 
+import { DOP, TYPE_FILTER_FUNCTION } from "./DOP.js";
 
 class MySQLAttackStore extends AttackStore {
 

@@ -3,11 +3,13 @@
   "version": "1.0.0",
   "description": "AppSensorLike UI classes/types shared among web and console UIs",
   "main": "index.js",
+  "type": "module",
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "gen_session_store_mysql_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-ui-session-storage-mysql-config_schema.json MySQLSesionStorageConfig"
   },
   "repository": {
     "type": "git",

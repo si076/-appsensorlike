@@ -13,8 +13,9 @@ import { JSONServerConfigurationReader } from "../../../configuration-modes/apps
 class ReportingWebSocketServerConfigReader  extends JSONConfigReadValidate {
 
     constructor() {
-        super('./reporting-engines/appsensor-reporting-websocket/server/appsensor-reporting-websocket-server-config.json',
-              './websocket/server/appsensor-websocket-server-config_schema.json',
+        super(import.meta.url,
+              'appsensor-reporting-websocket-server-config.json',
+              'appsensor-websocket-server-config_schema.json',
               WebSocketServerConfig.prototype);
     }
 }

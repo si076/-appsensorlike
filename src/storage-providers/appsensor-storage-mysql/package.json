@@ -1,13 +1,15 @@
 {
-  "name": "@si076/appsensorlike_storage_mysql",
-  "version": "1.0.0",
+  "name": "@appsensorlike/appsensorlike_storage_mysql",
+  "version": "0.17.0",
   "description": "AppSensorLike's MySQL storage implementation",
-  "main": "appsensor-storage-mysql.js",
+  "type": "module",
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "gen_mysql_mapping_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o mapping_schema.json IMapping",
+    "gen_mysql_config_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-storage-mysql-config_schema.json MySQLStorageConfig"
   },
   "repository": {
     "type": "git",
@@ -15,7 +17,6 @@
   },
   "keywords": [
     "js",
-    "AppSensor",
     "AppSensor",
     "storage",
     "MySQL"
@@ -26,12 +27,25 @@
     "url": "https://github.com/si076/-appsensorlike/issues"
   },
   "homepage": "https://github.com/si076/-appsensorlike#readme",
+  "engines": {
+    "node": ">=14.15.0"
+  },
   "dependencies": {
+    "@appsensorlike/appsensorlike": "^0.17.0",
     "mysql": "^2.18.1",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@types/mysql": "^2.15.21",
-    "@types/uuid": "^9.0.1"
+    "@types/uuid": "^9.0.1",
+    "typescript": "^4.7.4"
+  },
+  "files": [
+    "dist/storage-providers/appsensor-storage-mysql/*",
+    "dist/storage-providers/appsensor-storage-mysql/sql/*",
+    "dist/storage-providers/appsensor-storage-mysql/tests/*"
+  ],
+  "exports": {
+    ".": "./dist/appsensor-storage-mysql.js"
   }
 }

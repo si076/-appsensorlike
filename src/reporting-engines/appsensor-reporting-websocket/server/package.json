@@ -1,10 +1,12 @@
 {
-  "name": "@si076/appsensorlike_reporting_websocket_server",
+  "name": "@appsensorlike/appsensorlike_reporting_websocket_server",
   "version": "1.0.0",
   "description": "AppSensorLike reporting websocket server",
   "main": "appsensor-reporting-websocket-server.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "gen_reporting_websocket_server_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-websocket-server-config_schema.json WebSocketServerConfig"
   },
   "repository": {
     "type": "git",

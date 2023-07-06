@@ -1,8 +1,8 @@
-import { AppSensorClient, AppSensorEvent, AppSensorServer, DetectionPoint, KeyValuePair } from "../../../core/core.js";
+import { AppSensorClient, AppSensorEvent, AppSensorServer, DetectionPoint, KeyValuePair } from "@appsensorlike/appsensorlike/core/core.js";
 import { DOP, TYPE_FILTER_FUNCTION } from "../DOP.js";
+import { BaseTests } from "./BaseTests.js";
 
 import assert from "assert";
-import { BaseTests } from "./BaseTests.js";
 
 class DOPTests extends BaseTests {
 

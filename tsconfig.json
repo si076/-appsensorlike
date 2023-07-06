@@ -5,7 +5,7 @@
     "module": "Node16",
     "allowSyntheticDefaultImports": true,
     "rootDir": "src",
-    "outDir": "./dist",
+    "outDir": "./dist/@appsensorlike/appsensorlike/dist",
     "moduleResolution": "Node16",
     "types": [
       "node"
@@ -14,17 +14,16 @@
   "include": [
     //"./src/*.ts",
     //"./src/**/*.ts"
-    "./src/access-controllers/*.ts",
-    "./src/analysis-engines/*.ts",
-    "./src/configuration-modes/*.ts",
-    "./src/core/*.ts",
-    "./src/execution-modes/appsensor-local/*.ts",
-    "./src/execution-modes/appsensor-local/tests/*.ts",
-    "./src/execution-modes/tests/*.ts",
+    "./src/access-controllers/**/*.ts",
+    "./src/analysis-engines/**/*.ts",
+    "./src/configuration-modes/**/*.ts",
+    "./src/core/**/*.ts",
+    "./src/execution-modes/appsensor-local/**/*.ts",
+    "./src/execution-modes/tests/**/*.ts",
     "./src/logging/*.ts",
     "./src/storage-providers/appsensor-storage-in-memory/*.ts",
     //"./src/tests",
-    "./src/utils/*.ts",
+    "./src/utils/*.ts"
   ],
   "exclude": [
     "node_modules"

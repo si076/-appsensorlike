@@ -9,8 +9,9 @@ import e from 'express';
 
 class RestRequestHandlerConfigReader extends JSONConfigReadValidate {
     constructor() {
-        super('./execution-modes/appsensor-rest/server/handler/appsensor-rest-request-handler-config.json',
-              './rest/server/appsensor-rest-server-config_schema.json',
+        super(import.meta.url,
+              'appsensor-rest-request-handler-config.json',
+              'appsensor-rest-server-config_schema.json',
               RestServerConfig.prototype);
     }
 }

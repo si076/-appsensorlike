@@ -8,6 +8,9 @@ class JSONClientConfigurationReader extends JSONConfigReadValidate implements Cl
 
     private static configPrototypesSample: JSONClientConfiguration;
 
+    public static DEFAULT_CONFIG_FILE        = 'appsensor-client-config.json';
+    public static DEFAULT_CONFIG_SCHEMA_FILE = 'appsensor-client-config_schema.json';
+
     static {
         JSONClientConfigurationReader.configPrototypesSample = new JSONClientConfiguration();
 
@@ -15,7 +18,9 @@ class JSONClientConfigurationReader extends JSONConfigReadValidate implements Cl
     }
 
     constructor() {
-        super('appsensor-client-config.json', 'appsensor-client-config_schema.json');
+        super(import.meta.url, 
+              JSONClientConfigurationReader.DEFAULT_CONFIG_FILE,
+              JSONClientConfigurationReader.DEFAULT_CONFIG_SCHEMA_FILE);
     }
 
     public override read(configurationLocation: string = '', 

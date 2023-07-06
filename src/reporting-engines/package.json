@@ -3,8 +3,12 @@
   "version": "1.0.0",
   "description": "AppSensorLike reporting engines base classes/types",
   "main": "reporting-engines.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "run_reporting_tests_server_only": "npx run-func ./tests/appsensor-reporting-websocket-tests.js runServerSeparately",
+    "run_reporting_tests_client_only": "npx run-func ./tests/appsensor-reporting-websocket-tests.js runClientSeparately",
+    "run_reporting_tests_client_only_report_events": "npx run-func ./tests/appsensor-reporting-websocket-tests.js runClientSeparatelyReportEvents"
   },
   "repository": {
     "type": "git",

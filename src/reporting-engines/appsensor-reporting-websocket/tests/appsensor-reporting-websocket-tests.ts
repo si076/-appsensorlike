@@ -9,7 +9,7 @@ import { DOP } from "../../../storage-providers/appsensor-storage-mysql/DOP.js";
 import { MySQLAttackStore, MySQLEventStore, MySQLResponseStore } from "../../../storage-providers/appsensor-storage-mysql/appsensor-storage-mysql.js";
 
 import assert from "assert";
-import { Utils } from "../../../utils/Utils.js";
+import { JSONConfigReadValidate, Utils } from "../../../utils/Utils.js";
 import { JSONServerConfigurationReader } from "../../../configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
 
 class AppSensorReportingWebsocketClientTest {
@@ -508,14 +508,18 @@ class AppSensorReportingWebsocketTests {
 
 async function runTestWithHttpServer(earliest: string, withCustomPoints: boolean) {
 	console.log('----- With Http Server -----');
-	let configLocation = './reporting-engines/appsensor-reporting-websocket/tests/appsensor-reporting-websocket-server-config1.json';
-    const server = new AppSensorReportingWebsocketTests(configLocation);
+	let configLocation = 'appsensor-reporting-websocket-server-config1.json';
+	let configAbsolutPath = JSONConfigReadValidate.resolvePath(import.meta.url, configLocation);
+
+    const server = new AppSensorReportingWebsocketTests(configAbsolutPath);
 	await server.startServer();
     await server.initializeMySQLStorage();
     await server.populateData(withCustomPoints);
 
-	configLocation = './reporting-engines/appsensor-reporting-websocket/tests/appsensor-reporting-websocket-client-config1.json';
-	const client = new AppSensorReportingWebsocketClientTest(configLocation);
+	configLocation = 'appsensor-reporting-websocket-client-config1.json';
+	configAbsolutPath = JSONConfigReadValidate.resolvePath(import.meta.url, configLocation);
+
+	const client = new AppSensorReportingWebsocketClientTest(configAbsolutPath);
     await client.test(earliest);
 
 	await client.closeWebsocket();
@@ -525,14 +529,18 @@ async function runTestWithHttpServer(earliest: string, withCustomPoints: boolean
 
 async function runTestWithHttpsServer(earliest: string, withCustomPoints: boolean) {
 	console.log('----- With Https Server -----');
-	let configLocation = './reporting-engines/appsensor-reporting-websocket/tests/appsensor-reporting-websocket-server-config2.json';
-    const server = new AppSensorReportingWebsocketTests(configLocation);
+	let configLocation = 'appsensor-reporting-websocket-server-config2.json';
+	let configAbsolutPath = JSONConfigReadValidate.resolvePath(import.meta.url, configLocation);
+
+    const server = new AppSensorReportingWebsocketTests(configAbsolutPath);
 	await server.startServer();
     await server.initializeMySQLStorage();
     await server.populateData(withCustomPoints);
 
-	configLocation = './reporting-engines/appsensor-reporting-websocket/tests/appsensor-reporting-websocket-client-config2.json';
-	const client = new AppSensorReportingWebsocketClientTest(configLocation);
+	configLocation = 'appsensor-reporting-websocket-client-config2.json';
+	configAbsolutPath = JSONConfigReadValidate.resolvePath(import.meta.url, configLocation);
+
+	const client = new AppSensorReportingWebsocketClientTest(configAbsolutPath);
     await client.test(earliest);
 	
 	await client.closeWebsocket();

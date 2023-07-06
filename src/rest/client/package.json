@@ -4,7 +4,8 @@
   "description": "A simple configuration object to access and interact with REST web app/services",
   "main": "rest-client.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "gen_rest_client_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-rest-client-config_schema.json RestClientConfig"
   },
   "repository": {
     "type": "git",

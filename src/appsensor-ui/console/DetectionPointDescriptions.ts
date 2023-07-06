@@ -23,7 +23,10 @@ class DetectionPointDescriptions {
 
 class DetectionPointDescriptionsReader extends JSONConfigReadValidate {
     constructor() {
-        super('appsensor-detection-point-descriptions.json', null, DetectionPointDescriptions.prototype);
+        super(import.meta.url,
+              'appsensor-detection-point-descriptions.json', 
+              null, 
+              DetectionPointDescriptions.prototype);
     }
 }
 

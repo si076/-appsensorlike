@@ -8,8 +8,9 @@ import { Logger } from "../../../../logging/logging.js";
 
 class RestEventManagerConfigReader extends JSONConfigReadValidate {
     constructor() {
-        super('./execution-modes/appsensor-rest/client/event/appsensor-rest-request-event-config.json',
-              './rest/client/appsensor-rest-client-config_schema.json',
+        super(import.meta.url,
+              'appsensor-rest-request-event-config.json',
+              'appsensor-rest-client-config_schema.json',
               RestClientConfig.prototype);
     }
 }

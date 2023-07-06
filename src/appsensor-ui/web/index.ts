@@ -62,8 +62,9 @@ interface SESSION_WITH_MESSAGES {
 
 class AppsensorUIRestServerConfigReader extends JSONConfigReadValidate {
     constructor() {
-        super('./appsensor-ui/web/appsensor-ui-rest-server-config.json',
-              './rest/server/appsensor-rest-server-config_schema.json',
+        super(import.meta.url,
+              'appsensor-ui-rest-server-config.json',
+              'appsensor-rest-server-config_schema.json',
               RestServerConfig.prototype);
     }
 };

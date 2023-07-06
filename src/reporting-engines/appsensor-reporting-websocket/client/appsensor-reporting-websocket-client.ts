@@ -10,8 +10,9 @@ import { Logger } from "../../../logging/logging.js";
 class ReportingWebSocketClientConfigReader  extends JSONConfigReadValidate {
 
     constructor() {
-        super('./reporting-engines/appsensor-reporting-websocket/client/appsensor-reporting-websocket-client-config.json',
-              './websocket/client/appsensor-websocket-client-config_schema.json',
+        super(import.meta.url,
+              'appsensor-reporting-websocket-client-config.json',
+              'appsensor-websocket-client-config_schema.json',
               WebSocketClientConfig.prototype);
     }
 }

@@ -1,10 +1,12 @@
 
 import assert from "assert";
-import { AggregateEventAnalysisEngine } from "../../../analysis-engines/appsensor-analysis-rules/appsensor-analysis-rules.js";
-import { EventAnalysisEngine } from "../../../core/analysis/analysis.js";
-import { AppSensorClient, AppSensorEvent, AppSensorServer, Category, DetectionPoint, DetectionSystem, Interval, INTERVAL_UNITS, Response, Threshold, User } from "../../../core/core.js";
-import { SearchCriteria } from "../../../core/criteria/criteria.js";
-import { Clause, Expression, MonitorPoint, Rule } from "../../../core/rule/rule.js";
+
+import { AggregateEventAnalysisEngine } from "@appsensorlike/appsensorlike/analysis-engines/appsensor-analysis-rules/appsensor-analysis-rules.js";
+import { EventAnalysisEngine } from "@appsensorlike/appsensorlike/core/analysis/analysis.js";
+import { AppSensorClient, AppSensorEvent, AppSensorServer, Category, DetectionPoint, DetectionSystem, Interval, INTERVAL_UNITS, Response, Threshold, User } from "@appsensorlike/appsensorlike/core/core.js";
+import { SearchCriteria } from "@appsensorlike/appsensorlike/core/criteria/criteria.js";
+import { Clause, Expression, MonitorPoint, Rule } from "@appsensorlike/appsensorlike/core/rule/rule.js";
+
 import { DOP } from "../DOP.js";
 import { BaseTests } from "./BaseTests.js";
 

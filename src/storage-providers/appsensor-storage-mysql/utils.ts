@@ -1,5 +1,6 @@
 import { FieldInfo, MysqlError, Pool, PoolConnection } from "mysql";
-import { Logger } from "../../logging/logging.js";
+
+import { Logger } from "@appsensorlike/appsensorlike/logging/logging.js";
 import { ConnectionManager } from "./connection_manager.js";
 
 class Utils {

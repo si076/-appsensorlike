@@ -1,5 +1,4 @@
-import fs from 'fs';
-import { JSONConfigReadValidate } from '../../utils/Utils.js';
+import { JSONConfigReadValidate } from '@appsensorlike/appsensorlike/utils/Utils.js';
 
 interface IPropertyMap {
     column: string,
@@ -191,8 +190,9 @@ class Mapping implements IMapping {
 class MappingReader extends JSONConfigReadValidate {
 
     constructor() {
-        super("./storage-providers/appsensor-storage-mysql/mapping.json",
-              "./storage-providers/appsensor-storage-mysql/mapping_schema.json",
+        super(import.meta.url,
+              "mapping.json",
+              "mapping_schema.json",
               Mapping.prototype);
     }
 }
