@@ -10,18 +10,16 @@ class ConnectionManager {
 
     private static pool: Pool;
 
-    private static defaultConfigFile       = 'appsensor-storage-mysql-config.json';
-    private static defaultConfigSchemeFile = 'appsensor-storage-mysql-config_schema.json';
-    private static configFile              = 'appsensor-storage-mysql-config.json';
-    private static configSchemeFile        = './storage-providers/appsensor-storage-mysql/appsensor-storage-mysql-config_schema.json';
+    private static configFile       = 'appsensor-storage-mysql-config.json';
+    private static configSchemeFile = 'appsensor-storage-mysql-config_schema.json';
 
     private static configManager = 
                         new JSONConfigManager(new JSONConfigReadValidate(import.meta.url,
-                                                                         ConnectionManager.defaultConfigFile, 
-                                                                         ConnectionManager.defaultConfigSchemeFile, 
+                                                                         ConnectionManager.configFile, 
+                                                                         ConnectionManager.configSchemeFile, 
                                                                          MySQLStorageConfig.prototype), 
                                                                          ConnectionManager.configFile, 
-                                                                         ConnectionManager.configSchemeFile,
+                                                                         null,
                                                                          true);
 
     private static createPool(poolConfig: PoolConfig) {

@@ -33,7 +33,7 @@ class AppSensorLocal {
 
     private configManager: JSONConfigManager;
 
-    constructor(configFile: string = '',
+    constructor(configFile: string = 'appsensor-server-config.json',
                 attackStore?: AttackStore,
                 eventStore?: EventStore,
                 responseStore?: ResponseStore,

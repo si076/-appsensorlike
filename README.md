@@ -20,7 +20,6 @@ One might ask why do we need another port as we have already got the Java implem
  ```
  Minimum Setup
  ---
- Copy appsensor-server-config.json, appsensor-server-config_schema.json, appsensor-client-config.json, appsensor-client-config_schema.json, appsensor-logging-config.json and appsensor-logging-config_schema.json from /node_modules/@appsensorlike/appsensorlike/dist to your working directory.
  ```javascript
  import { AppSensorLocal } from '@appsensorlike/appsensorlike/execution-modes/appsensor-local/appsensor_local.js';
  import { AppSensorEvent, Category, DetectionPoint, DetectionSystem, User } from "@appsensorlike/appsensorlike/core/core.js";
@@ -39,8 +38,10 @@ const user1 = new User("user1");
 const detectionPoint = new DetectionPoint(Category.REQUEST, "RE7");
 const detectionSystem = new DetectionSystem("localhostme");
 
-await eventManager.addEvent(new AppSensorEvent(user1, detectionPoint, detectionSystem)); 
-await eventManager.addEvent(new AppSensorEvent(user1, detectionPoint, detectionSystem)); //new instance every time to set timestamp
+if (eventManager) {
+    await eventManager.addEvent(new AppSensorEvent(user1, detectionPoint, detectionSystem)); 
+    await eventManager.addEvent(new AppSensorEvent(user1, detectionPoint, detectionSystem)); //new instance every time to set timestamp
+}
 
 //the response(in cese of an Attack) from the server will be available via
 //ResponseHandler set in AppSensorLocal constructor
@@ -49,17 +50,23 @@ await eventManager.addEvent(new AppSensorEvent(user1, detectionPoint, detectionS
 Watch console for generated attacks and responses.
 
 
-For a real world scenario you have to:
+For a real scenario you have to:
 ---
-1) Determine possible attempts for an attack and configure accordingly appsensor-server-config.json in your working directory. You can find guidens how to determine detection points and responses in https://owasp.org/www-pdf-archive/Owasp-appsensor-guide-v2.pdf. For your convenience a list of detection points is provided in appsensor-detection-point-descriptions.json and a list of responses in appsensor-responses-descriptions.json. Configuration in appsensor-server-config.json is just for demonstration purpose. Schem file appsensor-server-config_schema.json is available. 
-2) Choose or implement a storage provider, which holds AppSensorEvent, Attack, Response, etc., and pass it to AppSensorLocal constructor. This module comes with in-memory storage provider, which could be considered only for testing. As a separate module under the same scope @appsensorlike/appsensorlike_storage_mysql is provided MySQL storage provider.
+1) Determine possible attempts for an attack. You can find guidens how to determine detection points and responses in https://owasp.org/www-pdf-archive/Owasp-appsensor-guide-v2.pdf. For your convenience a list of detection points is provided in module dist/appsensor-detection-point-descriptions.json and a list of responses in module dist/appsensor-responses-descriptions.json. Configure accordingly appsensor-server-config.json in your working directory. You can copy a demonstration appsensor-server-config.json from dist/configuration-modes/appsensor-configuration-json/server and modify it. Corresponding schem file appsensor-server-config_schema.json is in the same directory. 
+2) Choose or implement a storage provider, which holds AppSensorEvent, Attack, Response, etc., and pass it to AppSensorLocal constructor. This module comes with in-memory storage provider, which could be considered only for testing. As a separate module under the same scope [@appsensorlike/appsensorlike_storage_mysql](https://www.npmjs.com/package/@appsensorlike/appsensorlike_storage_mysql) is provided MySQL storage provider.
 3) Implement ResponseHandler and pass it to the AppSensorLocal constructor. The ResponseHandler is responsible, on the app side, to modify behaviour of the app according to the response.
+
+
+TypeScript support
+---
+You need TypeScript version >= 4.7 in order the paths exported by the module to be resolved.
+
 
 Other modules
 ---
 **Storage-providers**
 
-@appsensorlike/appsensorlike_storage_mysql - MySQL storage provider implementation
+[@appsensorlike/appsensorlike_storage_mysql](https://www.npmjs.com/package/@appsensorlike/appsensorlike_storage_mysql) - MySQL storage provider implementation
 
 **Execution Modes**
 

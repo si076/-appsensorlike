@@ -58,14 +58,13 @@ class Logger {
         }
     }
 
-    static {
-        Logger.initLoggers(true);
-
+    public static async init() {
         Logger.configManager.listenForConfigurationChange( 
             (newConfig: any) => {
                 Logger.initLoggers(true);
             });
 
+        await Logger.initLoggers(true);
     }
 
     public static getClientLogger() {
@@ -114,5 +113,8 @@ class Logger {
         }
     }
 }
+
+//await to init in order not to miss a log line
+await Logger.init();
 
 export {Logger, LoggingConfiguration};

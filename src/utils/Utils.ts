@@ -297,7 +297,7 @@ class JSONConfigReadValidate {
 
         const resolvedPath = resolve(__dirname, fileLocation);
 
-        console.log(resolvedPath);
+        // console.log(resolvedPath);
 
         return resolvedPath;
     } 

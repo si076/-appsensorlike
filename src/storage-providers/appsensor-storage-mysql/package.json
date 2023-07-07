@@ -1,6 +1,6 @@
 {
   "name": "@appsensorlike/appsensorlike_storage_mysql",
-  "version": "0.17.0",
+  "version": "0.18.2",
   "description": "AppSensorLike's MySQL storage implementation",
   "type": "module",
   "directories": {
@@ -31,7 +31,7 @@
     "node": ">=14.15.0"
   },
   "dependencies": {
-    "@appsensorlike/appsensorlike": "^0.17.0",
+    "@appsensorlike/appsensorlike": "^0.18.3",
     "mysql": "^2.18.1",
     "uuid": "^9.0.0"
   },
@@ -46,6 +46,6 @@
     "dist/storage-providers/appsensor-storage-mysql/tests/*"
   ],
   "exports": {
-    ".": "./dist/appsensor-storage-mysql.js"
+    ".": "./dist/storage-providers/appsensor-storage-mysql/appsensor-storage-mysql.js"
   }
 }
