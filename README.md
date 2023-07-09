@@ -52,7 +52,7 @@ Watch console for generated attacks and responses.
 
 For a real scenario you have to:
 ---
-1) Determine possible attempts for an attack. You can find guidens how to determine detection points and responses in https://owasp.org/www-pdf-archive/Owasp-appsensor-guide-v2.pdf. For your convenience a list of detection points is provided in module dist/appsensor-detection-point-descriptions.json and a list of responses in module dist/appsensor-responses-descriptions.json. Configure accordingly appsensor-server-config.json in your working directory. You can copy a demonstration appsensor-server-config.json from dist/configuration-modes/appsensor-configuration-json/server and modify it. Corresponding schem file appsensor-server-config_schema.json is in the same directory. 
+1) Determine possible attempts for an attack. You can find guidens how to determine detection points and responses in https://owasp.org/www-pdf-archive/Owasp-appsensor-guide-v2.pdf. For your convenience a list of detection points is provided in module dist/appsensor-detection-point-descriptions.json and a list of responses in module dist/appsensor-responses-descriptions.json. Configure accordingly appsensor-server-config.json in your working directory. You can copy a demonstration appsensor-server-config.json from dist/configuration-modes/appsensor-configuration-json/server and modify it. Corresponding schem file appsensor-server-config_schema.json is in the same directory. *The configuration is reloaded on change.*
 2) Choose or implement a storage provider, which holds AppSensorEvent, Attack, Response, etc., and pass it to AppSensorLocal constructor. This module comes with in-memory storage provider, which could be considered only for testing. As a separate module under the same scope [@appsensorlike/appsensorlike_storage_mysql](https://www.npmjs.com/package/@appsensorlike/appsensorlike_storage_mysql) is provided MySQL storage provider.
 3) Implement ResponseHandler and pass it to the AppSensorLocal constructor. The ResponseHandler is responsible, on the app side, to modify behaviour of the app according to the response.
 
@@ -80,9 +80,9 @@ Other modules
 
 **Reporting**
 
-@appsensorlike/appsensorlike_reporting_websocket_client - reporting client connecting to reporting server via WebSocket.
-
-@appsensorlike/appsensorlike_reporting_websocket_server - reporting server exposed via WebSocket.
+[@appsensorlike/appsensorlike_reporting_engines_websocket](https://www.npmjs.com/package/@appsensorlike/appsensorlike_reporting_engines_websocket) - provides classes for reporting engine:
+* reporting client connecting to reporting server via WebSocket.
+* reporting server exposed via WebSocket.
 
 **Monitoring**
 

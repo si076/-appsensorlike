@@ -22,6 +22,7 @@
     "./src/execution-modes/tests/**/*.ts",
     "./src/http/*.ts",
     "./src/logging/*.ts",
+    "./src/reporting-engines/*.ts",
     "./src/storage-providers/appsensor-storage-in-memory/*.ts",
     //"./src/tests",
     "./src/utils/*.ts"

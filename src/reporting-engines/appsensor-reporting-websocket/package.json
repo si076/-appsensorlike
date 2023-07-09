@@ -1,8 +1,7 @@
 {
-  "name": "@si076/appsensorlike_reporting-engines",
-  "version": "1.0.0",
-  "description": "AppSensorLike reporting engines base classes/types",
-  "main": "reporting-engines.js",
+  "name": "@appsensorlike/appsensorlike_reporting_engines_websocket",
+  "version": "0.21.1",
+  "description": "AppSensorLike reporting engines websocket",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -24,5 +23,12 @@
   "bugs": {
     "url": "https://github.com/si076/-appsensorlike/issues"
   },
-  "homepage": "https://github.com/si076/-appsensorlike#readme"
+  "homepage": "https://github.com/si076/-appsensorlike#readme",
+  "exports": {
+    "./server": "./dist/reporting-engines/appsensor-reporting-websocket/server/appsensor-reporting-websocket-server.js",
+    "./client": "./dist/reporting-engines/appsensor-reporting-websocket/client/appsensor-reporting-websocket-client.js"
+  },
+  "dependencies": {
+    "@appsensorlike/appsensorlike_websocket": "^0.20.1"
+  }
 }

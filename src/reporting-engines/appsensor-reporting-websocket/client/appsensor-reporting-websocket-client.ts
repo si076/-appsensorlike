@@ -1,11 +1,12 @@
-import { AppSensorEvent, Attack, Response, KeyValuePair } from "../../../core/core.js";
-import { JSONConfigReadValidate, Utils } from "../../../utils/Utils.js";
-import { ActionResponse } from "../../../websocket/appsensor-websocket.js";
-import { ReportingEngineExt } from "../../reporting-engines.js";
-import { AppSensorWebSocketClient, WebSocketClientConfig } from "../../../websocket/client/appsensor-websocket-client.js";
+import { AppSensorEvent, Attack, Response, KeyValuePair } from "@appsensorlike/appsensorlike/core/core.js";
+import { JSONConfigReadValidate, Utils } from "@appsensorlike/appsensorlike/utils/Utils.js";
+import { Logger } from "@appsensorlike/appsensorlike/logging/logging.js";
+import { ActionResponse } from "@appsensorlike/appsensorlike_websocket";
+import { ReportingEngineExt } from "@appsensorlike/appsensorlike/reporting-engines/reporting-engines.js";
+
+import { AppSensorWebSocketClient, WebSocketClientConfig } from "@appsensorlike/appsensorlike_websocket/client";
 
 import { EventEmitter } from "events";
-import { Logger } from "../../../logging/logging.js";
 
 class ReportingWebSocketClientConfigReader  extends JSONConfigReadValidate {
 

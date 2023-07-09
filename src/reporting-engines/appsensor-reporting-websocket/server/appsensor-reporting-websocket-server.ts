@@ -1,14 +1,15 @@
-import { AppSensorEvent, Attack, Response, KeyValuePair, AppSensorServer, User, DetectionPoint, IPAddress } from "../../../core/core.js";
-import { SearchCriteria } from "../../../core/criteria/criteria.js";
-import { AttackStore, EventStore, ResponseStore } from "../../../core/storage/storage.js";
-import { ReportingEngineExt } from "../../reporting-engines.js";
-import { JSONConfigReadValidate } from "../../../utils/Utils.js";
-import { AppSensorWebSocketServer, WebSocketExt, WebSocketServerConfig } from "../../../websocket/server/appsensor-websocket-server.js";
-import { ActionRequest } from "../../../websocket/appsensor-websocket.js";
-import { Action, Context } from "../../../core/accesscontrol/accesscontrol.js";
+import { AppSensorEvent, Attack, Response, KeyValuePair, AppSensorServer, User, DetectionPoint, IPAddress } from "@appsensorlike/appsensorlike/core/core.js";
+import { SearchCriteria } from "@appsensorlike/appsensorlike/core/criteria/criteria.js";
+import { AttackStore, EventStore, ResponseStore } from "@appsensorlike/appsensorlike/core/storage/storage.js";
+import { ReportingEngineExt } from "@appsensorlike/appsensorlike/reporting-engines/reporting-engines.js";
+import { JSONConfigReadValidate } from "@appsensorlike/appsensorlike/utils/Utils.js";
+import { JSONServerConfigurationReader } from "@appsensorlike/appsensorlike/configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
+import { Action, Context } from "@appsensorlike/appsensorlike/core/accesscontrol/accesscontrol.js";
+
+import { AppSensorWebSocketServer, WebSocketExt, WebSocketServerConfig } from "@appsensorlike/appsensorlike_websocket/server";
+import { ActionRequest } from "@appsensorlike/appsensorlike_websocket";
 
 import { IncomingMessage } from "http";
-import { JSONServerConfigurationReader } from "../../../configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
 
 class ReportingWebSocketServerConfigReader  extends JSONConfigReadValidate {
 

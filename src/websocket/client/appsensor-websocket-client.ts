@@ -1,13 +1,13 @@
 
+import { Utils } from "@appsensorlike/appsensorlike/utils/Utils.js";
+import { Logger } from "@appsensorlike/appsensorlike/logging/logging.js";
+import { IValidateInitialize } from "@appsensorlike/appsensorlike/core/core.js";
 import { ActionRequest, ActionResponse, UUID_QUERY_PARAM } from "../appsensor-websocket.js";
-import { Utils } from "../../utils/Utils.js";
-import { Logger } from "../../logging/logging.js";
 
 import { ClientRequestArgs } from "http";
 
 import WebSocket from "ws";
 import { v4 as uuidv4 } from 'uuid';
-import { IValidateInitialize } from "../../core/core.js";
 
 class WebSocketClientConfig implements IValidateInitialize {
     public static DEFAULT_RETRY_INTERVAL = 20000;
@@ -85,7 +85,8 @@ class AppSensorWebSocketClient {
         Logger.getClientLogger().trace(`AppSensorWebSocketClient.socket: ${this.myUUID}:`, 'close', 
                                         ' CODE: ', code, ' REASON: ', reason.toString());
         
-        if (this.reconnectConfig && this.reconnectConfig.reconnectOnConnectionLost &&
+        if (code !== 1005 && 
+            this.reconnectConfig && this.reconnectConfig.reconnectOnConnectionLost &&
             !this.reconnectTimer) {
             this.reconnectTimer = setInterval(this.reconnect.bind(this), this.reconnectConfig.reconnectRetryInterval);
         }

@@ -1,0 +1,1 @@
+An internal module providing websocket client/server skeleton, extended by other modules.

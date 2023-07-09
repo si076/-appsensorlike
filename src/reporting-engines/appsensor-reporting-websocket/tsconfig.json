@@ -1,0 +1,8 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../dist/@appsensorlike/appsensorlike_reporting_engines_websocket/dist",
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "./tests"]
+}
