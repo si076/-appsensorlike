@@ -70,9 +70,9 @@ Other modules
 
 **Execution Modes**
 
-@appsensorlike/appsensorlike_rest_client - http/s client consuming the web service as defined in https://owasp.org/www-pdf-archive/Owasp-appsensor-guide-v2.pdf under Chapter 20
+[@appsensorlike/appsensorlike_exec_mode_rest_client_node](https://www.npmjs.com/package/@appsensorlike/appsensorlike_exec_mode_rest_client_node) - http/s client consuming the web service as defined in https://owasp.org/www-pdf-archive/Owasp-appsensor-guide-v2.pdf under Chapter 20
 
-@appsensorlike/appsensorlike-rest-server - http/s server exposed as a web service as defined in https://owasp.org/www-pdf-archive/Owasp-appsensor-guide-v2.pdf under Chapter 20
+[@appsensorlike/appsensorlike_exec_mode_rest_server](https://www.npmjs.com/package/@appsensorlike/appsensorlike_exec_mode_rest_server) - http/s server exposed as a web service as defined in https://owasp.org/www-pdf-archive/Owasp-appsensor-guide-v2.pdf under Chapter 20
 
 @appsensorlike/appsensorlike_websocket_client - client communicating with the server via WebSocket 
 

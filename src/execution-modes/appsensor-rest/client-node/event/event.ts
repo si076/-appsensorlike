@@ -1,10 +1,13 @@
-import { AppSensorEvent, Attack, Response } from "../../../../core/core.js";
-import { EventManager } from "../../../../core/event/event.js";
-import { RestClientConfig } from "../../../../rest/client/rest-client.js";
-import { JSONConfigReadValidate } from "../../../../utils/Utils.js";
+import { AppSensorEvent, Attack, Response } from "@appsensorlike/appsensorlike/core/core.js";
+import { EventManager } from "@appsensorlike/appsensorlike/core/event/event.js";
+import { JSONConfigReadValidate } from "@appsensorlike/appsensorlike/utils/Utils.js";
+import { Logger } from "@appsensorlike/appsensorlike/logging/logging.js";
 
 import fetch from 'cross-fetch';
-import { Logger } from "../../../../logging/logging.js";
+
+class RestClientConfig {
+    url: string = '';
+}
 
 class RestEventManagerConfigReader extends JSONConfigReadValidate {
     constructor() {
@@ -20,7 +23,7 @@ class RestEventManager implements EventManager {
     private url: string;
 
     constructor(url: string = '', 
-                configLocation: string = 'appsensor-rest-request-event-config.json',) {
+                configLocation: string = 'appsensor-rest-request-event-config.json') {
         this.url = url;
         if (this.url.trim().length === 0) {
             this.url = (new RestEventManagerConfigReader().read(configLocation) as RestClientConfig).url;

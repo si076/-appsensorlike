@@ -1,8 +1,8 @@
 {
-  "name": "@si076/appsensorlike_rest_server",
-  "version": "1.0.0",
+  "name": "@appsensorlike/appsensorlike_rest_server",
+  "version": "0.18.0",
   "description": "A skeleton for REST web app/services",
-  "main": "rest-server.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "gen_rest_server_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-rest-server-config_schema.json RestServerConfig"
@@ -17,7 +17,6 @@
     "REST",
     "Web",
     "App",
-    "Web",
     "Service"
   ],
   "author": "",
@@ -27,11 +26,18 @@
   },
   "homepage": "https://github.com/si076/-appsensorlike#readme",
   "dependencies": {
+    "@appsensorlike/appsensorlike": "^0.19.0",
     "express": "^4.18.2",
     "morgan": "^1.10.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.17",
     "@types/morgan": "^1.9.4"
+  },
+  "files": [
+    "dist/rest/server/*"
+  ],
+  "exports": {
+    ".": "./dist/rest/server/rest-server.js"
   }
 }

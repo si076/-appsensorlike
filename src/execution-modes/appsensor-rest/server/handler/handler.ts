@@ -1,9 +1,9 @@
-import { AppSensorEvent, AppSensorServer, Attack, RequestHandler, Response } from "../../../../core/core.js";
-import { SearchCriteria } from "../../../../core/criteria/criteria.js";
-import { Logger } from "../../../../logging/logging.js";
-import { JSONConfigReadValidate, Utils } from "../../../../utils/Utils.js";
-import { Action } from "../../../../core/accesscontrol/accesscontrol.js";
-import { RestServer, RestServerConfig } from "../../../../rest/server/rest-server.js";
+import { AppSensorEvent, AppSensorServer, Attack, RequestHandler, Response } from "@appsensorlike/appsensorlike/core/core.js";
+import { SearchCriteria } from "@appsensorlike/appsensorlike/core/criteria/criteria.js";
+import { Logger } from "@appsensorlike/appsensorlike/logging/logging.js";
+import { JSONConfigReadValidate, Utils } from "@appsensorlike/appsensorlike/utils/Utils.js";
+import { Action } from "@appsensorlike/appsensorlike/core/accesscontrol/accesscontrol.js";
+import { RestServer, RestServerConfig } from "@appsensorlike/appsensorlike_rest_server";
 
 import e from 'express';
 

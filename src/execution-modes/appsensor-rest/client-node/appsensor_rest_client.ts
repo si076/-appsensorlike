@@ -1,6 +1,6 @@
-import { AppSensorClient } from "../../../core/core.js";
-import { UserManager, NoopUserManager, ResponseHandler } from "../../../core/response/response.js";
-import { LocalResponseHandler } from "../../appsensor-local/response/response.js";
+import { AppSensorClient } from "@appsensorlike/appsensorlike/core/core.js";
+import { UserManager, NoopUserManager, ResponseHandler } from "@appsensorlike/appsensorlike/core/response/response.js";
+import { LocalResponseHandler } from "@appsensorlike/appsensorlike/execution-modes/appsensor-local/response/response.js";
 import { RestEventManager } from "./event/event.js";
 
 class AppSensorRestClient {
@@ -10,7 +10,7 @@ class AppSensorRestClient {
     private responseHandler: ResponseHandler = new LocalResponseHandler(this.userManager);
 
     constructor(url: string = '', 
-                configLocation: string = '',
+                configLocation: string = 'appsensor-rest-request-event-config.json',
                 responseHandler?: ResponseHandler) {
 
         if (responseHandler) {

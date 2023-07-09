@@ -1,0 +1,1 @@
+An internal module providing a skeleton for REST web app/services

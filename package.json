@@ -1,6 +1,6 @@
 {
   "name": "@appsensorlike/appsensorlike",
-  "version": "0.18.3",
+  "version": "0.19.1",
   "description": "A port of OWASP AppSensor reference implementation",
   "main": "",
   "type": "module",
@@ -46,6 +46,7 @@
     "dist/core/*",
     "dist/execution-modes/appsensor-local/*",
     "dist/execution-modes/tests/*",
+    "dist/http/*",
     "dist/logging/*",
     "dist/storage-providers/appsensor-storage-in-memory/*",
     "dist/utils/*",

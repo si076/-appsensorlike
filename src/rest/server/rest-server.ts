@@ -6,11 +6,11 @@ import morgan from 'morgan';
 import http from 'http';
 import path from 'path';
 
-import { ServerConfiguration } from '../../core/configuration/server/server_configuration.js';
-import { IPAddress } from '../../core/core.js';
-import { AccessController, Action, Context } from '../../core/accesscontrol/accesscontrol.js';
-import { Logger } from '../../logging/logging.js';
-import { HttpS2Server, HttpS2ServerConfig } from '../../http/HttpS2Server.js';
+import { ServerConfiguration } from '@appsensorlike/appsensorlike/core/configuration/server/server_configuration.js';
+import { IPAddress } from '@appsensorlike/appsensorlike/core/core.js';
+import { AccessController, Action, Context } from '@appsensorlike/appsensorlike/core/accesscontrol/accesscontrol.js';
+import { Logger } from '@appsensorlike/appsensorlike/logging/logging.js';
+import { HttpS2Server, HttpS2ServerConfig } from '@appsensorlike/appsensorlike/http/HttpS2Server.js';
 
 class RestServerConfig extends HttpS2ServerConfig {
     
@@ -19,6 +19,9 @@ class RestServerConfig extends HttpS2ServerConfig {
     appPaths?: string[] | undefined;
 }
 
+/**
+ * A skeleton for REST web app/services
+ */
 class RestServer extends HttpS2Server {
 
     protected expressApp: e.Express;

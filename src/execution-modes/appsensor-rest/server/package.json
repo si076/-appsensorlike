@@ -1,6 +1,6 @@
 {
-  "name": "@appsensorlike/appsensorlike-rest-server",
-  "version": "1.0.0",
+  "name": "@appsensorlike/appsensorlike_exec_mode_rest_server",
+  "version": "0.19.1",
   "description": "AppSensorLike execution mode REST; server part",
   "main": "appsensor-rest-server.js",
   "type": "module",
@@ -24,9 +24,14 @@
   },
   "homepage": "https://github.com/si076/-appsensorlike#readme",
   "dependencies": {
+    "@appsensorlike/appsensorlike_rest_server": "^0.18.0",
     "express": "^4.18.2"
   },
   "devDependencies": {
     "@types/express": "^4.17.17"
+  },
+  "exports": {
+    ".": "./dist/execution-modes/appsensor-rest/server/appsensor-rest-server.js"
   }
+
 }

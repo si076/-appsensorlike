@@ -13,6 +13,9 @@ enum HTTP_PROTOCOLS {
     HTTP2 = 'http2'
 }
 
+/**
+ * Http/s/2 server and listen configuration
+ */
 class HttpS2ServerConfig {
     protocol: HTTP_PROTOCOLS = HTTP_PROTOCOLS.HTTP;
     
@@ -25,6 +28,10 @@ class HttpS2ServerConfig {
     listenOptions?: net.ListenOptions | undefined;
 }
 
+/**
+ * Creates Http/s/2 server and listen for connection according to
+ * provided HttpS2ServerConfig configuration
+ */
 class HttpS2Server {
 
     protected server: http.Server | https.Server | http2.Http2Server | null = null;
