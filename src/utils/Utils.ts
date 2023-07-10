@@ -129,8 +129,8 @@ class JSONConfigReadValidate {
                 defaultConfigFile: string, 
                 defaultConfigSchemaFile: string | null = null, 
                 prototypeOfConfigObj?: Object | null) {
-        this.defaultConfigFile = JSONConfigReadValidate.resolvePath(defaultRelativeTo, defaultConfigFile);
-        this.defaultConfigSchemaFile = defaultConfigSchemaFile ? JSONConfigReadValidate.resolvePath(defaultRelativeTo, defaultConfigSchemaFile) : null;
+        this.defaultConfigFile = Utils.resolvePath(defaultRelativeTo, defaultConfigFile);
+        this.defaultConfigSchemaFile = defaultConfigSchemaFile ? Utils.resolvePath(defaultRelativeTo, defaultConfigSchemaFile) : null;
         this.prototypeOfConfigObj = prototypeOfConfigObj;
     }
 
@@ -288,20 +288,6 @@ class JSONConfigReadValidate {
         return valid;
     }
 
-    public static resolvePath(relativeToFileURL: string, fileLocation: string): string {
-        let __dirname = process.cwd();
-        if (relativeToFileURL.length > 0) {
-            const __filename = fileURLToPath(relativeToFileURL);
-            __dirname = dirname(__filename);
-        }
-
-        const resolvedPath = resolve(__dirname, fileLocation);
-
-        // console.log(resolvedPath);
-
-        return resolvedPath;
-    } 
-
 }
 
 class Utils {
@@ -383,6 +369,20 @@ class Utils {
         Utils.responsePrototypeSample.setDetectionPoint(detPoint);
         Utils.responsePrototypeSample.setRule(rule);
     }
+
+    public static resolvePath(relativeToFileURL: string, fileLocation: string): string {
+        let __dirname = process.cwd();
+        if (relativeToFileURL.length > 0) {
+            const __filename = fileURLToPath(relativeToFileURL);
+            __dirname = dirname(__filename);
+        }
+
+        const resolvedPath = resolve(__dirname, fileLocation);
+
+        // console.log(resolvedPath);
+
+        return resolvedPath;
+    } 
 
 	public static sleep(timeOutInMilis: number): Promise<null> {
 		return new Promise((resolve, reject) => {

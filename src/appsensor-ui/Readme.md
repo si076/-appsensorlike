@@ -1,0 +1,1 @@
+An internal module providing classes/types shared among web and console UIs.

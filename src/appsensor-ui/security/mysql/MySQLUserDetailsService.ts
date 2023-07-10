@@ -1,7 +1,7 @@
 import * as msql from 'mysql2';
-import { Logger } from '../../../logging/logging.js';
+import { Logger } from '@appsensorlike/appsensorlike/logging/logging.js';
 
-import { Authority, AUTHORITY_NAME, Group, User, UserDetails, UserDetailsService } from "../UserDetailsService.js";
+import { Authority, AUTHORITY_NAME, UserDetails, UserDetailsService } from "../UserDetailsService.js";
 import { ConnectionManager } from './connection_manager.js';
 
 class UserDetailsImpl implements UserDetails {

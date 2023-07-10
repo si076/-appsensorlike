@@ -1,6 +1,6 @@
 import { ServerConnection } from "../../../../core/configuration/client/client_configuration.js";
 import { JSONClientConfiguration, JSONClientConfigurationReader } from "../JSONClientConfig.js";
-import { JSONConfigReadValidate } from "../../../../utils/Utils.js";
+import { Utils } from "../../../../utils/Utils.js";
 
 import assert from "assert";
 
@@ -21,7 +21,7 @@ class JSONClientConfigurationTest {
 
         configExpected.setServerConnection(serverConnection);
 
-        const testConfigFile = JSONConfigReadValidate.resolvePath(import.meta.url,'appsensor-client-config.json');
+        const testConfigFile = Utils.resolvePath(import.meta.url,'appsensor-client-config.json');
 
         const configActual = new JSONClientConfigurationReader().read(testConfigFile);
 

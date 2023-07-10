@@ -4,10 +4,10 @@ import { Role } from "../../../../core/accesscontrol/accesscontrol.js";
 import { GeoLocation } from "../../../../core/geolocation/geolocation.js";
 import { CorrelationSet } from "../../../../core/correlation/correlation.js";
 import { Clause, Expression, MonitorPoint, Rule } from "../../../../core/rule/rule.js";
+import { JSONConfigReadValidate, Utils } from "../../../../utils/Utils.js";
 
 import assert from "assert";
 import fs from 'fs';
-import { JSONConfigReadValidate } from "../../../../utils/Utils.js";
 
 class JSONServerConfigurationTest {
 
@@ -207,7 +207,7 @@ class JSONServerConfigurationTest {
             configExpected.setCustomDetectionPoints(customDetectionPoints);
         }
 
-        const configFilePath = JSONConfigReadValidate.resolvePath(import.meta.url, JSONServerConfigurationTest.TEST_CONFIG_LOCATION);
+        const configFilePath = Utils.resolvePath(import.meta.url, JSONServerConfigurationTest.TEST_CONFIG_LOCATION);
 
         configExpected.configurationFile = fs.realpathSync(configFilePath);
 

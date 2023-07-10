@@ -1,7 +1,6 @@
 import e from 'express';
 
-import { ReportingEngineExt } from "../../../reporting-engines/reporting-engines.js";
-import { DetectionPointReport } from "../../reports/DetectionPointReport.js";
+import { DetectionPointReport } from "@appsensorlike/appsensorlike_ui/appsensor-ui/reports/DetectionPointReport.js";
 
 class DetectionPointController {
 

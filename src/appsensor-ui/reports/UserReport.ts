@@ -1,8 +1,8 @@
 import { Instant, LocalDateTime } from "@js-joda/core";
 import { Interval } from "@js-joda/extra";
 
-import { AppSensorEvent, Attack, Response, Utils } from "../../core/core.js";
-import {ReportingEngineExt} from "../../reporting-engines/reporting-engines.js"
+import { AppSensorEvent, Attack, Response, Utils } from "@appsensorlike/appsensorlike/core/core.js";
+import {ReportingEngineExt} from "@appsensorlike/appsensorlike/reporting-engines/reporting-engines.js"
 import { BaseReport } from "./BaseReport.js";
 import { Dates, NAME_EVENT_COUNT, Table, TimeFrameItem, TimeUnit, Type, ViewObject } from "./Reports.js";
 

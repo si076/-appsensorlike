@@ -1,6 +1,7 @@
-import { Instant, LocalDateTime } from "@js-joda/core";
+import { Instant } from "@js-joda/core";
 import {Interval} from '@js-joda/extra';
-import { AppSensorEvent, Attack } from "../../core/core";
+
+import { AppSensorEvent, Attack } from "@appsensorlike/appsensorlike/core/core.js";
 
 type NAME_EVENT_COUNT = {[key: string]: number};
 

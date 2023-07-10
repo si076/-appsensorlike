@@ -1,6 +1,6 @@
 {
   "name": "@appsensorlike/appsensorlike_reporting_engines_websocket",
-  "version": "0.21.1",
+  "version": "0.21.3",
   "description": "AppSensorLike reporting engines websocket",
   "type": "module",
   "scripts": {
@@ -29,6 +29,6 @@
     "./client": "./dist/reporting-engines/appsensor-reporting-websocket/client/appsensor-reporting-websocket-client.js"
   },
   "dependencies": {
-    "@appsensorlike/appsensorlike_websocket": "^0.20.1"
+    "@appsensorlike/appsensorlike_websocket": "^0.20.2"
   }
 }

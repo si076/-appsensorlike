@@ -1,6 +1,6 @@
 import { LocalDateTime } from "@js-joda/core";
 
-import { ReportingEngineExt } from "../../reporting-engines/reporting-engines.js";
+import { ReportingEngineExt } from "@appsensorlike/appsensorlike/reporting-engines/reporting-engines.js";
 import { BaseReport } from "./BaseReport.js";
 import { TimeUnit, TrendItem, Type } from "./Reports.js";
 

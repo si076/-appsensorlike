@@ -1,6 +1,6 @@
 import e from 'express';
 
-import { TrendsDashboardReport } from "../../reports/TrendsDashboardReport.js";
+import { TrendsDashboardReport } from "@appsensorlike/appsensorlike_ui/appsensor-ui/reports/TrendsDashboardReport.js";
 
 class TrendsDashboardController {
 

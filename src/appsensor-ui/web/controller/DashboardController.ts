@@ -1,6 +1,6 @@
 import e from 'express';
 
-import { DashboardReport } from "../../reports/DashboardReport.js";
+import { DashboardReport } from "@appsensorlike/appsensorlike_ui/appsensor-ui/reports/DashboardReport.js";
 
 class DashboardController {
 

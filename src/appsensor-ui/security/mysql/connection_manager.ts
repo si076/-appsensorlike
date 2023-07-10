@@ -1,7 +1,7 @@
 import * as msql from 'mysql2';
 
-import { JSONConfigManager, JSONConfigReadValidate } from '../../../utils/Utils.js';
-import { Logger } from '../../../logging/logging.js';
+import { JSONConfigManager, JSONConfigReadValidate } from '@appsensorlike/appsensorlike/utils/Utils.js';
+import { Logger } from '@appsensorlike/appsensorlike/logging/logging.js';
 
 class MySQLSesionStorageConfig {
     poolOptions: msql.PoolOptions = {};
@@ -15,7 +15,6 @@ class ConnectionManager {
     private static defaultConfigFile       = 'appsensor-ui-session-storage-mysql-config.json';
     private static defaultConfigSchemeFile = 'appsensor-ui-session-storage-mysql-config_schema.json';
     private static configFile              = 'appsensor-ui-session-storage-mysql-config.json';
-    private static configSchemeFile        = 'appsensor-ui-session-storage-mysql-config_schema.json';
 
     private static configManager = 
                         new JSONConfigManager(new JSONConfigReadValidate(import.meta.url,
@@ -23,7 +22,7 @@ class ConnectionManager {
                                                                          ConnectionManager.defaultConfigSchemeFile, 
                                                                          MySQLSesionStorageConfig.prototype), 
                                                                          ConnectionManager.configFile, 
-                                                                         ConnectionManager.configSchemeFile,
+                                                                         null,
                                                                          true);
 
     private static createPool(poolConfig: msql.PoolOptions) {

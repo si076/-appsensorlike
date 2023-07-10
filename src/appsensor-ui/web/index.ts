@@ -1,21 +1,31 @@
-import { AppSensorReportingWebSocketClient } from "../../reporting-engines/appsensor-reporting-websocket/client/appsensor-reporting-websocket-client.js";
-import { RestServer, RestServerConfig } from "../../rest/server/rest-server.js";
-import { JSONConfigReadValidate } from "../../utils/Utils.js";
+import { AppSensorReportingWebSocketClient } from "@appsensorlike/appsensorlike_reporting_engines_websocket/client";
+
+import { RestServer, RestServerConfig } from "@appsensorlike/appsensorlike_rest_server";
+
+import { JSONConfigReadValidate, Utils } from "@appsensorlike/appsensorlike/utils/Utils.js";
+import { Logger } from "@appsensorlike/appsensorlike/logging/logging.js";
+import { AppSensorEvent, Attack, Response } from "@appsensorlike/appsensorlike/core/core.js";
+
 import { UserController } from "./controller/UserController.js";
 import { DashboardController } from "./controller/DashboardController.js";
-import { Logger } from "../../logging/logging.js";
 import { DetectionPointController } from "./controller/DetectionPointController.js";
-import { DashboardReport } from "../reports/DashboardReport.js";
-import { DetectionPointReport } from "../reports/DetectionPointReport.js";
-import { UserReport } from "../reports/UserReport.js";
-import { TrendsDashboardReport } from "../reports/TrendsDashboardReport.js";
+import { ConfigurationController } from "./controller/ConfigurationController.js";
 import { TrendsDashboardController } from "./controller/TrendsDashboardController.js";
-import { AppSensorEvent, Attack, Response } from "../../core/core.js";
 import { WebSocketJsonObject } from "./websocket/WebSocketJSONObject.js";
+
+import { DashboardReport } from "@appsensorlike/appsensorlike_ui/appsensor-ui/reports/DashboardReport.js";
+import { DetectionPointReport } from "@appsensorlike/appsensorlike_ui/appsensor-ui/reports/DetectionPointReport.js";
+import { UserReport } from "@appsensorlike/appsensorlike_ui/appsensor-ui/reports/UserReport.js";
+import { TrendsDashboardReport } from "@appsensorlike/appsensorlike_ui/appsensor-ui/reports/TrendsDashboardReport.js";
+import { ConfigurationReport } from "@appsensorlike/appsensorlike_ui/appsensor-ui/reports/ConfigurationReport.js";
+import { ConnectionManager } from "@appsensorlike/appsensorlike_ui/appsensor-ui/security/mysql/connection_manager.js";
+import { AUTHORITY_NAME, UserDetails } from "@appsensorlike/appsensorlike_ui/appsensor-ui/security/UserDetailsService.js";
+import { UserManager } from "@appsensorlike/appsensorlike_ui/appsensor-ui/security/UserManager.js";
 
 import e from 'express';
 import sessionF, * as sessionNS from 'express-session';
 import MySQLStore from 'express-mysql-session';
+import { ParamsDictionary } from "express-serve-static-core";
 
 import morgan from 'morgan';
 import hbs from 'hbs';
@@ -29,15 +39,10 @@ import csurf from 'csurf';
 import http, { IncomingMessage } from 'http';
 import https from 'https';
 import path from 'path';
+import url from 'url';
 
 import WebSocket, { WebSocketServer } from "ws";
-import { ConfigurationReport } from "../reports/ConfigurationReport.js";
-import { ConfigurationController } from "./controller/ConfigurationController.js";
-import { ConnectionManager } from "../security/mysql/connection_manager.js";
-import { AUTHORITY_NAME, UserDetails, UserDetailsService } from "../security/UserDetailsService.js";
-import { ParamsDictionary } from "express-serve-static-core";
 import { ParsedQs } from "qs";
-import { UserManager } from "../security/UserManager.js";
 
 
 type TEMPLATE_VARIABLES = {
@@ -129,8 +134,11 @@ class AppsensorUIRestServer extends RestServer {
             LOGGED_IN_USERNAME: ''
         };
 
-        const basePath = this.config.basePath ? this.config.basePath : '';
-        const templatesPath = path.join(basePath, AppsensorUIRestServer.TEMPLATES_DIR);
+        if (!this.config.basePath || this.config.basePath.length === 0) {
+            this.config.basePath = path.dirname(url.fileURLToPath(import.meta.url));
+        }
+
+        const templatesPath = path.join(this.config.basePath, AppsensorUIRestServer.TEMPLATES_DIR);
 
         this.expressApp.set('views', templatesPath);
         // this.expressApp.set('view engine', 'hbs');
@@ -549,7 +557,4 @@ class AppsensorUIRestServer extends RestServer {
     
 }
 
-(async () => {
-    const inst = new AppsensorUIRestServer();
-    await inst.initStartServer();
-})()
+export { AppsensorUIRestServer };

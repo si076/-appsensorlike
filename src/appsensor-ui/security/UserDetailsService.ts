@@ -152,7 +152,7 @@ class Authority {
 	
 }
 
-interface UserDetails extends Express.User {
+interface UserDetails { //extends Express.User { //from @types/passport
     //Returns the authorities granted to the user.
     getAuthorities(): Authority[];
 

@@ -1,6 +1,6 @@
 import e from 'express';
 
-import { ConfigurationReport } from "../../reports/ConfigurationReport.js";
+import { ConfigurationReport } from "@appsensorlike/appsensorlike_ui/appsensor-ui/reports/ConfigurationReport.js";
 
 class ConfigurationController {
 

@@ -1,8 +1,7 @@
 {
   "name": "@appsensorlike/appsensorlike_ui_web",
-  "version": "1.0.0",
+  "version": "0.21.2",
   "description": "AppSensorLikeUI web implementation",
-  "main": "index.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -19,6 +18,10 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@appsensorlike/appsensorlike": "^0.20.2",
+    "@appsensorlike/appsensorlike_reporting_engines_websocket": "^0.21.3",
+    "@appsensorlike/appsensorlike_rest_server": "^0.18.1",
+    "@appsensorlike/appsensorlike_ui": "^0.20.1",
     "csurf": "^1.11.0",
     "express": "^4.18.2",
     "express-mysql-session": "^3.0.0",
@@ -38,5 +41,8 @@
     "@types/passport": "^1.0.12",
     "@types/passport-local": "^1.0.35",
     "@types/ws": "^8.5.4"
+  },
+  "exports": {
+    ".": "./dist/appsensor-ui/web/index.js"
   }
 }

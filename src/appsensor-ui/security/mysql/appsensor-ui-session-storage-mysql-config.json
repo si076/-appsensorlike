@@ -1,8 +1,8 @@
 {
     "poolOptions": {
-        "user": "test",
-        "password": "test2020",
-        "database": "appsensor",
+        "user": "",
+        "password": "",
+        "database": "",
         "dateStrings": ["DATE","DATETIME"],
         "waitForConnections": false,
         "queueLimit": 0

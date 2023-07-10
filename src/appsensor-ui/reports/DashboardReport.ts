@@ -1,9 +1,10 @@
 import { Instant, LocalDateTime } from "@js-joda/core";
 import { Interval } from "@js-joda/extra";
-import { JSONServerConfigurationReader } from "../../configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
-import { ServerConfiguration } from "../../core/configuration/server/server_configuration.js";
-import { AppSensorEvent, Attack, DetectionPoint, Response } from "../../core/core.js";
-import { ReportingEngineExt } from "../../reporting-engines/reporting-engines.js";
+
+import { JSONServerConfigurationReader } from "@appsensorlike/appsensorlike/configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
+import { ServerConfiguration } from "@appsensorlike/appsensorlike/core/configuration/server/server_configuration.js";
+import { AppSensorEvent, Attack, DetectionPoint, Response } from "@appsensorlike/appsensorlike/core/core.js";
+import { ReportingEngineExt } from "@appsensorlike/appsensorlike/reporting-engines/reporting-engines.js";
 import { DetectionPointReport } from "./DetectionPointReport.js";
 import { CategoryItem, Dates, Table, TimeFrameItem, TimeUnit, Type, ViewObject } from "./Reports.js";
 import { UserReport } from "./UserReport.js";

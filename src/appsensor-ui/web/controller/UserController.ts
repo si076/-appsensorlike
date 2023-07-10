@@ -1,7 +1,6 @@
 import e from 'express';
 
-import { ReportingEngineExt } from '../../../reporting-engines/reporting-engines.js';
-import { UserReport } from '../../reports/UserReport.js';
+import { UserReport } from '@appsensorlike/appsensorlike_ui/appsensor-ui/reports/UserReport.js';
 
 class UserController {
 
