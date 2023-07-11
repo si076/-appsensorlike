@@ -1,8 +1,10 @@
 import { DateTimeFormatter, LocalDateTime } from "@js-joda/core";
-import { ReportingEngineExt } from "../../reporting-engines/reporting-engines.js";
 
-import { TimeUnitUtil, TrendDirection, TrendItem } from "../reports/Reports.js";
-import { TrendsDashboardReport } from "../reports/TrendsDashboardReport.js";
+import { ReportingEngineExt } from "@appsensorlike/appsensorlike/reporting-engines/reporting-engines.js";
+
+import { TimeUnitUtil, TrendDirection, TrendItem } from "@appsensorlike/appsensorlike_ui/appsensor-ui/reports/Reports.js";
+import { TrendsDashboardReport } from "@appsensorlike/appsensorlike_ui/appsensor-ui/reports/TrendsDashboardReport.js";
+
 import { AppSensorUIConsoleSettings, EXCEL4NODE_CELL_STYLE } from "./appsensor-ui-console.js";
 import { ConsoleReport } from "./ConsoleReport.js";
 

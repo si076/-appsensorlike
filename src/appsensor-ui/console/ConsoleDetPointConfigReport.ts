@@ -1,9 +1,12 @@
-import { ColumnUserConfig, TableUserConfig } from "table";
-import { JSONServerConfigurationReader } from "../../configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
-import { ServerConfiguration } from "../../core/configuration/server/server_configuration.js";
-import { DetectionPoint, Response, Utils } from "../../core/core.js";
-import { ReportingEngineExt } from "../../reporting-engines/reporting-engines.js";
-import { ConfigurationReport } from "../reports/ConfigurationReport.js";
+import { TableUserConfig } from "table";
+
+import { JSONServerConfigurationReader } from "@appsensorlike/appsensorlike/configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
+import { ServerConfiguration } from "@appsensorlike/appsensorlike/core/configuration/server/server_configuration.js";
+import { DetectionPoint, Response, Utils } from "@appsensorlike/appsensorlike/core/core.js";
+import { ReportingEngineExt } from "@appsensorlike/appsensorlike/reporting-engines/reporting-engines.js";
+
+import { ConfigurationReport } from "@appsensorlike/appsensorlike_ui/appsensor-ui/reports/ConfigurationReport.js";
+
 import { AppSensorUIConsoleSettings, EXCEL4NODE_CELL_STYLE } from "./appsensor-ui-console.js";
 import { ConsoleReport } from "./ConsoleReport.js";
 

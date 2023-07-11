@@ -1,4 +1,4 @@
-import { JSONConfigReadValidate } from "../../utils/Utils.js";
+import { JSONConfigReadValidate } from "@appsensorlike/appsensorlike/utils/Utils.js";
 
 type RESPONSE_CATEGORIZATION_EXECUTION = { always: string[], sometimes: string[] };
 

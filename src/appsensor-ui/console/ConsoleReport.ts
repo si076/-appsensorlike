@@ -1,9 +1,10 @@
 import { Spinner } from "cli-spinner";
 import { ColumnUserConfig, table, TableUserConfig } from "table";
-import { AppSensorEvent, Attack, Response } from "../../core/core.js";
-import { ReportingEngineExt } from "../../reporting-engines/reporting-engines.js";
 
-import { AppSensorUIConsoleSettings, EXCEL4NODE_CELL_STYLE, EXCEL_CELLS_CONFIG, EXCEL_CELLS_TO_MERGE, EXCEL_CELL_STYLE } from "./appsensor-ui-console.js";
+import { AppSensorEvent, Attack, Response } from "@appsensorlike/appsensorlike/core/core.js";
+import { ReportingEngineExt } from "@appsensorlike/appsensorlike/reporting-engines/reporting-engines.js";
+
+import { AppSensorUIConsoleSettings, EXCEL4NODE_CELL_STYLE, EXCEL_CELLS_CONFIG } from "./appsensor-ui-console.js";
 
 type NEW_OBJECTS_SINCE_LAST_RELOAD = {events: number, attacks: number, responses: number};
 

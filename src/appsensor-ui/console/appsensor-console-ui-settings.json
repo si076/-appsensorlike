@@ -1,5 +1,1 @@
-{
-    "autoReload": false,
-    "autoReloadTimeMs": 30000,
-    "maxDisplayedItems": 5
-}
+{"autoReload":true,"autoReloadTimeMs":5000,"maxDisplayedItems":2,"lastCheck":"2023-07-11T14:11:34.036Z"}

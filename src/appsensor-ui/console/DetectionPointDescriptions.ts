@@ -1,4 +1,4 @@
-import { JSONConfigReadValidate } from "../../utils/Utils.js";
+import { JSONConfigReadValidate } from "@appsensorlike/appsensorlike/utils/Utils.js";
 
 type DET_POINT_CATEGORIZATION_DESCR = { description: string, one_user: string[], all_users: string[] };
 

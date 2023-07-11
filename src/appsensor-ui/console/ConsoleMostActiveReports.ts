@@ -1,10 +1,12 @@
 import { TableUserConfig } from "table";
 
-import { AppSensorEvent, Attack, DetectionPoint, Response, Utils } from "../../core/core.js";
-import { ReportingEngineExt } from "../../reporting-engines/reporting-engines.js";
-import { DetectionPointReport } from "../reports/DetectionPointReport.js";
-import { NAME_EVENT_COUNT } from "../reports/Reports.js";
-import { UserReport } from "../reports/UserReport.js";
+import { AppSensorEvent, Attack, DetectionPoint, Response, Utils } from "@appsensorlike/appsensorlike/core/core.js";
+import { ReportingEngineExt } from "@appsensorlike/appsensorlike/reporting-engines/reporting-engines.js";
+
+import { DetectionPointReport } from "@appsensorlike/appsensorlike_ui/appsensor-ui/reports/DetectionPointReport.js";
+import { NAME_EVENT_COUNT } from "@appsensorlike/appsensorlike_ui/appsensor-ui/reports/Reports.js";
+import { UserReport } from "@appsensorlike/appsensorlike_ui/appsensor-ui/reports/UserReport.js";
+
 import { AppSensorUIConsoleSettings } from "./appsensor-ui-console.js";
 import { ConsoleReport } from "./ConsoleReport.js";
 

@@ -1,7 +1,11 @@
-import { ReportingEngineExt, } from "../../reporting-engines/reporting-engines.js";
-import { AppSensorReportingWebSocketClient } from "../../reporting-engines/appsensor-reporting-websocket/client/appsensor-reporting-websocket-client.js";
-import { AppSensorEvent, Attack, IValidateInitialize, Response} from "../../core/core.js";
-import { JSONConfigReadValidate } from "../../utils/Utils.js";
+#!/usr/bin/env node
+
+import { ReportingEngineExt } from "@appsensorlike/appsensorlike/reporting-engines/reporting-engines.js";
+import { AppSensorEvent, Attack, IValidateInitialize, Response} from "@appsensorlike/appsensorlike/core/core.js";
+import { JSONConfigReadValidate } from "@appsensorlike/appsensorlike/utils/Utils.js";
+
+import { AppSensorReportingWebSocketClient } from "@appsensorlike/appsensorlike_reporting_engines_websocket/client";
+
 import { ConsoleAllActivitiesReport } from "./ConsoleAllActivitiesReport.js";
 import { ConsoleMostActiveDetPointsReport, ConsoleMostActiveUsersReport } from "./ConsoleMostActiveReports.js";
 import { ConsoleDetPointCategorizationReport } from "./ConsoleDetPointCategorizationReport.js";
@@ -22,7 +26,7 @@ import excel4node from 'excel4node/distribution/index.js';
 import { table } from 'table';
 import chalk from 'chalk';
 import { MonthDay, Year } from "@js-joda/core";
-import { parse } from 'ts-command-line-args';
+import { parse, UsageGuideConfig } from 'ts-command-line-args';
 
 class BaseSettings {
     autoReload?: boolean;
@@ -35,6 +39,44 @@ class CommandLineOptions extends BaseSettings {
     earliest?: string;
     export?: boolean;
     help?: boolean;
+}
+
+const ALL_REPORTS: string = "All";
+
+const AVAILABLE_REPORTS: string[] = [ALL_REPORTS, 
+    ConsoleAllActivitiesReport.ID,  
+    ConsoleMostActiveDetPointsReport.ID,
+    ConsoleMostActiveUsersReport.ID,
+    ConsoleTrendsReport.ID,
+    ConsoleDetPointConfigReport.ID,
+    ConsoleDetPointCategorizationReport.ID]; 
+
+//prepared for ts-command-line-args module's write-markdown but
+//it doesn't support ES module loading!
+const USAGE_GUIDE_INFO: UsageGuideConfig<CommandLineOptions> = {
+    arguments: {
+        report: {type: String, optional: true, 
+                 alias: 'r', defaultValue: 'All', 
+                 description: `Report to be displayed/exported, one of: ${AVAILABLE_REPORTS.join(', ')}`},
+        earliest: {type: String, optional: true, alias: 'e',
+                   description: 'Report earliest date (server UTC) in format YYYY-MM-DD HH:mm:ss.sss (fraction part .sss is optional)'},
+        export: {type: Boolean, optional: true, alias: 'x',
+                 description: 'Export report(s) to an excel file in the working directory. If this option is set, report(s) are not displayed!'},
+        autoReload: {type: Boolean, optional: true, alias: 'a', 
+                     description: 'Set on auto reload'},
+        autoReloadTimeMs: {type: Number, optional: true, alias: 't',
+                            description: 'Auto reload interval in milliseconds'},
+        maxDisplayedItems: {type: Number, optional: true, alias: 'i',
+                            description: 'Maximum displayed items at once'},
+        help: {type: Boolean, optional: true, alias: 'h', 
+               description: 'Prints this usage guide' },
+    },
+    parseOptions: {
+        helpArg: 'help',
+        headerContentSections: [{header: 'AppSensorLike Console Reports', 
+                                 content: 'Display most of AppSensor Dashboard reports on console. Reports data can be exported to an excel file in the background.' }],
+        footerContentSections: [{header: '', content: `MIT license. Project home: {underline https://github.com/si076/appsensorlike}` }],
+    }
 }
 
 
@@ -172,15 +214,6 @@ type EXCEL_CELLS_CONFIG = {headerRowHeight: number, //in lines
                            dataRowsHeight: number[]}; //in lines
 
 class ReportingConsole {
-    public static ALL_REPORTS = "All";
-
-    public static AVAILABLE_REPORTS: string[] = [ReportingConsole.ALL_REPORTS, 
-                                                 ConsoleAllActivitiesReport.ID,  
-                                                 ConsoleMostActiveDetPointsReport.ID,
-                                                 ConsoleMostActiveUsersReport.ID,
-                                                 ConsoleTrendsReport.ID,
-                                                 ConsoleDetPointConfigReport.ID,
-                                                 ConsoleDetPointCategorizationReport.ID]; 
 
     private reportingEngine: ReportingEngineExt;
 
@@ -211,6 +244,9 @@ class ReportingConsole {
 
         this.earliest = this.settings.lastCheck!.toISOString();
         if (this.commandLineOptions.earliest) {
+            if (this.commandLineOptions.earliest.indexOf('.') > 0) {
+                this.commandLineOptions.earliest += 'Z';
+            }
             this.earliest = this.commandLineOptions.earliest;
         }
 
@@ -228,7 +264,7 @@ class ReportingConsole {
             }
         }
 
-        this.setReports(this.commandLineOptions.report || ReportingConsole.ALL_REPORTS);
+        this.setReports(this.commandLineOptions.report || ALL_REPORTS);
 
         this.currentReport = this.reports[0];
 
@@ -239,33 +275,11 @@ class ReportingConsole {
     }
 
     getCommandLineOptions(): CommandLineOptions {
-        return parse<CommandLineOptions>({
-            report: {type: String, optional: true, 
-                     alias: 'r', defaultValue: 'All', 
-                     description: `Report to be displayed/exported, one of: ${ReportingConsole.AVAILABLE_REPORTS.join(', ')}`},
-            earliest: {type: String, optional: true, alias: 'e',
-                       description: 'Report earliest date (server UTC) in format YYYY-MM-DD HH:mm:ss.sss (fraction part .sss is optional)'},
-            export: {type: Boolean, optional: true, alias: 'x',
-                     description: 'Export report(s) to an excel file in the working directory. If this option is set, report(s) are not displayed!'},
-            autoReload: {type: Boolean, optional: true, alias: 'a', 
-                         description: 'Set on auto reload'},
-            autoReloadTimeMs: {type: Number, optional: true, alias: 't',
-                                description: 'Auto reload interval in milliseconds'},
-            maxDisplayedItems: {type: Number, optional: true, alias: 'i',
-                                description: 'Maximum displayed items at once'},
-            help: {type: Boolean, optional: true, alias: 'h', 
-                   description: 'Prints this usage guide' },
-        },
-        {
-            helpArg: 'help',
-            headerContentSections: [{header: 'AppSensorLike Console Reports', 
-                                     content: 'Display most of AppSensor Dashboard reports on console. Reports data can be exported to an excel file in the background.' }],
-            footerContentSections: [{header: '', content: `MIT license. Project home: {underline https://github.com/si076/appsensorlike}` }],
-        });
+        return parse<CommandLineOptions>(USAGE_GUIDE_INFO.arguments, USAGE_GUIDE_INFO.parseOptions);
     }
 
     validateCommandLineOptions(commandLineOptions: CommandLineOptions): boolean {
-        if (commandLineOptions.report && ReportingConsole.AVAILABLE_REPORTS.indexOf(commandLineOptions.report) === -1) {
+        if (commandLineOptions.report && AVAILABLE_REPORTS.indexOf(commandLineOptions.report) === -1) {
             console.log("Invalid Report: ${commandLineOptions.report}");
             return false;
         }
@@ -281,49 +295,49 @@ class ReportingConsole {
         return true;
     }
 
-    setReports(reportName: string = ReportingConsole.ALL_REPORTS) {
+    setReports(reportName: string = ALL_REPORTS) {
         switch (reportName) {
-            case ReportingConsole.ALL_REPORTS:
+            case ALL_REPORTS:
             case ConsoleAllActivitiesReport.ID: {
                 this.reports.push(new ConsoleAllActivitiesReport(this.reportingEngine, 
                                                                  this.detectionPointDescriptions));
-                if (reportName !== ReportingConsole.ALL_REPORTS) {
+                if (reportName !== ALL_REPORTS) {
                     break;
                 }
             }
-            case ReportingConsole.ALL_REPORTS:
+            case ALL_REPORTS:
             case ConsoleMostActiveDetPointsReport.ID: {
                 this.reports.push(new ConsoleMostActiveDetPointsReport(this.reportingEngine));
-                if (reportName !== ReportingConsole.ALL_REPORTS) {
+                if (reportName !== ALL_REPORTS) {
                     break;
                 }
             }
-            case ReportingConsole.ALL_REPORTS:
+            case ALL_REPORTS:
             case ConsoleMostActiveUsersReport.ID: {
                 this.reports.push(new ConsoleMostActiveUsersReport(this.reportingEngine));
-                if (reportName !== ReportingConsole.ALL_REPORTS) {
+                if (reportName !== ALL_REPORTS) {
                     break;
                 }
             }
-            case ReportingConsole.ALL_REPORTS:
+            case ALL_REPORTS:
             case ConsoleTrendsReport.ID: {
                 this.reports.push(new ConsoleTrendsReport(this.reportingEngine));
-                if (reportName !== ReportingConsole.ALL_REPORTS) {
+                if (reportName !== ALL_REPORTS) {
                     break;
                 }
             }
-            case ReportingConsole.ALL_REPORTS:
+            case ALL_REPORTS:
             case ConsoleDetPointConfigReport.ID: {
                 this.reports.push(new ConsoleDetPointConfigReport(this.reportingEngine));
-                if (reportName !== ReportingConsole.ALL_REPORTS) {
+                if (reportName !== ALL_REPORTS) {
                     break;
                 }
             }
-            case ReportingConsole.ALL_REPORTS:
+            case ALL_REPORTS:
             case ConsoleDetPointCategorizationReport.ID: {
                 this.reports.push(new ConsoleDetPointCategorizationReport(this.reportingEngine, 
                                                                           this.detectionPointDescriptions));
-                if (reportName !== ReportingConsole.ALL_REPORTS) {
+                if (reportName !== ALL_REPORTS) {
                     break;
                 }
             }
@@ -421,7 +435,9 @@ class ReportingConsole {
             case 'earliestDate': {
                 await this.prepareEarliestDate(settings)
                 .then((answer) => {
-                    this.earliest = answer.replace(' ', 'T') + 'Z';
+                    if (answer && answer.trim().length > 0) {
+                        this.earliest = answer.trim().replace(' ', 'T') + 'Z';
+                    }
                 })
                 .catch();
                 break
@@ -520,10 +536,11 @@ class ReportingConsole {
     }
 
     prepareReportsMenu(reports: ConsoleReport[]): Promise<string> {
-        const choices: {value: number, name: string}[] = [];
+        const choices: {value: string, name: string}[] = [];
         reports.forEach((el, index) => {
             const number = index + 1;
-            choices.push({value: number, name: `${number}. ${el.getReportName()}`});
+            choices.push({value: new Number(number).toString(), 
+                          name: `${number}. ${el.getReportName()}`});
         });
         return select<string>({
                     message: 'Report:',
@@ -553,13 +570,13 @@ class ReportingConsole {
 
     prepareEarliestDate(settings: AppSensorUIConsoleSettings): Promise<string> {
         return input({
-            message: 'Report earliest date (server UTC) in format YYYY-MM-DD HH:mm:ss.sss (fraction part .sss is optional):',
+            message: 'Report earliest date (server UTC) in format YYYY-MM-DDTHH:mm:ss.sss (fraction part .sss is optional):',
             validate: this.validateEarliestDate
         });
     }
 
     validateEarliestDate(userInput: any): string | true {
-        const regExpr = "([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2})\:([0-9]{2})\:([0-9]{2})(\.([0-9]{3}))*";
+        const regExpr = "([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2})\:([0-9]{2})\:([0-9]{2})(\.([0-9]{3}))*";
         if (userInput) {
             const match = userInput.match(regExpr);
             if (match) {
@@ -731,10 +748,18 @@ class ReportingConsole {
         const fromDateStr = ConsoleReport.formatTimestamp(new Date(this.earliest));
         const toDateStr = ConsoleReport.formatTimestamp(new Date());
 
-        let fileName = `AppSensor_Reports_${fromDateStr}-${toDateStr}.xlsx`;
+
+        let fileName = `AppSensorLike_Reports_${fromDateStr}-${toDateStr}.xlsx`;
         fileName = fileName.replace(new RegExp(' ', 'g'), '_').replace(new RegExp(':', 'g'), '-');
 
-        wb.write(fileName);
+        await new Promise((resolve, reject) => {
+            wb.write(fileName, (err: NodeJS.ErrnoException | string | null, stats: fs.Stats) => {
+                if (err) {
+                    console.log(err);    
+                }
+                resolve(null);
+            });
+        });
     }
 }
 
@@ -744,5 +769,5 @@ async function run() {
 
 await run();
 
-export {ConsoleReport, AppSensorUIConsoleSettings, 
+export { AppSensorUIConsoleSettings, USAGE_GUIDE_INFO,
         EXCEL_CELLS_TO_MERGE, EXCEL_CELL_STYLE, EXCEL4NODE_CELL_STYLE, EXCEL_CELLS_CONFIG};

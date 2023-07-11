@@ -1,14 +1,16 @@
-import { AppSensorEvent, Attack, Response, Utils as coreUtils } from "../../core/core.js";
-import { Rule } from "../../core/rule/rule.js";
-import { BaseReport } from "../reports/BaseReport.js";
+import { ReportingEngineExt } from "@appsensorlike/appsensorlike/reporting-engines/reporting-engines.js";
+import { AppSensorEvent, Attack, Response, Utils as coreUtils } from "@appsensorlike/appsensorlike/core/core.js";
+import { Rule } from "@appsensorlike/appsensorlike/core/rule/rule.js";
+
+import { BaseReport } from "@appsensorlike/appsensorlike_ui/appsensor-ui/reports/BaseReport.js";
+
 import { AppSensorUIConsoleSettings, EXCEL4NODE_CELL_STYLE } from "./appsensor-ui-console.js";
 import { ConsoleReport } from "./ConsoleReport.js";
+import { DetectionPointDescriptions } from "./DetectionPointDescriptions.js";
 
 import { TableUserConfig, ColumnUserConfig } from 'table';
-
 import chalk from 'chalk';
-import { DetectionPointDescriptions } from "./DetectionPointDescriptions.js";
-import { ReportingEngineExt } from "../../reporting-engines/reporting-engines.js";
+
 
 class ConsoleAllActivitiesReport extends ConsoleReport {
 

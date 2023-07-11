@@ -1,5 +1,6 @@
 import { ColumnUserConfig, SpanningCellConfig, TableUserConfig } from "table";
-import { ReportingEngineExt } from "../../reporting-engines/reporting-engines.js";
+
+import { ReportingEngineExt } from "@appsensorlike/appsensorlike/reporting-engines/reporting-engines.js";
 
 import { AppSensorUIConsoleSettings, EXCEL4NODE_CELL_STYLE } from "./appsensor-ui-console.js";
 import { ConsoleReport } from "./ConsoleReport.js";
