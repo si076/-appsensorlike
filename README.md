@@ -86,6 +86,6 @@ Other modules
 
 **Monitoring**
 
-@appsensorlike/appsensorlike_ui_web - Web Dashboard for monitoring recent activities, trends, geo map, etc.
+[@appsensorlike/appsensorlike_ui_web](https://www.npmjs.com/package/@appsensorlike/appsensorlike_ui_web) - Web Dashboard for monitoring recent activities, trends, geo map, etc.
 
 @appsensorlike/appsensorlike_ui_console - Console for monitoring and report exporting

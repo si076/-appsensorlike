@@ -438,3 +438,17 @@ dist/@appsensorlike/appsensorlike_ui_web/dist/appsensor-ui/web/templates/common/
 dist/@appsensorlike/appsensorlike_ui_web/dist/appsensor-ui/web/templates/common/wide-container.html
 dist/@appsensorlike/appsensorlike_ui_web/dist/appsensor-ui/web/websocket/WebSocketJSONObject.d.ts
 dist/@appsensorlike/appsensorlike_ui_web/dist/appsensor-ui/web/websocket/WebSocketJSONObject.js
+dist/@appsensorlike/appsensorlike_ui_console/package.json
+dist/@appsensorlike/appsensorlike_ui_console/Readme.md
+dist/@appsensorlike/appsensorlike_ui_console/dist/appsensor-ui/console/appsensor-console-ui-settings.json
+dist/@appsensorlike/appsensorlike_ui_console/dist/appsensor-ui/console/appsensor-detection-point-descriptions.json
+dist/@appsensorlike/appsensorlike_ui_console/dist/appsensor-ui/console/appsensor-responses-descriptions.json
+dist/@appsensorlike/appsensorlike_ui_console/dist/appsensor-ui/console/appsensor-ui-console.js
+dist/@appsensorlike/appsensorlike_ui_console/dist/appsensor-ui/console/ConsoleAllActivitiesReport.js
+dist/@appsensorlike/appsensorlike_ui_console/dist/appsensor-ui/console/ConsoleDetPointCategorizationReport.js
+dist/@appsensorlike/appsensorlike_ui_console/dist/appsensor-ui/console/ConsoleDetPointConfigReport.js
+dist/@appsensorlike/appsensorlike_ui_console/dist/appsensor-ui/console/ConsoleMostActiveReports.js
+dist/@appsensorlike/appsensorlike_ui_console/dist/appsensor-ui/console/ConsoleReport.js
+dist/@appsensorlike/appsensorlike_ui_console/dist/appsensor-ui/console/ConsoleTrendsReport.js
+dist/@appsensorlike/appsensorlike_ui_console/dist/appsensor-ui/console/DetectionPointDescriptions.js
+dist/@appsensorlike/appsensorlike_ui_console/dist/appsensor-ui/console/ResponseDescriptions.js

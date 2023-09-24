@@ -5,8 +5,8 @@ set outTestsDir=.\dist\storage-providers\appsensor-storage-mysql\tests
 
 set wd=%CD%
 
-cd %outRootDir%
+REM cd %outRootDir%
 
-call npx run-func %outTestsDir%\tests.js runTests
+call npx run-func %outRootDir%\%outTestsDir%\tests.js runTests
 
 cd %wd%

@@ -1,5 +1,7 @@
 [@appsensorlike/appsensorlike](https://www.npmjs.com/package/@appsensorlike/appsensorlike) Dashboard
 
+![alt text](https://github.com/si076/-appsensorlike/blob/main/src/appsensor-ui/web/images/Dashboard1.png "Dashboard")  ![alt text](https://github.com/si076/-appsensorlike/blob/main/src/appsensor-ui/web/images/Dashboard2.png "Trends")
+
 
  Installation
  ---
@@ -13,11 +15,39 @@ Preparation
 You have to create db tables, which hold users, user groups, and corresponding authorizations.
 Use MySQL script located in dependent module @appsensorlike/appsensorlike_ui under dist/appsensor-ui/security/mysql/sql.
 
-Copy from the dependent module @appsensorlike/appsensorlike_ui dist/appsensor-ui/security/mysql/appsensor-ui-session-storage-mysql-config.json in your working directory and set "database", "user" and "password" under "poolOptions".
+Copy from the dependent module @appsensorlike/appsensorlike_ui dist/appsensor-ui/security/mysql/appsensor-ui-session-storage-mysql-config.json in your working directory and set "database", "user" and "password" under "poolOptions". This user is used to connect to db in order to check logging users credentials.
 
 
 Usage
 ---
+You have to have running websocket reporting engine server connected to running AppSensorLike server.
+
+For example:
+`````javascript
+import { AppSensorLocal } from '@appsensorlike/appsensorlike/execution-modes/appsensor-local/appsensor_local.js';
+import { AppSensorEvent, Category, DetectionPoint, DetectionSystem, User } from "@appsensorlike/appsensorlike/core/core.js";
+import { AppSensorReportingWebSocketServer } from "@appsensorlike/appsensorlike_reporting_engines_websocket/server";
+
+const appSensorLocal = new AppSensorLocal();
+const eventManager = appSensorLocal.getAppSensorClient().getEventManager();
+
+//following lines are added just for purpose of demonstration
+//
+const user1 = new User("user1");
+const detectionPoint = new DetectionPoint(Category.REQUEST, "RE7");
+const detectionSystem = new DetectionSystem("localhostme");
+
+if (eventManager) {
+    await eventManager.addEvent(new AppSensorEvent(user1, detectionPoint, detectionSystem)); 
+    await eventManager.addEvent(new AppSensorEvent(user1, detectionPoint, detectionSystem)); //new instance every time to set timestamp
+}
+
+//create and start the reporting engine server
+const wsServer = new AppSensorReportingWebSocketServer(appSensorLocal.getAppSensorServer());
+await wsServer.startServer();
+`````
+
+Dashboard app creates a websocket reporting engine client, which by default tries to connect to ws://localhost:3000. By default it will try to reconnect on connection lost. You can change configuration as pointed in [@appsensorlike/appsensorlike_reporting_engines_websocket](https://www.npmjs.com/package/@appsensorlike/appsensorlike_reporting_engines_websocket) under Configuration section.
 `````javascript
 import { AppsensorUIRestServer } from "@appsensorlike/appsensorlike_ui_web"
 

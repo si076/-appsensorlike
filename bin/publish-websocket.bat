@@ -1,4 +1,4 @@
-set outRootDir=..\..\..\dist\@appsensorlike\appsensorlike_storage_mysql
+set outRootDir=..\dist\@appsensorlike\appsensorlike_websocket
 
 set wd=%CD%
 
