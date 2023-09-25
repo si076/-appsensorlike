@@ -1,6 +1,6 @@
 {
-  "name": "@appsensorlike/appsensorlike_websocket_server",
-  "version": "1.0.0",
+  "name": "@appsensorlike/appsensorlike_exec_mode_websocket_server",
+  "version": "0.18.0",
   "description": "AppSensorLike execution mode over websocket; server part",
   "main": "appsensor_websocket_server.js",
   "type": "module",
@@ -16,5 +16,21 @@
   "bugs": {
     "url": "https://github.com/si076/-appsensorlike/issues"
   },
-  "homepage": "https://github.com/si076/-appsensorlike#readme"
+  "homepage": "https://github.com/si076/-appsensorlike#readme",
+  "keywords": [
+    "js",
+    "AppSensor",
+    "Websocket",
+    "server"
+  ],
+  "engines": {
+    "node": ">=14.15.0"
+  },
+  "dependencies": {
+    "@appsensorlike/appsensorlike": "^0.20.3",
+    "@appsensorlike/appsensorlike_websocket": "^0.20.2"
+  },
+  "exports": {
+    ".": "./dist/execution-modes/appsensor-websocket/server/appsensor_websocket_server.js"
+  }
 }

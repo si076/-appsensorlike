@@ -1,8 +1,8 @@
 
-import { AppSensorClient } from "../../../core/core.js";
-import { NoopUserManager, ResponseHandler, UserManager } from "../../../core/response/response.js";
-import { LocalResponseHandler } from "../../appsensor-local/response/response.js";
-import { WebSocketEventManager } from "./../client/event/event.js";
+import { AppSensorClient } from "@appsensorlike/appsensorlike/core/core.js";
+import { NoopUserManager, ResponseHandler, UserManager } from "@appsensorlike/appsensorlike/core/response/response.js";
+import { LocalResponseHandler } from "@appsensorlike/appsensorlike/execution-modes/appsensor-local/response/response.js";
+import { WebSocketEventManager } from "./event/event.js";
 
 class AppSensorWebsocketExecClient {
 

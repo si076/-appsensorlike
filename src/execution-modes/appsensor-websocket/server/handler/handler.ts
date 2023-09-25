@@ -1,12 +1,12 @@
 import { IncomingMessage } from "http";
-import { Context } from "../../../../core/accesscontrol/accesscontrol.js";
+import { Context } from "@appsensorlike/appsensorlike/core/accesscontrol/accesscontrol.js";
 
-import { AppSensorEvent, RequestHandler, AppSensorServer, Attack, Response, IPAddress, Utils as coreUtils} from "../../../../core/core.js";
-import { SearchCriteria } from "../../../../core/criteria/criteria.js";
-import { Logger } from "../../../../logging/logging.js";
-import { JSONConfigReadValidate, Utils } from "../../../../utils/Utils.js";
-import { ActionRequest } from "../../../../websocket/appsensor-websocket.js";
-import { AppSensorWebSocketServer, WebSocketExt, WebSocketServerConfig } from "../../../../websocket/server/appsensor-websocket-server.js";
+import { AppSensorEvent, RequestHandler, AppSensorServer, Attack, Response, IPAddress, Utils as coreUtils} from "@appsensorlike/appsensorlike/core/core.js";
+import { SearchCriteria } from "@appsensorlike/appsensorlike/core/criteria/criteria.js";
+import { Logger } from "@appsensorlike/appsensorlike/logging/logging.js";
+import { JSONConfigReadValidate, Utils } from "@appsensorlike/appsensorlike/utils/Utils.js";
+import { ActionRequest } from "@appsensorlike/appsensorlike_websocket";
+import { AppSensorWebSocketServer, WebSocketExt, WebSocketServerConfig } from "@appsensorlike/appsensorlike_websocket/server";
 
 class WebSocketRequestHandlerConfigReader  extends JSONConfigReadValidate {
 

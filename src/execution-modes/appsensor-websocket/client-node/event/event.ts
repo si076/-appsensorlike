@@ -1,9 +1,10 @@
-import { AppSensorEvent, Attack, Response } from "../../../../core/core.js";
-import { EventManager } from "../../../../core/event/event.js";
-import { JSONConfigReadValidate, Utils } from "../../../../utils/Utils.js";
-import { AppSensorWebSocketClient, WebSocketClientConfig } from "../../../../websocket/client/appsensor-websocket-client.js";
-import { ActionResponse } from "../../../../websocket/appsensor-websocket.js";
-import { Logger } from "../../../../logging/logging.js";
+import { AppSensorEvent, Attack, Response } from "@appsensorlike/appsensorlike/core/core.js";
+import { EventManager } from "@appsensorlike/appsensorlike/core/event/event.js";
+import { JSONConfigReadValidate, Utils } from "@appsensorlike/appsensorlike/utils/Utils.js";
+import { Logger } from "@appsensorlike/appsensorlike/logging/logging.js";
+
+import { AppSensorWebSocketClient, WebSocketClientConfig } from "@appsensorlike/appsensorlike_websocket/client";
+import { ActionResponse } from "@appsensorlike/appsensorlike_websocket";
 
 import EventEmitter from "events";
 

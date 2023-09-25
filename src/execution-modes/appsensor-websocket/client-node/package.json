@@ -1,6 +1,6 @@
 {
-  "name": "@appsensorlike/appsensorlike_websocket_client",
-  "version": "1.0.0",
+  "name": "@appsensorlike/appsensorlike_exec_mode_websocket_client_node",
+  "version": "0.18.1",
   "description": "AppSensorLike execution mode over websocket; client part",
   "main": "appsensor_websocket_client.js",
   "type": "module",
@@ -22,5 +22,15 @@
   "bugs": {
     "url": "https://github.com/si076/-appsensorlike/issues"
   },
-  "homepage": "https://github.com/si076/-appsensorlike#readme"
+  "homepage": "https://github.com/si076/-appsensorlike#readme",
+  "engines": {
+    "node": ">=14.15.0"
+  },
+  "dependencies": {
+    "@appsensorlike/appsensorlike": "^0.20.3",
+    "@appsensorlike/appsensorlike_websocket": "^0.20.2"
+  },
+  "exports": {
+    ".": "./dist/execution-modes/appsensor-websocket/client-node/appsensor_websocket_client.js"
+  }
 }

@@ -1,14 +1,14 @@
 import { IncomingMessage } from "http";
-import { ReferenceAccessController } from "../../../access-controllers/appsensor-access-control-reference/ReferenceAccessController.js";
+import { ReferenceAccessController } from "@appsensorlike/appsensorlike/access-controllers/appsensor-access-control-reference/ReferenceAccessController.js";
 
-import { ReferenceAttackAnalysisEngine, ReferenceEventAnalysisEngine } from "../../../analysis-engines/appsensor-analysis-reference/appsensor-analysis-reference.js";
-import { AggregateAttackAnalysisEngine, AggregateEventAnalysisEngine } from "../../../analysis-engines/appsensor-analysis-rules/appsensor-analysis-rules.js";
-import { JSONServerConfigurationReader } from "../../../configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
-import { AppSensorServer, RequestHandler } from "../../../core/core.js";
-import { AttackStore, EventStore, ResponseStore } from "../../../core/storage/storage.js";
-import { InMemoryAttackStore, InMemoryEventStore, InMemoryResponseStore } from "../../../storage-providers/appsensor-storage-in-memory/appsensor-storage-in-memory.js";
-import { JSONConfigManager } from "../../../utils/Utils.js";
-import { WebSocketRequestHandler } from "./../server/handler/handler.js";
+import { ReferenceAttackAnalysisEngine, ReferenceEventAnalysisEngine } from "@appsensorlike/appsensorlike/analysis-engines/appsensor-analysis-reference/appsensor-analysis-reference.js";
+import { AggregateAttackAnalysisEngine, AggregateEventAnalysisEngine } from "@appsensorlike/appsensorlike/analysis-engines/appsensor-analysis-rules/appsensor-analysis-rules.js";
+import { JSONServerConfigurationReader } from "@appsensorlike/appsensorlike/configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
+import { AppSensorServer, RequestHandler } from "@appsensorlike/appsensorlike/core/core.js";
+import { AttackStore, EventStore, ResponseStore } from "@appsensorlike/appsensorlike/core/storage/storage.js";
+import { InMemoryAttackStore, InMemoryEventStore, InMemoryResponseStore } from "@appsensorlike/appsensorlike/storage-providers/appsensor-storage-in-memory/appsensor-storage-in-memory.js";
+import { JSONConfigManager } from "@appsensorlike/appsensorlike/utils/Utils.js";
+import { WebSocketRequestHandler } from "./handler/handler.js";
 
 class AppSensorWebsocketExecServer {
 
