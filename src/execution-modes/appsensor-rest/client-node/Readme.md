@@ -70,7 +70,8 @@ if (eventManager) {
 
 Configuration
 ---
-You can pass the *url* to send request to in the AppSensorRestClient constructor or configure it in appsensor-rest-request-event-config.json file in the working directory. You can copy the default configuration from this module's dist/execution-modes/appsensor-rest/client-node/event.
+You can pass the *url* to send request to in the AppSensorRestClient constructor or configure it in appsensor-rest-request-event-config.json file in the working directory. You can copy the default configuration from this module's dist/execution-modes/appsensor-rest/client-node/event. Corresponding schema file appsensor-rest-client-config_schema.json is in the same directory.
+The default url is http://localhost:8080 .
 
 
 TypeScript support

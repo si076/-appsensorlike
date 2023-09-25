@@ -33,7 +33,7 @@ Configuration
 ---
 You can configure AppSensorLike detection points, responses, etc. via *appsensor-server-config.json* in your working directory. You can copy a demonstration appsensor-server-config.json from @appsensorlike/appsensorlike/dist/configuration-modes/appsensor-configuration-json/server and modify it accordingly. Corresponding schem file *appsensor-server-config_schema.json* is in the same directory. The configuration is reloaded on change.
 
-You can configure http/s server thru *appsensor-rest-request-handler-config.json* file in your working directory. You can copy the default configuration from this module's dist/execution-modes/appsensor-rest/server/handler. Corresponding schem file *appsensor-rest-server-config_schema.json* is in the same directory. For more information of the configuration fields check class @appsensorlike/appsensorlike/dist/http/HttpS2ServerConfig.
+You can configure http/s server thru *appsensor-rest-request-handler-config.json* file in your working directory. You can copy the default configuration from this module's dist/execution-modes/appsensor-rest/server/handler. Corresponding schem file *appsensor-rest-server-config_schema.json* is in the same directory. For more information of the configuration fields check class @appsensorlike/appsensorlike/dist/http/HttpS2ServerConfig. This implementation utilizes Node's http/s server so you could refer to Node's documentation about the options (e.g. https://nodejs.org/dist/v14.15.0/docs/api/http.html#http_http_createserver_options_requestlistener). By default the server listens on port 8080.
 
 
 TypeScript support
