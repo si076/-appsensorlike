@@ -23,6 +23,9 @@
     "url": "https://github.com/si076/-appsensorlike/issues"
   },
   "homepage": "https://github.com/si076/-appsensorlike#readme",
+  "engines": {
+    "node": ">=14.15.0"
+  },
   "dependencies": {
     "@appsensorlike/appsensorlike": "^0.20.2",
     "uuid": "^9.0.0",

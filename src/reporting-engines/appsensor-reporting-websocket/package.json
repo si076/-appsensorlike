@@ -24,6 +24,9 @@
     "url": "https://github.com/si076/-appsensorlike/issues"
   },
   "homepage": "https://github.com/si076/-appsensorlike#readme",
+  "engines": {
+    "node": ">=14.15.0"
+  },
   "exports": {
     "./server": "./dist/reporting-engines/appsensor-reporting-websocket/server/appsensor-reporting-websocket-server.js",
     "./client": "./dist/reporting-engines/appsensor-reporting-websocket/client/appsensor-reporting-websocket-client.js"
