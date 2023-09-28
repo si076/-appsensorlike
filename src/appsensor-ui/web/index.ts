@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { AppSensorReportingWebSocketClient } from "@appsensorlike/appsensorlike_reporting_engines_websocket/client";
 
 import { RestServer, RestServerConfig } from "@appsensorlike/appsensorlike_rest_server";
@@ -556,5 +557,14 @@ class AppsensorUIRestServer extends RestServer {
     }
     
 }
+
+async function run() {
+    const inst = new AppsensorUIRestServer();
+    await inst.initStartServer();
+    //now the dashboard app is up and running expecting requests on configured url
+    //e.g. http://localhost:8080
+}
+
+await run();
 
 export { AppsensorUIRestServer };
