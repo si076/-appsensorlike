@@ -74,9 +74,9 @@ Other modules
 
 [@appsensorlike/appsensorlike_exec_mode_rest_server](https://www.npmjs.com/package/@appsensorlike/appsensorlike_exec_mode_rest_server) - http/s server exposed as a web service as defined in https://owasp.org/www-pdf-archive/Owasp-appsensor-guide-v2.pdf under Chapter 20
 
-@appsensorlike/appsensorlike_websocket_client - client communicating with the server via WebSocket 
+[@appsensorlike/appsensorlike_exec_mode_websocket_client_node](https://www.npmjs.com/package/@appsensorlike/appsensorlike_exec_mode_websocket_client_node) - client communicating with the server via WebSocket 
 
-@appsensorlike/appsensorlike_websocket_server - server exposed via WebSocket.
+[@appsensorlike/appsensorlike_exec_mode_websocket_server](https://www.npmjs.com/package/@appsensorlike/appsensorlike_exec_mode_websocket_server) - server exposed via WebSocket.
 
 **Reporting**
 
@@ -88,4 +88,4 @@ Other modules
 
 [@appsensorlike/appsensorlike_ui_web](https://www.npmjs.com/package/@appsensorlike/appsensorlike_ui_web) - Web Dashboard for monitoring recent activities, trends, geo map, etc.
 
-@appsensorlike/appsensorlike_ui_console - Console for monitoring and report exporting
+[@appsensorlike/appsensorlike_ui_console](https://www.npmjs.com/package/@appsensorlike/appsensorlike_ui_console) - Console for monitoring and report exporting

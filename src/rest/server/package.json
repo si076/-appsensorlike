@@ -1,6 +1,6 @@
 {
   "name": "@appsensorlike/appsensorlike_rest_server",
-  "version": "0.18.1",
+  "version": "0.18.2",
   "description": "A skeleton for REST web app/services",
   "type": "module",
   "scripts": {

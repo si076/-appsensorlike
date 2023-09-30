@@ -1,6 +1,6 @@
 {
   "name": "@appsensorlike/appsensorlike_websocket",
-  "version": "0.20.2",
+  "version": "0.20.3",
   "description": "Base class/types utilized by websocket client/server",
   "type": "module",
   "scripts": {
