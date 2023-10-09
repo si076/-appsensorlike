@@ -4,7 +4,7 @@ import { Role } from "../../../../core/accesscontrol/accesscontrol.js";
 import { GeoLocation } from "../../../../core/geolocation/geolocation.js";
 import { CorrelationSet } from "../../../../core/correlation/correlation.js";
 import { Clause, Expression, MonitorPoint, Rule } from "../../../../core/rule/rule.js";
-import { JSONConfigReadValidate, Utils } from "../../../../utils/Utils.js";
+import { Utils } from "../../../../utils/Utils.js";
 
 import assert from "assert";
 import fs from 'fs';

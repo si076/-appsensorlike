@@ -1,0 +1,18 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+      "outDir": "./dist/core/tests",
+    },
+    "include": [
+      "./src/analysis-engines/appsensor-analysis-rules/tests/**/*.ts",
+      "./src/configuration-modes/appsensor-configuration-json/tests/**/*.ts",
+      "./src/configuration-modes/appsensor-configuration-json/client/tests/**/*.ts",
+      "./src/configuration-modes/appsensor-configuration-json/server/tests/**/*.ts",
+      "./src/core/tests/**/*.ts",
+      "./src/execution-modes/appsensor-local/tests/**/*.ts",
+      "./src/execution-modes/tests/**/*.ts",
+      "./src/tests/**/*.ts"
+        
+    ],
+    "exclude": ["node_modules"]
+  }

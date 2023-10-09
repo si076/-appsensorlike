@@ -1,6 +1,6 @@
 
 import * as readline from 'readline';
-import { JSONConfigReadValidate, Utils } from '../../../utils/Utils.js';
+import { Utils } from '../../../utils/Utils.js';
 import { runTests as test} from '../../tests/tests.js';
 import { AppSensorLocal } from '../appsensor_local.js';
 

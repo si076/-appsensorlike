@@ -2,7 +2,6 @@ import { IPAddress, ObjectValidationError } from "../core.js";
 
 import * as assert from 'assert';
 
-import ipaddrlib from 'ipaddr.js';
 
 class IPAddressTests {
 	

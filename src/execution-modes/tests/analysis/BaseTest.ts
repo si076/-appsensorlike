@@ -1,7 +1,6 @@
 import { AppSensorClient, AppSensorServer } from "../../../core/core.js";
 import { InMemoryAttackStore, InMemoryEventStore, InMemoryResponseStore } from "../../../storage-providers/appsensor-storage-in-memory/appsensor-storage-in-memory.js";
 import { Rule } from "../../../core/rule/rule.js";
-import { AppSensorLocal } from "../../appsensor-local/appsensor_local.js";
 
 abstract class BaseTest {
 
