@@ -1,8 +1,8 @@
 {
-  "name": "@si076/appsensorlike_fast_geoip",
-  "version": "1.0.0",
-  "description": "AppSensor ip locator implementation utilizing fast-geoip library",
-  "main": "fast-geoip.js",
+  "name": "@appsensorlike/appsensorlike_geolocators_fast_geoip",
+  "version": "0.18.1",
+  "description": "AppSensorLike ip locator implementation utilizing fast-geoip library",
+  "type": "module",
   "directories": {
     "test": "tests"
   },
@@ -24,7 +24,14 @@
     "url": "https://github.com/si076/-appsensorlike/issues"
   },
   "homepage": "https://github.com/si076/-appsensorlike#readme",
+  "engines": {
+    "node": ">=14.15.0"
+  },
   "dependencies": {
-    "fast-geoip": "^1.1.88"
+    "fast-geoip": "^1.1.88",
+    "@appsensorlike/appsensorlike": "0.20.4"
+  },
+  "exports": {
+    ".": "./dist/geolocators/fast-geoip/fast-geoip.js"
   }
 }

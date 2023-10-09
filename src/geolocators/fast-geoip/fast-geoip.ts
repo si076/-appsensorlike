@@ -1,4 +1,4 @@
-import { GeoLocation, GeoLocator } from "../../core/geolocation/geolocation.js";
+import { GeoLocation, GeoLocator } from "@appsensorlike/appsensorlike/core/geolocation/geolocation.js";
 
 import fast_geoip from 'fast-geoip';
 
@@ -61,4 +61,4 @@ class FastGeoIPLocator implements GeoLocator {
 
 }
 
-export {FastGeoIPLocator};
+export {FastGeoIPLocator, GeoLocationExt};
