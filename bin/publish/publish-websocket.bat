@@ -1,4 +1,4 @@
-set outRootDir=..\dist\@appsensorlike\appsensorlike_ui
+set outRootDir=..\..\dist\@appsensorlike\appsensorlike_websocket
 
 set wd=%CD%
 

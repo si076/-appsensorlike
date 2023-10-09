@@ -1,8 +1,8 @@
-set outRootDir=..\dist\@appsensorlike\appsensorlike_ui
+set outRootDir=..\..\dist\@appsensorlike\appsensorlike_ui
 set outDistDir=%outRootDir%\dist
 set outMySQLDir=%outDistDir%\appsensor-ui\security\mysql
 set outSQLDir=%outMySQLDir%\sql
-set baseDir=..\src\appsensor-ui
+set baseDir=..\..\src\appsensor-ui
 
 set srcMySQLDir=%baseDir%\security\mysql
 set srcSQLDir=%srcMySQLDir%\sql

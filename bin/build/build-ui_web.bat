@@ -1,9 +1,9 @@
-set outRootDir=..\dist\@appsensorlike\appsensorlike_ui_web
+set outRootDir=..\..\dist\@appsensorlike\appsensorlike_ui_web
 set outDistDir=%outRootDir%\dist
 set outWebDir=%outDistDir%\appsensor-ui\web
 set outTemplatesDir=%outWebDir%\templates
 set outStaticDir=%outWebDir%\static
-set baseDir=..\src\appsensor-ui\web
+set baseDir=..\..\src\appsensor-ui\web
 
 
 set srcTemplatesDir=%baseDir%\templates

@@ -1,16 +1,16 @@
-set outRootDir=..\dist\@appsensorlike\appsensorlike
+set outRootDir=..\..\dist\@appsensorlike\appsensorlike
 set outDistDir=%outRootDir%\dist
 set outConfigDir=%outDistDir%\configuration-modes\appsensor-configuration-json
 set outExecModeDir=%outDistDir%\execution-modes
 set outExecModeTestsDir=%outExecModeDir%\tests
 set outLoggingDir=%outDistDir%\logging
-set baseDir=..
+set baseDir=..\..
 
-set srcConfigDir=..\src\configuration-modes\appsensor-configuration-json
+set srcConfigDir=..\..\src\configuration-modes\appsensor-configuration-json
 
-set srcExecModesTestsDir=..\src\execution-modes\tests
+set srcExecModesTestsDir=..\..\src\execution-modes\tests
 
-set srcLoggingDir=..\src\logging
+set srcLoggingDir=..\..\src\logging
 
 rd %outRootDir% /s /q
 

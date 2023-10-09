@@ -1,8 +1,8 @@
-set outRootDir=..\dist\@appsensorlike\appsensorlike_reporting_engines_websocket
+set outRootDir=..\..\dist\@appsensorlike\appsensorlike_reporting_engines_websocket
 set outDistDir=%outRootDir%\dist
 set outServerDir=%outDistDir%\reporting-engines\appsensor-reporting-websocket\server
 set outClientDir=%outDistDir%\reporting-engines\appsensor-reporting-websocket\client
-set baseDir=..\src\reporting-engines\appsensor-reporting-websocket
+set baseDir=..\..\src\reporting-engines\appsensor-reporting-websocket
 
 set srcServerDir=%baseDir%\server
 set srcClientDir=%baseDir%\client

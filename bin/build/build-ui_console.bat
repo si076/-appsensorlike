@@ -1,7 +1,7 @@
-set outRootDir=..\dist\@appsensorlike\appsensorlike_ui_console
+set outRootDir=..\..\dist\@appsensorlike\appsensorlike_ui_console
 set outDistDir=%outRootDir%\dist
 set outConsoleDir=%outDistDir%\appsensor-ui\console
-set baseDir=..\src\appsensor-ui\console
+set baseDir=..\..\src\appsensor-ui\console
 
 rd %outRootDir% /s /q
 

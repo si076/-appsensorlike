@@ -1,7 +1,7 @@
-set outRootDir=..\dist\@appsensorlike\appsensorlike_storage_mysql
+set outRootDir=..\..\dist\@appsensorlike\appsensorlike_storage_mysql
 set outDistDir=%outRootDir%\dist
 set outStorageMySQLDir=%outDistDir%\storage-providers\appsensor-storage-mysql
-set baseDir=..\src\storage-providers\appsensor-storage-mysql
+set baseDir=..\..\src\storage-providers\appsensor-storage-mysql
 
 rd %outRootDir% /s /q
 

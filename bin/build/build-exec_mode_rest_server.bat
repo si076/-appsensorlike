@@ -1,7 +1,7 @@
-set outRootDir=..\dist\@appsensorlike\appsensorlike_exec_mode_websocket_server
+set outRootDir=..\..\dist\@appsensorlike\appsensorlike_exec_mode_rest_server
 set outDistDir=%outRootDir%\dist
-set outHandlerDir=%outDistDir%\execution-modes\appsensor-websocket\server\handler
-set baseDir=..\src\execution-modes\appsensor-websocket\server
+set outHandlerDir=%outDistDir%\execution-modes\appsensor-rest\server\handler
+set baseDir=..\..\src\execution-modes\appsensor-rest\server
 
 set srcHandlerDir=%baseDir%\handler
 
