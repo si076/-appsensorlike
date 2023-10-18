@@ -1388,6 +1388,8 @@ class Category {
 /**
  * The RequestHandler is the key interface that the server side of 
  * AppSensor implements to handle the different functional requests.
+ * 
+ * In contrast to the ORIGINAL code here methods are asynchronous returning Promise<T>.
  */
  interface RequestHandler {
 	
@@ -1414,7 +1416,27 @@ class Category {
 	 * @return a Collection of Response objects 
 	 */
 	getResponses(earliest: Date): Promise<Response[]>;
-	
+
+	/**
+	 * Retrieve any {@link AppSensorEvent}s generated that apply to this 
+	 * client since the last time the client called this method.
+	 *  
+	 * ADDITION TO THE ORIGINAL CODE
+	 * 
+	 * @return a Collection of {@link AppSensorEvent} objects 
+	 */
+	 getEvents(earliest: Date): Promise<AppSensorEvent[]>;
+
+	/**
+	 * Retrieve any {@link Attack}s generated that apply to this 
+	 * client since the last time the client called this method.
+	 *  
+	 * ADDITION TO THE ORIGINAL CODE
+	 * 
+	 * @return a Collection of {@link Attack} objects 
+	 */
+	 getAttacks(earliest: Date): Promise<Attack[]>;
+
 }
 
 /**

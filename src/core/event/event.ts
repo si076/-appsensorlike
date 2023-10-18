@@ -21,6 +21,7 @@ import { AppSensorEvent, Attack, Response } from "../core.js";
 	 */
 	addAttack(attack: Attack): Promise<void>;
 
+
 	/**
 	 * Retrieve any {@link Response}s generated that apply to this 
 	 * client since the last time the client called this method.
@@ -28,6 +29,27 @@ import { AppSensorEvent, Attack, Response } from "../core.js";
 	 * @return a Collection of {@link Response} objects 
 	 */
 	getResponses(earliest: Date): Promise<Response[]>;
+
+	/**
+	 * Retrieve any {@link AppSensorEvent}s generated that apply to this 
+	 * client since the last time the client called this method.
+	 *  
+	 * ADDITION TO THE ORIGINAL CODE
+	 * 
+	 * @return a Collection of {@link AppSensorEvent} objects 
+	 */
+	 getEvents(earliest: Date): Promise<AppSensorEvent[]>;
+
+	/**
+	 * Retrieve any {@link Attack}s generated that apply to this 
+	 * client since the last time the client called this method.
+	 *  
+	 * ADDITION TO THE ORIGINAL CODE
+	 * 
+	 * @return a Collection of {@link Attack} objects 
+	 */
+	 getAttacks(earliest: Date): Promise<Attack[]>;
+
 }
 
 export {EventManager};
