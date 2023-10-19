@@ -61,6 +61,36 @@ class LocalRequestHandler implements RequestHandler {
 		return responses;
 	}
 
+	public async getEvents(earliest: Date): Promise<AppSensorEvent[]> {
+        const detSystem = LocalRequestHandler.detectionSystemId !== null ? LocalRequestHandler.detectionSystemId : "";
+		const criteria: SearchCriteria = new SearchCriteria().
+				setDetectionSystemIds([detSystem]).
+				setEarliest(earliest);
+		
+        let events: AppSensorEvent[] = []         
+
+        const eventStore = this.appSensorServer.getEventStore();
+        if (eventStore) {
+            events = await eventStore.findEvents(criteria);
+        }
+		return events;
+	}
+
+	public async getAttacks(earliest: Date): Promise<Attack[]> {
+        const detSystem = LocalRequestHandler.detectionSystemId !== null ? LocalRequestHandler.detectionSystemId : "";
+		const criteria: SearchCriteria = new SearchCriteria().
+				setDetectionSystemIds([detSystem]).
+				setEarliest(earliest);
+		
+        let attacks: Attack[] = []         
+
+        const attackStore = this.appSensorServer.getAttackStore();
+        if (attackStore) {
+            attacks = await attackStore.findAttacks(criteria);
+        }
+		return attacks;
+	}
+
 }
 
 export {LocalRequestHandler};
