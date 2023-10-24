@@ -1,3 +1,6 @@
+@echo -- Build UI Web --
+@echo off
+
 set outRootDir=..\..\dist\@appsensorlike\appsensorlike_ui_web
 set outDistDir=%outRootDir%\dist
 set outWebDir=%outDistDir%\appsensor-ui\web
@@ -11,7 +14,12 @@ set srcStaticDir=%baseDir%\static
 
 rd %outRootDir% /s /q
 
-call tsc -d -p %baseDir%\tsconfig.json
+call tsc -d -p %baseDir%\tsconfig.json > error.txt
+
+call check_error_file.bat error.txt
+if %errorlevel%==1 (
+    exit /b 1
+)
 
 copy %baseDir%\appsensor-ui-rest-server-config.json %outWebDir%
 copy %baseDir%\appsensor-rest-server-config_schema.json %outWebDir%

@@ -1,3 +1,6 @@
+@echo -- Build Storage MySQL --
+@echo off
+
 set outRootDir=..\..\dist\@appsensorlike\appsensorlike_storage_mysql
 set outDistDir=%outRootDir%\dist
 set outStorageMySQLDir=%outDistDir%\storage-providers\appsensor-storage-mysql
@@ -5,7 +8,12 @@ set baseDir=..\..\src\storage-providers\appsensor-storage-mysql
 
 rd %outRootDir% /s /q
 
-call tsc -d -p %baseDir%\tsconfig.json
+call tsc -d -p %baseDir%\tsconfig.json > error.txt
+
+call check_error_file.bat error.txt
+if %errorlevel%==1 (
+    exit /b 1
+)
 
 del %outStorageMySQLDir%\tests\*.d.ts
 REM del following one by one because we want to keep appsensor-storage-mysql.d.ts
