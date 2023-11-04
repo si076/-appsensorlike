@@ -4,7 +4,8 @@
   "description": "Base class/types utilized by websocket client/server",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "gen_websocket_server_config_schema": "typescript-json-schema tsconfig.json --noExtraProps true --required true -o appsensor-websocket-server-config_schema.json WebSocketServerConfig"
   },
   "repository": {
     "type": "git",

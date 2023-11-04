@@ -1,6 +1,8 @@
 
 const UUID_QUERY_PARAM = 'uuid';
 
+const ACTION_CONFIG = "CONFIG";
+
 class AccessDeniedError extends Error {
     constructor(message: string = "Access denied") {
         super(message);
@@ -67,4 +69,4 @@ class ActionResponse implements IActionResponse {
     }
 }
 
-export {UUID_QUERY_PARAM, ActionRequest, ActionResponse, AccessDeniedError, UnAuthorizedActionError};
+export {UUID_QUERY_PARAM, ACTION_CONFIG, ActionRequest, ActionResponse, AccessDeniedError, UnAuthorizedActionError};

@@ -2,9 +2,10 @@
 import { Utils } from "@appsensorlike/appsensorlike/utils/Utils.js";
 import { Logger } from "@appsensorlike/appsensorlike/logging/logging.js";
 import { IValidateInitialize } from "@appsensorlike/appsensorlike/core/core.js";
-import { ActionRequest, ActionResponse, UUID_QUERY_PARAM } from "../appsensor-websocket.js";
+import { ActionRequest, ActionResponse, UUID_QUERY_PARAM, ACTION_CONFIG } from "../appsensor-websocket.js";
 
 import { ClientRequestArgs } from "http";
+import EventEmitter from "events";
 
 import WebSocket from "ws";
 import { v4 as uuidv4 } from 'uuid';
@@ -32,38 +33,60 @@ class AppSensorWebSocketClient {
     protected socket: WebSocket | null = null;
     protected myUUID: string;
 
-    protected reconnectAddress: string | URL;
-    protected reconnectConfig: WebSocketClientConfig;
     protected reconnectTimer: NodeJS.Timer | null = null;
 
+    protected address: string;
+    protected config: WebSocketClientConfig;
+
+    protected accessDenied: boolean = false;
+
+    protected eventEmmiter: EventEmitter = new EventEmitter();
+
+
     constructor(config: WebSocketClientConfig) {
-        
+        this.config = config;
+
         this.myUUID = uuidv4();
 
-        const _address = config.address + '?' + UUID_QUERY_PARAM + '=' + this.myUUID;
-
-        this.reconnectAddress = _address;   
-        this.reconnectConfig = config;
-
-        this.connect(_address, config.options);
+        this.address = config.address + '?' + UUID_QUERY_PARAM + '=' + this.myUUID;
     }
 
-    protected connect(address: string | URL,
-                      options?: WebSocket.ClientOptions | ClientRequestArgs) {
+    public async connect(configParameters?: { [propertyName: string]: string | Object; }): Promise<boolean> {
+        let result = false;
+        try {
+
+            result = await new Promise<boolean>((resolve, reject) => {
+
+                this.socket = new WebSocket(this.address, this.config.options);
+                
+                this.socket.on('error', this.onError.bind(this));
+                this.socket.on('close', this.onClose.bind(this));
+                this.socket.on('message', this.onMessage.bind(this));
+                this.socket.on('open', this.onOpen.bind(this));
+    
+                this.socket.on('open', () => {
+                    resolve(true);
+                });
+                this.socket.on('error', (err: Error) => {
+                    reject(err);
+                });
+
+            });
+    
+            await this.sendConfigMsg(configParameters);
+
+        } catch (error) {
+            result = false;
+            Logger.getClientLogger().error(error);
+        }
+
+        return result;
+    }
+
+    protected async sendConfigMsg(configParameters?: { [propertyName: string]: string | Object; }) {
+        const request = this.createRequest(ACTION_CONFIG, configParameters);
         
-
-        this.socket = new WebSocket(address, options);
-
-        const _myUUID = this.myUUID;
-
-        
-        this.socket.on('open', this.onOpen.bind(this));
-
-        this.socket.on('error', this.onError.bind(this));
-
-        this.socket.on('message', this.onMessage.bind(this));
-
-        this.socket.on('close', this.onClose.bind(this));
+        await this.sendRequest(request);
     }
 
     protected onOpen() {
@@ -78,23 +101,23 @@ class AppSensorWebSocketClient {
     }
 
     protected onError(error: Error) {
-        Logger.getClientLogger().error(`AppSensorWebSocketClient.socket: ${this.myUUID}:`, 'error ', error);
+        Logger.getClientLogger().error(`AppSensorWebSocketClient.socket: ${this.myUUID}:`, 'error:', error);
     }
 
     protected onClose(code: number, reason: Buffer) {
-        Logger.getClientLogger().trace(`AppSensorWebSocketClient.socket: ${this.myUUID}:`, 'close', 
+        Logger.getClientLogger().trace(`AppSensorWebSocketClient.socket: ${this.myUUID}:`, 'close:', 
                                         ' CODE: ', code, ' REASON: ', reason.toString());
         
         if (code !== 1005 && 
-            this.reconnectConfig && this.reconnectConfig.reconnectOnConnectionLost &&
+            this.config.reconnectOnConnectionLost &&
             !this.reconnectTimer) {
-            this.reconnectTimer = setInterval(this.reconnect.bind(this), this.reconnectConfig.reconnectRetryInterval);
+            this.reconnectTimer = setInterval(this.reconnect.bind(this), this.config.reconnectRetryInterval);
         }
     }
 
-    protected reconnect() {
+    protected async reconnect() {
         Logger.getClientLogger().info('AppSensorWebSocketClient.reconnect:', 'Retry reconnect...');
-        return this.connect(this.reconnectAddress, this.reconnectConfig.options);
+        await this.connect();
     }
 
     onMessage(data: WebSocket.RawData, isBinary: boolean) {
@@ -104,6 +127,7 @@ class AppSensorWebSocketClient {
         Object.setPrototypeOf(response, ActionResponse.prototype);
 
         if (response.accessDenied) {
+            this.accessDenied = true;
 
             Logger.getClientLogger().warn('Access denied for this client application! Configure server!');
 
@@ -111,27 +135,33 @@ class AppSensorWebSocketClient {
 
             Logger.getClientLogger().warn(`This client application is not authorized to perform '${response.actionName}' on server! Configure server!`);
             
+            this.onServerResponse(response);
+            
         } else {
             this.onServerResponse(response);
         }
     }
     
     protected onServerResponse(response: ActionResponse) {
-        //your code goes here
+
+        const responseStatus = response.error ? 'Error' : 'OK';
+        Logger.getClientLogger().trace('AppSensorWebSocketClient.onServerResponse: ', responseStatus);
+
+        this.eventEmmiter.emit(response.id, response);
     }
 
-    protected static createRequest(actionName: string, parameters?: { [propertyName: string]: string | Object; }): ActionRequest {
+    protected createRequest(actionName: string, parameters?: { [propertyName: string]: string | Object; }): ActionRequest {
         const uuid = uuidv4();
 
         return new ActionRequest(uuid, actionName, parameters);
     }
 
-    protected async sendRequest(request: ActionRequest, cb: (err?: Error) => void) {
+    protected async sendRequest(request: ActionRequest) {
         let waited = 0;
         const timeout = 500;
 
         if (!this.socket) {
-            return;
+            throw new Error("socket cannot be null!");
         }
 
         while (this.socket.readyState === WebSocket.CONNECTING && waited < 5000) {
@@ -139,28 +169,82 @@ class AppSensorWebSocketClient {
             waited += timeout;
         }
 
-        if (this.socket.readyState === WebSocket.CONNECTING) {
+        await new Promise<void>((resolve, reject) => {
+            if (!this.socket) {
+                reject(new Error("socket cannot be null!"));
+                return;
+            }
 
-            cb(new Error('WebSocket in CONNECTING state for too long!'));
+            if (this.socket.readyState === WebSocket.CONNECTING) {
 
-        } else if (this.socket.readyState === WebSocket.CLOSING) {
+                reject(new Error('WebSocket in CONNECTING state for too long!'));
+    
+            } else if (this.socket.readyState === WebSocket.CLOSING) {
+    
+                reject(new Error('WebSocket in CLOSING state!'));
+                
+            } else if (this.socket.readyState === WebSocket.CLOSED) {
+    
+                reject(new Error('WebSocket has already been closed!'));
+                
+            } else if (this.socket.readyState === WebSocket.OPEN) {
+    
+                this.socket.send(JSON.stringify(request), (err?: Error | undefined) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
 
-            cb(new Error('WebSocket in CLOSING state!'));
-            
-        } else if (this.socket.readyState === WebSocket.CLOSED) {
-
-            cb(new Error('WebSocket has already been closed!'));
-            
-        } else if (this.socket.readyState === WebSocket.OPEN) {
-
-            this.socket.send(JSON.stringify(request), cb);
-
-        }
+                    resolve();
+                });
+    
+            }
+        });
     }
+
+    protected async addRequest(request: ActionRequest): Promise<string | number | Object | null> {
+
+        const promise = new Promise<string | number | Object | null>((resolve, reject) => {
+
+
+            this.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
+
+                this.eventEmmiter.removeAllListeners(request.id);
+
+                if (response.error) {
+                    const serverError = new Error(response.error);
+                    Logger.getClientLogger().error('Server error:', serverError);
+
+                    reject(serverError);
+                } else {
+                    
+                    resolve(response.result);
+                }
+            });
+           
+            
+        });
+
+        return await this.sendRequest(request)
+        .then((res) => {
+            return promise;
+        })
+        .catch((error) => {
+            Logger.getClientLogger().error('Communication error:', error);
+            return Promise.reject(error);
+        });
+    }
+
 
     public async closeSocket() {
         if (this.socket) {
+            Logger.getClientLogger().info('AppSensorWebSocketClient.closeSocket');
+
             this.socket.close();
+
+            if (this.reconnectTimer) {
+                clearInterval(this.reconnectTimer);
+            }
         }
     }
 

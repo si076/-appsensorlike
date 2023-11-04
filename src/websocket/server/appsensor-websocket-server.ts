@@ -3,12 +3,13 @@ import { AccessDeniedError, ActionRequest, ActionResponse, UnAuthorizedActionErr
 import { IValidateInitialize } from "@appsensorlike/appsensorlike/core/core.js";
 import { HttpS2Server, HttpS2ServerConfig } from "@appsensorlike/appsensorlike/http/HttpS2Server.js";
 
-import { URL } from 'url';
+import { URL, UrlWithStringQuery } from 'url';
 import http from 'http';
 import { IncomingMessage } from "http";
 import https from 'https';
 
 import WebSocket, { PerMessageDeflateOptions, WebSocketServer } from "ws";
+import { ServerConfiguration } from "@appsensorlike/appsensorlike/core/configuration/server/server_configuration.js";
 
 class WebSocketServerConfig extends HttpS2ServerConfig implements IValidateInitialize {
     private static DEFAULT_PORT = 3000;
@@ -19,12 +20,18 @@ class WebSocketServerConfig extends HttpS2ServerConfig implements IValidateIniti
         perMessageDeflate?: boolean | PerMessageDeflateOptions | undefined;
         maxPayload?: number | undefined;
         skipUTF8Validation?: boolean | undefined;
-    }
+    };
+
+    clientApplicationIdentificationHeaderName?: string;
 
     checkValidInitialize() {
 
         if (!this.listenOptions) {
             this.listenOptions = {port: WebSocketServerConfig.DEFAULT_PORT}
+        }
+
+        if (!this.clientApplicationIdentificationHeaderName) {
+            this.clientApplicationIdentificationHeaderName = ServerConfiguration.DEFAULT_HEADER_NAME;
         }
     };
 }
@@ -33,6 +40,7 @@ class WebSocketServerConfig extends HttpS2ServerConfig implements IValidateIniti
 
 interface WebSocketAdditionalProperties {
     isAlive?: boolean;
+    clientApplication?: string,
     remoteAddress?: string;
     uuid?: string;
 }
@@ -79,6 +87,8 @@ class AppSensorWebSocketServer extends HttpS2Server {
                 throw new Error(`WebSocketServer cannot run on http server protocol: ${this.config.protocol}`);
             }
 
+            const self = this;
+
             this.websocketServer = new WebSocketServer(this.websocketServerOptions);
 
             const interval = setInterval(this.ping.bind(this), 30000);
@@ -100,23 +110,35 @@ class AppSensorWebSocketServer extends HttpS2Server {
                     ws.remoteAddress = req.socket.remoteAddress;
                 }
     
+
+                ws.clientApplication = '';
+                if (self.config.clientApplicationIdentificationHeaderName) {
+                    const headerName = self.config.clientApplicationIdentificationHeaderName.toLowerCase();
+
+                    const propDescriptor = Object.getOwnPropertyDescriptor(req.headers, headerName);
+                    if (propDescriptor) {
+                        ws.clientApplication = propDescriptor.value
+                    }
+                }
+
+
                 const url = new URL(req.url!, `ws://${req.headers.host}`);
                 // console.log(url);
                 ws.uuid = url.searchParams.get(UUID_QUERY_PARAM)!;
     
-                Logger.getServerLogger().info('AppSensorWebSocketServer.websocketServer:', 'connection', 
-                                               'IP address:', ws.remoteAddress, 'client uuid:', ws.uuid);
+                Logger.getServerLogger().info('AppSensorWebSocketServer.websocketServer:', 'connection:', 
+                                              'Client application:', ws.clientApplication,
+                                              '; IP address:', ws.remoteAddress, '; client uuid:', ws.uuid);
     
     
     
                 if (!isConnectionAllowedThunk(ws)) {
                     
-                    Logger.getServerLogger().warn(`AppSensorWebSocketServer.websocketServer: Unknown client application with IP address: ${ws.remoteAddress} is trying to access the websocketServer`);
-                    Logger.getServerLogger().warn(`AppSensorWebSocketServer.websocketServer: Closing connection to client application with IP address: ${ws.remoteAddress}`);
+                    Logger.getServerLogger().warn(`AppSensorWebSocketServer.websocketServer: Closing connection to client application ${ws.clientApplication} with IP address: ${ws.remoteAddress}. Access denied! Configure server!`);
     
-                    AppSensorWebSocketServer.reportAccessDenied(ws);
-    
-                    ws.close(AppSensorWebSocketServer.ACCESS_DENIED_CLOSE_CODE, "Access denied");
+                    // AppSensorWebSocketServer.reportAccessDenied(ws);
+                    ws.close(AppSensorWebSocketServer.ACCESS_DENIED_CLOSE_CODE, 'Access denied for this client application! Configure server!');
+                    ws.terminate();
                 }
     
                 ws.isAlive = true;
@@ -197,12 +219,23 @@ class AppSensorWebSocketServer extends HttpS2Server {
 
     public async closeServer() {
         if (this.websocketServer) {
-            this.websocketServer.close((err?: Error | undefined) => {
-                Logger.getServerLogger().trace('AppSensorWebSocketServer.closeServer');
-                if (err) {
-                    Logger.getServerLogger().error('AppSensorWebSocketServer.closeServer: error', err);
-                }
+            await new Promise((resolve, reject) => {
+                this.websocketServer!.close((err?: Error | undefined) => {
+                    Logger.getServerLogger().info('AppSensorWebSocketServer.closeServer');
+                    if (err) {
+                        Logger.getServerLogger().error('AppSensorWebSocketServer.closeServer: error', err);
+                        reject(err);
+                        return;
+                    }
+
+                    resolve(0);
+                });
             });
+
+            await this.stopServer();
+    
+        } else {
+            await this.stopServer();
         }
     }
 
@@ -259,7 +292,7 @@ class AppSensorWebSocketServer extends HttpS2Server {
                                             '',
                                             null,
                                             null,
-                                            new AccessDeniedError().toString(),
+                                            new AccessDeniedError().message,
                                             true);
 
         ws.send(JSON.stringify(response));                                             
@@ -270,7 +303,7 @@ class AppSensorWebSocketServer extends HttpS2Server {
                                             request.actionName,
                                             null,
                                             null,
-                                            new UnAuthorizedActionError(request.actionName).toString(),
+                                            new UnAuthorizedActionError(request.actionName).message,
                                             false,
                                             true);
 
