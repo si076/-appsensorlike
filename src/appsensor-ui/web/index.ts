@@ -115,6 +115,8 @@ class AppsensorUIRestServer extends RestServer {
         super(new AppsensorUIRestServerConfigReader().read(restServerConfig));
 
         this.wsReportingClient = new AppSensorReportingWebSocketClient();
+        this.wsReportingClient.addOnAddListener(this.onAdd.bind(this));    
+
 
         const userReport = new UserReport(this.wsReportingClient);
         const detectionPointReport = new DetectionPointReport(this.wsReportingClient);
@@ -188,10 +190,10 @@ class AppsensorUIRestServer extends RestServer {
         });
     }
 
-    private verifyUserCredentials (username: string,
+    private verifyUserCredentials(username: string,
                                    password: string,
                                    done: (error: any, user?: Express.User | false, options?: IVerifyOptions) => void,
-                                  ): void {
+                                 ): void {
 
         this.userManager.loadUserByUsername(username)
         .then(userDetails => {
@@ -288,7 +290,7 @@ class AppsensorUIRestServer extends RestServer {
         const csrfProtection = csurf();
         //render pages
         this.expressApp.get('/login', csrfProtection, this.renderLogInPage.bind(this));
-        this.expressApp.post('/login', e.urlencoded(), csrfProtection, passport.authenticate('local', {
+        this.expressApp.post('/login', e.urlencoded({ extended: true }), csrfProtection, passport.authenticate('local', {
             successRedirect: '/',
             failureMessage: true,
             failureRedirect: '/login'
@@ -481,46 +483,35 @@ class AppsensorUIRestServer extends RestServer {
                         ws.remoteAddress = req.headers['x-forwarded-for'].split(',')[0].trim();
                     }
                 } catch (error) {
-                    Logger.getServerLogger().trace('AppSensorUI.websocketServer:', error);
+                    Logger.getServerLogger().error('AppSensorUI.websocketServer:', error);
                 }
                 
                 if (!ws.remoteAddress) {
                     ws.remoteAddress = req.socket.remoteAddress;
                 }
     
-                Logger.getServerLogger().info('AppSensorUI.websocketServer:', 'connection', 
+                Logger.getServerLogger().debug('AppSensorUI.websocketServer:', 'connection', 
                                                'remote address:', ws.remoteAddress);
 
-                self.wsReportingClient.addOnAddListener((obj: AppSensorEvent | Attack | Response) => {
-                    let type = '';
-                    if (obj instanceof AppSensorEvent) {
-                        type = "event";
-                    } else if (obj instanceof Attack) {
-                        type = "attack";
-                    } else if (obj instanceof Response) {
-                        type = "response";
-                    }
-                    const wsJSONObject = new WebSocketJsonObject(type, obj);
-                    const wsJSONObjectStr = JSON.stringify(wsJSONObject);
-
-                    ws.send(wsJSONObjectStr);
-                });    
 
                 ws.isAlive = true;
 
                 ws.on('error', (error) => {
-                    Logger.getServerLogger().trace('AppSensorUI.websocketServer:', ': error', error);
+                    Logger.getServerLogger().error('AppSensorUI.websocketServer:ws:', 'error:', error);
                 });
 
                 ws.on('message', function(this:  WebSocketExt, data: WebSocket.RawData, isBinary: boolean) {
-                    Logger.getServerLogger().trace('AppSensorUI.websocketServer:', 'message:', data.toString());
+                    Logger.getServerLogger().debug('AppSensorUI.websocketServer:ws:', 'message:', data.toString());
                 });
 
                 ws.on('pong', function(this:  WebSocketExt) {
-                    // console.log('pong');
-                    Logger.getServerLogger().trace('AppSensorUI.websocketServer:', ': pong');
+                    Logger.getServerLogger().debug('AppSensorUI.websocketServer:ws:', 'pong');
     
                     this.isAlive = true;
+                });
+
+                ws.on("close", function(this: WebSocketExt, code: number, reason: Buffer) {
+                    Logger.getServerLogger().debug('AppSensorUI.websocketServer:ws:', 'close: with code:', code);//, ' reason:', reason.toString());
                 });
 
             });  
@@ -534,7 +525,7 @@ class AppsensorUIRestServer extends RestServer {
             });
 
             this.websocketServer.on('close', function close(this: WebSocketServer) {
-                Logger.getServerLogger().info('AppSensorUI.websocketServer:', 'close');
+                Logger.getServerLogger().debug('AppSensorUI.websocketServer:', 'close');
 
                 clearInterval(interval);
             });
@@ -548,13 +539,36 @@ class AppsensorUIRestServer extends RestServer {
     private ping() {
         if (this.websocketServer) {
             this.websocketServer.clients.forEach(function each(ws:  WebSocketExt) {
-                if (ws.isAlive === false) return ws.terminate();
-            
+                if (ws.isAlive === false) {
+                    Logger.getServerLogger().debug('AppSensorUI.ping:', 'terminating not responding websocket');
+
+                    return ws.terminate();
+                }
+
                 ws.isAlive = false;
                 ws.ping();
             });
         }
     }
+
+    private onAdd(obj: AppSensorEvent | Attack | Response) {
+        let type = '';
+        if (obj instanceof AppSensorEvent) {
+            type = "event";
+        } else if (obj instanceof Attack) {
+            type = "attack";
+        } else if (obj instanceof Response) {
+            type = "response";
+        }
+        const wsJSONObject = new WebSocketJsonObject(type, obj);
+        const wsJSONObjectStr = JSON.stringify(wsJSONObject);
+
+        if (this.websocketServer) {
+            this.websocketServer.clients.forEach(function each(ws:  WebSocketExt) {
+                ws.send(wsJSONObjectStr);
+            });
+        }
+    }          
     
 }
 

@@ -38,14 +38,71 @@ const detectionPoint = new DetectionPoint(Category.REQUEST, "RE7");
 const detectionSystem = new DetectionSystem("localhostme");
 
 if (eventManager) {
+    //simulate some user malicious events
+    //
     await eventManager.addEvent(new AppSensorEvent(user1, detectionPoint, detectionSystem)); 
     await eventManager.addEvent(new AppSensorEvent(user1, detectionPoint, detectionSystem)); //new instance every time to set timestamp
 }
+
+//simulate some user malicious events on interval
+//see how Dashboard gets updated
+setInterval(async () => {
+    if (eventManager) {
+        await eventManager.addEvent(new AppSensorEvent(user1, detectionPoint, detectionSystem));
+    }
+}, 10000);
 
 //create and start the reporting engine server
 const wsServer = new AppSensorReportingWebSocketServer(appSensorLocal.getAppSensorServer());
 await wsServer.startServer();
 `````
+
+If you have installed the [geo locator module](https://www.npmjs.com/package/@appsensorlike/appsensorlike_geolocators_fast_geoip), you could also add geolocation along with the user's IP address. This will give you a visualization of user's location on GEO map. 
+
+For example:
+`````javascript
+import { AppSensorLocal } from '@appsensorlike/appsensorlike/execution-modes/appsensor-local/appsensor_local.js';
+import { AppSensorEvent, Category, DetectionPoint, DetectionSystem, User, IPAddress } from "@appsensorlike/appsensorlike/core/core.js";
+import { AppSensorReportingWebSocketServer } from "@appsensorlike/appsensorlike_reporting_engines_websocket/server";
+import { FastGeoIPLocator } from "@appsensorlike/appsensorlike_geolocators_fast_geoip";
+
+const appSensorLocal = new AppSensorLocal();
+const eventManager = appSensorLocal.getAppSensorClient().getEventManager();
+
+//following lines are added just for purpose of demonstration
+//
+
+const geoLocator = new FastGeoIPLocator();
+
+const ipAddressUser = await IPAddress.fromString("83.228.0.0", geoLocator);
+const user1 = new User("user1", ipAddressUser);
+
+const ipAddressDetSystem = await IPAddress.fromString("80.80.128.0", geoLocator);
+const detectionSystem = new DetectionSystem("localhostme", ipAddressDetSystem);
+
+const detectionPoint = new DetectionPoint(Category.REQUEST, "RE7");
+
+
+if (eventManager) {
+    //simulate some user malicious events
+    //
+    await eventManager.addEvent(new AppSensorEvent(user1, detectionPoint, detectionSystem)); 
+    await eventManager.addEvent(new AppSensorEvent(user1, detectionPoint, detectionSystem)); //new instance every time to set timestamp
+}
+
+//simulate some user malicious events on interval
+//see how Dashboard and Geo map get updated
+setInterval(async () => {
+    if (eventManager) {
+        await eventManager.addEvent(new AppSensorEvent(user1, detectionPoint, detectionSystem));
+    }
+}, 10000);
+
+//create and start the reporting engine server
+const wsServer = new AppSensorReportingWebSocketServer(appSensorLocal.getAppSensorServer());
+await wsServer.startServer();
+`````
+
 
 Dashboard app creates a websocket reporting engine client, which by default tries to connect to ws://localhost:3000. By default it will try to reconnect on connection lost. You can change configuration as pointed in [@appsensorlike/appsensorlike_reporting_engines_websocket](https://www.npmjs.com/package/@appsensorlike/appsensorlike_reporting_engines_websocket) under Configuration section.
 
