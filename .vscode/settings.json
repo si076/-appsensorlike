@@ -4,7 +4,8 @@
             "fileMatch": [
                 "/src/configuration-modes/appsensor-configuration-json/server/appsensor-server-config.json",
                 "/src/configuration-modes/appsensor-configuration-json/server/tests/appsensor-server-config.json",
-                "/src/execution-modes/tests/analysis/appsensor-analysis-tests-server-config.json"
+                "/src/execution-modes/tests/analysis/appsensor-analysis-tests-server-config.json",
+                "/src/reporting-engines/appsensor-reporting-websocket/tests/appsensor-server-config.json"
             ],
             "url": "/src/configuration-modes/appsensor-configuration-json/server/appsensor-server-config_schema.json"
         },
@@ -12,6 +13,7 @@
             "fileMatch": [
                 "/src/configuration-modes/appsensor-configuration-json/client/appsensor-client-config.json",
                 "/src/configuration-modes/appsensor-configuration-json/client/tests/appsensor-client-config.json",
+                "/src/execution-modes/appsensor-rest/client-node/event/appsensor-rest-request-event-config.json"
             ],
             "url": "/src/configuration-modes/appsensor-configuration-json/client/appsensor-client-config_schema.json"
         },
@@ -39,21 +41,15 @@
         },
         {
             "fileMatch": [
-                "/src/execution-modes/appsensor-websocket/client/event/appsensor-websocket-event-manager-config.json"
+                "/src/execution-modes/appsensor-websocket/client-node/event/appsensor-websocket-event-manager-config.json"
             ],
-            "url": "/src/execution-modes/appsensor-websocket/client/event/appsensor-websocket-client-config_schema.json"
+            "url": "/src/execution-modes/appsensor-websocket/client-node/event/appsensor-websocket-client-config_schema.json"
         },
         {
             "fileMatch": [
                 "/src/execution-modes/appsensor-rest/server/handler/appsensor-rest-request-handler-config.json"
             ],
             "url": "/src/execution-modes/appsensor-rest/server/handler/appsensor-rest-server-config_schema.json"
-        },
-        {
-            "fileMatch": [
-                "/src/execution-modes/appsensor-rest/client/event/appsensor-rest-request-event-config.json"
-            ],
-            "url": "/src/execution-modes/appsensor-rest/client/event/appsensor-rest-client-config_schema.json"
         },
         {
             "fileMatch": [

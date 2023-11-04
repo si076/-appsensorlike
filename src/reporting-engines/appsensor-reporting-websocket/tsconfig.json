@@ -4,5 +4,8 @@
     "outDir": "../../../dist/@appsensorlike/appsensorlike_reporting_engines_websocket/dist",
   },
   "include": ["**/*.ts"],
-  "exclude": ["node_modules", "./tests"]
+  "exclude": [
+    "node_modules",
+    "./tests"
+  ]
 }

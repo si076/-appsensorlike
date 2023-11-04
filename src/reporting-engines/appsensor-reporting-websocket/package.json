@@ -32,6 +32,7 @@
     "./client": "./dist/reporting-engines/appsensor-reporting-websocket/client/appsensor-reporting-websocket-client.js"
   },
   "dependencies": {
+    "@appsensorlike/appsensorlike": "^0.20.5",
     "@appsensorlike/appsensorlike_websocket": "^0.20.2"
   }
 }

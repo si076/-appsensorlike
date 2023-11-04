@@ -31,7 +31,7 @@
     "node": ">=14.15.0"
   },
   "dependencies": {
-    "@appsensorlike/appsensorlike": "^0.20.2",
+    "@appsensorlike/appsensorlike": "^0.20.5",
     "mysql": "^2.18.1",
     "uuid": "^9.0.0"
   },
@@ -42,8 +42,7 @@
   },
   "files": [
     "dist/storage-providers/appsensor-storage-mysql/*",
-    "dist/storage-providers/appsensor-storage-mysql/sql/*",
-    "dist/storage-providers/appsensor-storage-mysql/tests/*"
+    "dist/storage-providers/appsensor-storage-mysql/sql/*"
   ],
   "exports": {
     ".": "./dist/storage-providers/appsensor-storage-mysql/appsensor-storage-mysql.js"

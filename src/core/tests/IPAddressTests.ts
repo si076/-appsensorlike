@@ -1,6 +1,7 @@
 import { IPAddress, ObjectValidationError } from "../core.js";
 
 import * as assert from 'assert';
+import { Logger } from "../../logging/logging.js";
 
 
 class IPAddressTests {
@@ -72,14 +73,13 @@ class IPAddressTests {
     }
 	
     public static async runTests() {
-        console.log();
-        console.log('-> Start of IPAddressTests');
+        Logger.getTestsLogger().info('-> Start of IPAddressTests');
 
         await IPAddressTests.testFromStringInvalidAddress();
         await IPAddressTests.testFromStringValid();
         IPAddressTests.testEquality();
 
-        console.log('<- End of IPAddressTests');
+        Logger.getTestsLogger().info('<- End of IPAddressTests');
     }
 }
 

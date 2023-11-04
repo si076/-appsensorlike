@@ -1,9 +1,9 @@
+import { Logger } from "../../../logging/logging.js";
 import { JSONClientConfigurationTest } from "../client/tests/JSONClientConfigurationTest.js";
 import { JSONServerConfigurationTest } from "../server/tests/JSONServerConfigurationTest.js";
 
 function runTests() {
-    console.log();
-    console.log('----- Run configuration tests -----');
+    Logger.getTestsLogger().info('----- Run configuration tests -----');
     JSONServerConfigurationTest.runTests();
     JSONClientConfigurationTest.runTests();
 }

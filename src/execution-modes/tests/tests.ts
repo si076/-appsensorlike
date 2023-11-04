@@ -1,23 +1,20 @@
 import * as readline from 'readline';
+import util from 'util';
 
 import { AppSensorClient, AppSensorServer } from '../../core/core.js';
+import { Logger } from '../../logging/logging.js';
 import { AggregateEventAnalysisEngineIntegrationTest } from './analysis/AggregateEventAnalysisEngineIntegrationTest.js';
-import { ErrorHandlingTest } from './analysis/ErrorHandlingTest.js';
 import { MultipleDetectionPointsSameLabelEventAnalysisEngineTest } from './analysis/MultipleDetectionPointsSameLabelEventAnalysisEngineTest.js';
 import { ReferenceStatisticalEventAnalysisEngineTest } from './analysis/ReferenceStatisticalEventAnalysisEngineTest.js';
 import { SimpleAggregateEventAnalysisEngineTest } from './analysis/SimpleAggregateEventAnalysisEngineTest.js';
 
-enum EXEC_MODE {
-    EXEC_MODE_LOCAL     = "EXEC_MODE_LOCAL",
-    EXEC_MODE_WEBSOCKET = "EXEC_MODE_WEBSOCKET",
-    EXEC_MODE_REST      = "EXEC_MODE_REST"
-}
 
 async function runTests(appSensorServer: AppSensorServer, 
                         appSensorClient: AppSensorClient, 
                         configLocation: string,
                         readInf: readline.Interface | null = null,
-                        execMode: EXEC_MODE = EXEC_MODE.EXEC_MODE_LOCAL) {
+                        choice: string = 'a',
+                        executionTimes: number = 1) {
 
     let rl = readInf;
     if (!rl) {
@@ -27,37 +24,41 @@ async function runTests(appSensorServer: AppSensorServer,
         });
     }
 
-    console.log();
-    console.log(" 1: MultipleDetectionPointsSameLabelEventAnalysisEngineTest tests");
-    console.log(" 2: SimpleAggregateEventAnalysisEngineTest tests");
-    console.log(" 3: ReferenceStatisticalEventAnalysisEngineTest tests");
-    console.log(" 4: AggregateEventAnalysisEngineIntegrationTest tests");
-    console.log(" 5: ErrorHandlingTest tests");
-    const choice: string = await new Promise((resolve, reject) => {
-        rl!.question("To run all tests press 'a', to execute specific test choose a number:", (choice: string) => {
-            resolve(choice);
+    if (!choice) {
+        console.log(" 1: MultipleDetectionPointsSameLabelEventAnalysisEngineTest tests");
+        console.log(" 2: SimpleAggregateEventAnalysisEngineTest tests");
+        console.log(" 3: ReferenceStatisticalEventAnalysisEngineTest tests");
+        console.log(" 4: AggregateEventAnalysisEngineIntegrationTest tests");
+        choice = await new Promise((resolve, reject) => {
+            rl!.question("To run all tests press 'a', to execute specific test choose a number:", (choice: string) => {
+                resolve(choice);
+            });
         });
-    });
-    await testChoice(appSensorServer, appSensorClient, choice, configLocation, execMode, rl);
+
+    }
+
+    await testChoice(appSensorServer, appSensorClient, configLocation, rl, choice, executionTimes);
 }
 
 async function testChoice(appSensorServer: AppSensorServer, 
                           appSensorClient: AppSensorClient, 
-                          choice: string,
                           configLocation: string,
-                          execMode: EXEC_MODE = EXEC_MODE.EXEC_MODE_LOCAL,
-                          readInf: readline.Interface) {
-    const execTimesStr: string = await new Promise((resolve, reject) => {
-        readInf!.question("Execution times:", (choice: string) => {
-            resolve(choice);
+                          readInf: readline.Interface,
+                          choice: string,
+                          executionTimes: number) {
+    if (executionTimes === 0) {
+        const execTimesStr: string = await new Promise((resolve, reject) => {
+            readInf!.question("Execution times:", (choice: string) => {
+                resolve(choice);
+            });
         });
-    });
-
-    const execTimes = Number.parseInt(execTimesStr);
+    
+        executionTimes = Number.parseInt(execTimesStr);
+    }
     
     const startInMillis = new Date().getTime();
 
-    for (let i = 0; i < execTimes; i++) {
+    for (let i = 0; i < executionTimes; i++) {
         
         switch (choice) {
             case "1":  
@@ -88,21 +89,49 @@ async function testChoice(appSensorServer: AppSensorServer,
                     break;
                 }
             }
-            case "5":  
-            case "a": {
-                await ErrorHandlingTest.runTests(appSensorServer, appSensorClient, execMode);
-                if (choice !== 'a') {
-                    break;
-                }
-            }
             
         }
 
     }
     
     const endInMillis = new Date().getTime();
-    const average = (endInMillis - startInMillis) / execTimes;
-    console.log('Average time for test exection:', average, ' in in milliseconds.');
+    const average = (endInMillis - startInMillis) / executionTimes;
+    Logger.getTestsLogger().info('Average time for test exection:', average, ' in in milliseconds.');
 }
 
-export {runTests, EXEC_MODE};
+function loggedUnexpectedErrors(expectedErrors: (Error | string)[]): boolean {
+    let unexpectedErrorFound = false;
+
+    const events = Logger.getRecordingErrorEvents();
+
+    for (let i = 0; i < events.length; i++) {
+        let writtenEventStr = util.format(...events[i].data);
+        if (events[i].error) {
+            writtenEventStr = events[i].error!.name + ': ' + events[i].error!.message;
+        }
+        // console.log(events[i].categoryName, writtenEventStr);
+
+        let found = false;
+
+        for (let j = 0; j < expectedErrors.length; j++) {
+            let expErrorStr = util.format(...[expectedErrors[j]]);
+            if (expectedErrors[j] instanceof Error) {
+                expErrorStr = (expectedErrors[j] as Error).name + ': ' + (expectedErrors[j] as Error).message;
+            }
+            if (expErrorStr == writtenEventStr) {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            unexpectedErrorFound = true;
+            const errorStr  = events[i].categoryName + ' - '  + writtenEventStr;
+            Logger.getTestsLogger().error("Unexpected error:", errorStr);
+        }
+    };
+
+    return unexpectedErrorFound;
+}  
+
+export {runTests, loggedUnexpectedErrors};

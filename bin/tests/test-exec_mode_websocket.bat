@@ -44,6 +44,6 @@ cd %md%
 
 echo ---
 echo Clearing tests dir
-rd %outDistDir% /s /q
+rem rd %outDistDir% /s /q
 
 cd %sd%

@@ -2,6 +2,8 @@ import { AppSensorClient, AppSensorServer } from "../../../core/core.js";
 import { InMemoryAttackStore, InMemoryEventStore, InMemoryResponseStore } from "../../../storage-providers/appsensor-storage-in-memory/appsensor-storage-in-memory.js";
 import { Rule } from "../../../core/rule/rule.js";
 
+import assert from "assert";
+
 abstract class BaseTest {
 
 	protected appSensorServer: AppSensorServer;
@@ -37,6 +39,30 @@ abstract class BaseTest {
 		});
 
 	}
+
+	protected async pullEventsAssert(earliest: Date, eventCount: number) {
+		const responses = await this.appSensorClient.getEventManager()!.getEvents(earliest);
+
+		assert.equal(responses.length, eventCount);
+	}
+
+	protected async pullAttacksAssert(earliest: Date, attackCount: number) {
+		const responses = await this.appSensorClient.getEventManager()!.getAttacks(earliest);
+
+		assert.equal(responses.length, attackCount);
+	}
+
+	protected async pullResponsesAssertAnalyse(earliest: Date, responseCount: number, responseActions: string[]) {
+		const responses = await this.appSensorClient.getEventManager()!.getResponses(earliest);
+
+		assert.equal(responses.length, responseCount);
+
+		for (let i = 0; i < responses.length; i++) {
+			assert.equal(responses[i].getAction(), responseActions[i]);
+			this.appSensorClient.getResponseHandler()!.handle(responses[i]);
+		}
+	}
+
 }
 
 export {BaseTest};

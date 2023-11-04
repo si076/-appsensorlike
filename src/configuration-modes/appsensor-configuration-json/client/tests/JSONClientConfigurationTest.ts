@@ -3,11 +3,12 @@ import { JSONClientConfiguration, JSONClientConfigurationReader } from "../JSONC
 import { Utils } from "../../../../utils/Utils.js";
 
 import assert from "assert";
+import { Logger } from "../../../../logging/logging.js";
 
 class JSONClientConfigurationTest {
 
     private testConfigurationReadOfAllElements(): void {
-        console.log('--> testConfigurationReadOfAllElements');
+        Logger.getTestsLogger().info('--> testConfigurationReadOfAllElements');
 
         const configExpected = new JSONClientConfiguration();
 
@@ -31,12 +32,11 @@ class JSONClientConfigurationTest {
         assert.strictEqual(configActual.getServerConnection()!.getUrl(), serverConnection.getUrl());
         assert.strictEqual(configActual.getServerConnection()!.getPort(), serverConnection.getPort());
 
-        console.log('<-- testConfigurationReadOfAllElements');
+        Logger.getTestsLogger().info('<-- testConfigurationReadOfAllElements');
     }
 
     public static runTests() {
-        console.log('');
-        console.log('----- JSONClientConfigurationTest -----');
+        Logger.getTestsLogger().info('----- JSONClientConfigurationTest -----');
         new JSONClientConfigurationTest().testConfigurationReadOfAllElements();
     }
 

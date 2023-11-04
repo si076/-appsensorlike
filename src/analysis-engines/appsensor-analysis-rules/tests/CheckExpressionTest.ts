@@ -3,6 +3,7 @@ import { Clause, Expression, MonitorPoint, Notification } from "../../../core/ru
 import { AggregateEventAnalysisEngine } from "../appsensor-analysis-rules.js";
 
 import assert from 'assert';
+import { Logger } from "../../../logging/logging.js";
 
 class CheckExpressionTest {
 	static engine: AggregateEventAnalysisEngine;
@@ -30,7 +31,7 @@ class CheckExpressionTest {
 
 	// @Test
 	private static testOneValidClause(): void {
-        console.log('-> testOneValidClause');
+        Logger.getTestsLogger().info('-> testOneValidClause');
 
 		const clauses: Clause[] = [];
 		clauses.push(CheckExpressionTest.clause1);
@@ -42,12 +43,12 @@ class CheckExpressionTest {
 
 		assert.ok(CheckExpressionTest.engine.checkExpression(expression, sensors));
 
-        console.log('<- testOneValidClause');
+        Logger.getTestsLogger().info('<- testOneValidClause');
 	}
 
 	// @Test
 	private static testTwoValidClause(): void {
-        console.log('-> testTwoValidClause');
+        Logger.getTestsLogger().info('-> testTwoValidClause');
 
 		const clauses: Clause[] = [];
 		clauses.push(CheckExpressionTest.clause1);
@@ -61,12 +62,12 @@ class CheckExpressionTest {
 
 		assert.ok(CheckExpressionTest.engine.checkExpression(expression, sensors));
 
-        console.log('<- testTwoValidClause');
+        Logger.getTestsLogger().info('<- testTwoValidClause');
 	}
 
 	// @Test
 	private static testOneValidOneInvalidClause(): void {
-        console.log('-> testOneValidOneInvalidClause');
+        Logger.getTestsLogger().info('-> testOneValidOneInvalidClause');
 
 		const clauses: Clause[] = [];
 		clauses.push(CheckExpressionTest.clause1);
@@ -79,12 +80,12 @@ class CheckExpressionTest {
 
 		assert.ok(CheckExpressionTest.engine.checkExpression(expression, sensors));
 
-        console.log('<- testOneValidOneInvalidClause');
+        Logger.getTestsLogger().info('<- testOneValidOneInvalidClause');
 	}
 
 	// @Test
 	private static testOneInvalidClause(): void {
-        console.log('-> testOneInvalidClause');
+        Logger.getTestsLogger().info('-> testOneInvalidClause');
 
 		const clauses: Clause[] = [];
 		clauses.push(CheckExpressionTest.clause1);
@@ -95,12 +96,11 @@ class CheckExpressionTest {
 
 		assert.equal(CheckExpressionTest.engine.checkExpression(expression, sensors), false);
 
-        console.log('<- testOneInvalidClause');
+        Logger.getTestsLogger().info('<- testOneInvalidClause');
 	}
 
     public static runTests() {
-		console.log();
-        console.log('----- Run CheckExpressionTest -----');
+        Logger.getTestsLogger().info('----- Run CheckExpressionTest -----');
         CheckExpressionTest.testOneValidClause();
         CheckExpressionTest.testTwoValidClause();
         CheckExpressionTest.testOneValidOneInvalidClause();

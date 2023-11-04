@@ -12,7 +12,7 @@ import { BaseTests } from "./BaseTests.js";
 
 class AggregEventAnalysisEngIntegTest extends BaseTests {
 
-	private static bob = new User("bob");
+	private static test = new User("test");
 
 	private static detectionPoint1 = new DetectionPoint(Category.INPUT_VALIDATION, "IE1");
 
@@ -178,54 +178,54 @@ class AggregEventAnalysisEngIntegTest extends BaseTests {
 		AggregEventAnalysisEngIntegTest.criteria.set("all", new SearchCriteria().setDetectionSystemIds(AggregEventAnalysisEngIntegTest.detectionSystems1));
 
 		AggregEventAnalysisEngIntegTest.criteria.set("dp1", new SearchCriteria().
-				setUser(AggregEventAnalysisEngIntegTest.bob).
+				setUser(AggregEventAnalysisEngIntegTest.test).
 				setDetectionPoint(AggregEventAnalysisEngIntegTest.detectionPoint1).
 				setDetectionSystemIds(AggregEventAnalysisEngIntegTest.detectionSystems1));
 
         AggregEventAnalysisEngIntegTest.criteria.set("dp2", new SearchCriteria().
-				setUser(AggregEventAnalysisEngIntegTest.bob).
+				setUser(AggregEventAnalysisEngIntegTest.test).
 				setDetectionPoint(AggregEventAnalysisEngIntegTest.detectionPoint2).
 				setDetectionSystemIds(AggregEventAnalysisEngIntegTest.detectionSystems1));
 
         AggregEventAnalysisEngIntegTest.criteria.set("dp3", new SearchCriteria().
-				setUser(AggregEventAnalysisEngIntegTest.bob).
+				setUser(AggregEventAnalysisEngIntegTest.test).
 				setDetectionPoint(AggregEventAnalysisEngIntegTest.detectionPoint3).
 				setDetectionSystemIds(AggregEventAnalysisEngIntegTest.detectionSystems1));
 
         AggregEventAnalysisEngIntegTest.criteria.set("dp5", new SearchCriteria().
-				setUser(AggregEventAnalysisEngIntegTest.bob).
+				setUser(AggregEventAnalysisEngIntegTest.test).
 				setDetectionPoint(AggregEventAnalysisEngIntegTest.detectionPoint5).
 				setDetectionSystemIds(AggregEventAnalysisEngIntegTest.detectionSystems1));
 
         AggregEventAnalysisEngIntegTest.rules = AggregEventAnalysisEngIntegTest.generateRules();
 
 		AggregEventAnalysisEngIntegTest.criteria.set("rule1", new SearchCriteria().
-				setUser(AggregEventAnalysisEngIntegTest.bob).
+				setUser(AggregEventAnalysisEngIntegTest.test).
 				setRule(AggregEventAnalysisEngIntegTest.rules[0]).
 				setDetectionSystemIds(AggregEventAnalysisEngIntegTest.detectionSystems1));
 
         AggregEventAnalysisEngIntegTest.criteria.set("rule2", new SearchCriteria().
-				setUser(AggregEventAnalysisEngIntegTest.bob).
+				setUser(AggregEventAnalysisEngIntegTest.test).
 				setRule(AggregEventAnalysisEngIntegTest.rules[1]).
 				setDetectionSystemIds(AggregEventAnalysisEngIntegTest.detectionSystems1));
 
         AggregEventAnalysisEngIntegTest.criteria.set("rule3", new SearchCriteria().
-				setUser(AggregEventAnalysisEngIntegTest.bob).
+				setUser(AggregEventAnalysisEngIntegTest.test).
 				setRule(AggregEventAnalysisEngIntegTest.rules[2]).
 				setDetectionSystemIds(AggregEventAnalysisEngIntegTest.detectionSystems1));
 
         AggregEventAnalysisEngIntegTest.criteria.set("rule4", new SearchCriteria().
-				setUser(AggregEventAnalysisEngIntegTest.bob).
+				setUser(AggregEventAnalysisEngIntegTest.test).
 				setRule(AggregEventAnalysisEngIntegTest.rules[3]).
 				setDetectionSystemIds(AggregEventAnalysisEngIntegTest.detectionSystems1));
 
         AggregEventAnalysisEngIntegTest.criteria.set("rule5", new SearchCriteria().
-				setUser(AggregEventAnalysisEngIntegTest.bob).
+				setUser(AggregEventAnalysisEngIntegTest.test).
 				setRule(AggregEventAnalysisEngIntegTest.rules[4]).
 				setDetectionSystemIds(AggregEventAnalysisEngIntegTest.detectionSystems1));
 
         AggregEventAnalysisEngIntegTest.criteria.set("rule6", new SearchCriteria().
-				setUser(AggregEventAnalysisEngIntegTest.bob).
+				setUser(AggregEventAnalysisEngIntegTest.test).
 				setRule(AggregEventAnalysisEngIntegTest.rules[5]).
 				setDetectionSystemIds(AggregEventAnalysisEngIntegTest.detectionSystems1));
 	}
@@ -294,7 +294,7 @@ class AggregEventAnalysisEngIntegTest extends BaseTests {
 	// does not check anything
 	private async addEvent(detectionPoint: DetectionPoint, time: Date) {
         await this.appSensorClient!.getEventManager()!.addEvent(
-            new AppSensorEvent(AggregEventAnalysisEngIntegTest.bob, 
+            new AppSensorEvent(AggregEventAnalysisEngIntegTest.test, 
                                 detectionPoint, 
                                 new DetectionSystem("localhostme"),
                                 time));
@@ -317,7 +317,7 @@ class AggregEventAnalysisEngIntegTest extends BaseTests {
 			const attacks = await attackStore!.findAttacks(AggregEventAnalysisEngIntegTest.criteria.get(ruleName)!);
             assert.equal(attackCount, attacks.length);
 
-            await this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(AggregEventAnalysisEngIntegTest.bob, detectionPoint, new DetectionSystem("localhostme")));
+            await this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(AggregEventAnalysisEngIntegTest.test, detectionPoint, new DetectionSystem("localhostme")));
 
 			await super.sleep(millis);
         }
@@ -657,7 +657,7 @@ class AggregEventAnalysisEngIntegTest extends BaseTests {
 
 		let time = new Date(100 * 60 * 60 * 1000);
 		const ruleCriteria = new SearchCriteria().
-			setUser(AggregEventAnalysisEngIntegTest.bob).
+			setUser(AggregEventAnalysisEngIntegTest.test).
 			setRule(AggregEventAnalysisEngIntegTest.rules[6]).
 			setDetectionSystemIds(AggregEventAnalysisEngIntegTest.detectionSystems1);
 
@@ -716,7 +716,7 @@ class AggregEventAnalysisEngIntegTest extends BaseTests {
 
         let time = new Date(100 * 60 * 60 * 1000);
         const ruleCriteria = new SearchCriteria().
-            setUser(AggregEventAnalysisEngIntegTest.bob).
+            setUser(AggregEventAnalysisEngIntegTest.test).
             setRule(AggregEventAnalysisEngIntegTest.rules[0]).
             setDetectionSystemIds(AggregEventAnalysisEngIntegTest.detectionSystems1);
 

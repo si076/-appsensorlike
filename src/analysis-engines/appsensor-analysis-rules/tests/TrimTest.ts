@@ -3,6 +3,7 @@ import { MonitorPoint, Notification } from "../../../core/rule/rule.js";
 import { AggregateEventAnalysisEngine } from "../appsensor-analysis-rules.js";
 
 import assert from "assert";
+import { Logger } from "../../../logging/logging.js";
 
 class TrimTest {
 
@@ -33,7 +34,7 @@ class TrimTest {
 
 	// @Test
 	private static testTrimOne(): void {
-        console.log('-> testTrimOne');
+        Logger.getTestsLogger().info('-> testTrimOne');
 
 		const trimTime: Date = new Date(10);
 		const lengthBefore: number = TrimTest.queue.length;
@@ -46,12 +47,12 @@ class TrimTest {
 			assert.ok(ts.getStartTime().getTime() > trimTime.getTime());
 		}
 
-        console.log('<- testTrimOne');
+        Logger.getTestsLogger().info('<- testTrimOne');
 	}
 
 	// @Test
 	private static testTrimNone(): void {
-        console.log('-> testTrimNone');
+        Logger.getTestsLogger().info('-> testTrimNone');
 
 		const trimTime: Date = new Date(9);
 		const lengthBefore: number = TrimTest.queue.length;
@@ -64,12 +65,12 @@ class TrimTest {
 			assert.ok(ts.getStartTime().getTime() > trimTime.getTime());
 		}
 
-        console.log('<- testTrimNone');
+        Logger.getTestsLogger().info('<- testTrimNone');
 	}
 
 	// @Test
 	private static testTrimAll(): void {
-        console.log('-> testTrimAll');
+        Logger.getTestsLogger().info('-> testTrimAll');
 
 		const trimTime: Date = new Date(14);
 
@@ -81,12 +82,11 @@ class TrimTest {
 			assert.ok(ts.getStartTime().getTime() > trimTime.getTime());
 		}
 
-        console.log('<- testTrimAll');
+        Logger.getTestsLogger().info('<- testTrimAll');
 	}
 
     public static runTests() {
-		console.log();
-        console.log('----- Run TrimTest -----');
+        Logger.getTestsLogger().info('----- Run TrimTest -----');
         
         TrimTest.testTrimOne();
         TrimTest.testTrimNone();

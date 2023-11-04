@@ -3,6 +3,7 @@ import {MonitorPoint, Clause, Notification} from "../../../core/rule/rule.js"
 import { Category, DetectionPoint, Interval, INTERVAL_UNITS } from "../../../core/core.js";
 
 import assert from 'assert';
+import { Logger } from "../../../logging/logging.js";
 
 class CheckClauseTest {
 
@@ -21,7 +22,7 @@ class CheckClauseTest {
 
     // @Test
     private static testExactMatchOneDetectionPoint(): void {
-        console.log('-> testExactMatchOneDetectionPoint');
+        Logger.getTestsLogger().info('-> testExactMatchOneDetectionPoint');
 
         const points: DetectionPoint[] = [];
         points.push(CheckClauseTest.point1);
@@ -32,12 +33,12 @@ class CheckClauseTest {
 
         assert.ok(CheckClauseTest.engine.checkClause(clause, sensors));
 
-        console.log('<- testExactMatchOneDetectionPoint');
+        Logger.getTestsLogger().info('<- testExactMatchOneDetectionPoint');
     }
 
     // @Test
     private static testExactMatchTwoDetectionPoints(): void {
-        console.log('-> testExactMatchTwoDetectionPoints');
+        Logger.getTestsLogger().info('-> testExactMatchTwoDetectionPoints');
 
         const points: DetectionPoint[] = [];
         points.push(CheckClauseTest.point1);
@@ -50,12 +51,12 @@ class CheckClauseTest {
 
         assert.ok(CheckClauseTest.engine.checkClause(clause, sensors));
 
-        console.log('<- testExactMatchTwoDetectionPoints');
+        Logger.getTestsLogger().info('<- testExactMatchTwoDetectionPoints');
     }
 
     // @Test
     private static testExtraDetectionPoints(): void {
-        console.log('-> testExtraDetectionPoints');
+        Logger.getTestsLogger().info('-> testExtraDetectionPoints');
 
         const points: DetectionPoint[] = [];
         points.push(CheckClauseTest.point1);
@@ -67,12 +68,12 @@ class CheckClauseTest {
 
         assert.ok(CheckClauseTest.engine.checkClause(clause, sensors));
 
-        console.log('<- testExtraDetectionPoints');
+        Logger.getTestsLogger().info('<- testExtraDetectionPoints');
     }
 
     // @Test
     private static testNoDetectionPoints(): void {
-        console.log('-> testNoDetectionPoints');
+        Logger.getTestsLogger().info('-> testNoDetectionPoints');
 
         const points: DetectionPoint[] = [];
         points.push(CheckClauseTest.point1);
@@ -82,12 +83,12 @@ class CheckClauseTest {
 
         assert.equal(CheckClauseTest.engine.checkClause(clause, sensors), false);
 
-        console.log('<- testNoDetectionPoints');
+        Logger.getTestsLogger().info('<- testNoDetectionPoints');
     }
 
     // @Test
     private static testMissingDetectionPoint(): void {
-        console.log('-> testMissingDetectionPoint');
+        Logger.getTestsLogger().info('-> testMissingDetectionPoint');
 
         const points: DetectionPoint[] = [];
         points.push(CheckClauseTest.point1);
@@ -99,12 +100,11 @@ class CheckClauseTest {
 
         assert.equal(CheckClauseTest.engine.checkClause(clause, sensors), false);
 
-        console.log('<- testMissingDetectionPoint');
+        Logger.getTestsLogger().info('<- testMissingDetectionPoint');
     }
 
     public static runTests() {
-        console.log();
-        console.log('----- Run CheckClauseTest -----');
+        Logger.getTestsLogger().info('----- Run CheckClauseTest -----');
         CheckClauseTest.testExactMatchOneDetectionPoint();
         CheckClauseTest.testExactMatchTwoDetectionPoints();
         CheckClauseTest.testExtraDetectionPoints();

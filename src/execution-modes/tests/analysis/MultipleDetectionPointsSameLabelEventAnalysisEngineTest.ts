@@ -4,10 +4,11 @@ import { BaseTest } from "./BaseTest.js";
 
 import assert from "assert";
 import { JSONServerConfigurationReader } from "../../../configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
+import { Logger } from "../../../logging/logging.js";
 
 class MultipleDetectionPointsSameLabelEventAnalysisEngineTest extends BaseTest {
 
-	private static bob = new User("bob");
+	private static test = new User("test");
 
 	private static detectionPoint1 = new DetectionPoint(Category.REQUEST, "RE7");
 
@@ -39,9 +40,9 @@ class MultipleDetectionPointsSameLabelEventAnalysisEngineTest extends BaseTest {
 	}
 
 	private async testAttackCreationMultipleDetectionPointsOneLabel() {
-		console.log('--> testAttackCreationMultipleDetectionPointsOneLabel');
+		Logger.getTestsLogger().info('--> testAttackCreationMultipleDetectionPointsOneLabel');
 		const criteria = new SearchCriteria().
-				setUser(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.bob).
+				setUser(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.test).
 				setDetectionPoint(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionPoint1).
 				setDetectionSystemIds(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionSystems1);
 
@@ -52,7 +53,7 @@ class MultipleDetectionPointsSameLabelEventAnalysisEngineTest extends BaseTest {
 		assert.equal(0, events.length);
 		assert.equal(0, attacks.length);
 
-		await this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.bob, MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionPoint1, new DetectionSystem("localhostme")));
+		await this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.test, MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionPoint1, new DetectionSystem("localhostme")));
 		await this.sleep(500);
 
 		events = await this.appSensorServer!.getEventStore()!.findEvents(criteria);
@@ -60,7 +61,7 @@ class MultipleDetectionPointsSameLabelEventAnalysisEngineTest extends BaseTest {
 		assert.equal(1, events.length);
 		assert.equal(0, attacks.length);
 
-		await this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.bob, MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionPoint1, new DetectionSystem("localhostme")));
+		await this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.test, MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionPoint1, new DetectionSystem("localhostme")));
 		await this.sleep(500);
 
 		events = await this.appSensorServer!.getEventStore()!.findEvents(criteria);
@@ -68,7 +69,7 @@ class MultipleDetectionPointsSameLabelEventAnalysisEngineTest extends BaseTest {
 		assert.equal(2, events.length);
 		assert.equal(1, attacks.length);
 
-		await this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.bob, MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionPoint1, new DetectionSystem("localhostme")));
+		await this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.test, MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionPoint1, new DetectionSystem("localhostme")));
 		await this.sleep(500);
 
 		events = await this.appSensorServer!.getEventStore()!.findEvents(criteria);
@@ -76,7 +77,7 @@ class MultipleDetectionPointsSameLabelEventAnalysisEngineTest extends BaseTest {
 		assert.equal(3, events.length);
 		assert.equal(1, attacks.length);
 
-		await this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.bob, MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionPoint1, new DetectionSystem("localhostme")));
+		await this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.test, MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionPoint1, new DetectionSystem("localhostme")));
 		await this.sleep(500);
 
 		events = await this.appSensorServer!.getEventStore()!.findEvents(criteria);
@@ -84,7 +85,7 @@ class MultipleDetectionPointsSameLabelEventAnalysisEngineTest extends BaseTest {
 		assert.equal(4, events.length);
 		assert.equal(2, attacks.length);
 
-		await this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.bob, MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionPoint1, new DetectionSystem("localhostme")));
+		await this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.test, MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionPoint1, new DetectionSystem("localhostme")));
 		await this.sleep(500);
 
 		events = await this.appSensorServer!.getEventStore()!.findEvents(criteria);
@@ -92,7 +93,7 @@ class MultipleDetectionPointsSameLabelEventAnalysisEngineTest extends BaseTest {
 		assert.equal(5, events.length);
 		assert.equal(3, attacks.length);
 
-		await this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.bob, MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionPoint1, new DetectionSystem("localhostme")));
+		await this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.test, MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionPoint1, new DetectionSystem("localhostme")));
 		await this.sleep(500);
 
 		events = await this.appSensorServer!.getEventStore()!.findEvents(criteria);
@@ -100,7 +101,7 @@ class MultipleDetectionPointsSameLabelEventAnalysisEngineTest extends BaseTest {
 		assert.equal(6, events.length);
 		assert.equal(4, attacks.length);
 
-		await this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.bob, MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionPoint1, new DetectionSystem("localhostme")));
+		await this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.test, MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionPoint1, new DetectionSystem("localhostme")));
 		await this.sleep(500);
 
 		events = await this.appSensorServer!.getEventStore()!.findEvents(criteria);
@@ -108,7 +109,7 @@ class MultipleDetectionPointsSameLabelEventAnalysisEngineTest extends BaseTest {
 		assert.equal(7, events.length);
 		assert.equal(4, attacks.length);
 
-		await this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.bob, MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionPoint1, new DetectionSystem("localhostme")));
+		await this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.test, MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionPoint1, new DetectionSystem("localhostme")));
 		await this.sleep(500);
 
 		events = await this.appSensorServer!.getEventStore()!.findEvents(criteria);
@@ -116,7 +117,7 @@ class MultipleDetectionPointsSameLabelEventAnalysisEngineTest extends BaseTest {
 		assert.equal(8, events.length);
 		assert.equal(5, attacks.length);
 
-		await this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.bob, MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionPoint1, new DetectionSystem("localhostme")));
+		await this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.test, MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionPoint1, new DetectionSystem("localhostme")));
 		await this.sleep(500);
 
 		events = await this.appSensorServer!.getEventStore()!.findEvents(criteria);
@@ -124,7 +125,7 @@ class MultipleDetectionPointsSameLabelEventAnalysisEngineTest extends BaseTest {
 		assert.equal(9, events.length);
 		assert.equal(5, attacks.length);
 
-		await this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.bob, MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionPoint1, new DetectionSystem("localhostme")));
+		await this.appSensorClient!.getEventManager()!.addEvent(new AppSensorEvent(MultipleDetectionPointsSameLabelEventAnalysisEngineTest.test, MultipleDetectionPointsSameLabelEventAnalysisEngineTest.detectionPoint1, new DetectionSystem("localhostme")));
 		await this.sleep(500);
 
 		events = await this.appSensorServer!.getEventStore()!.findEvents(criteria);
@@ -132,11 +133,11 @@ class MultipleDetectionPointsSameLabelEventAnalysisEngineTest extends BaseTest {
 		assert.equal(10, events.length);
 		assert.equal(7, attacks.length);
 
-		console.log('<-- testAttackCreationMultipleDetectionPointsOneLabel');
+		Logger.getTestsLogger().info('<-- testAttackCreationMultipleDetectionPointsOneLabel');
 	}
 
 	public static async runTests(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient, configLocation: string) {
-		console.log('----- Run MultipleDetectionPointsSameLabelEventAnalysisEngineTest -----');
+		Logger.getTestsLogger().info('----- Run MultipleDetectionPointsSameLabelEventAnalysisEngineTest -----');
 		const inst = new MultipleDetectionPointsSameLabelEventAnalysisEngineTest(appSensorServer, appSensorClient, configLocation);
 
 		inst.initializeTest();

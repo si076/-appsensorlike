@@ -4,10 +4,11 @@ import { Clause, Expression, MonitorPoint, Rule } from "../../../core/rule/rule.
 import { BaseTest } from "./BaseTest.js";
 
 import assert from "assert";
+import { Logger } from "../../../logging/logging.js";
 
 class SimpleAggregateEventAnalysisEngineTest extends BaseTest {
 
-	private static bob = new User("bob");
+	private static test = new User("test");
 
 	private static detectionPoints: DetectionPoint[] | null = null;
 
@@ -120,7 +121,6 @@ class SimpleAggregateEventAnalysisEngineTest extends BaseTest {
 				setRule(SimpleAggregateEventAnalysisEngineTest.rules![0]).
 				setDetectionSystemIds(SimpleAggregateEventAnalysisEngineTest.detectionSystems1));
 
-		SimpleAggregateEventAnalysisEngineTest.time = new Date(Date.now() + 2 * 60 * 1000);
 	}
 
 	constructor(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
@@ -141,7 +141,7 @@ class SimpleAggregateEventAnalysisEngineTest extends BaseTest {
 	}
 
 	private async test1_DP1() {
-		console.log('--> test1_DP1');
+		Logger.getTestsLogger().info('--> test1_DP1');
 		// add rules/detection points
 		const rulesToAdd: Rule[] = [];
 		rulesToAdd.push(SimpleAggregateEventAnalysisEngineTest.rules![0]);
@@ -162,14 +162,11 @@ class SimpleAggregateEventAnalysisEngineTest extends BaseTest {
 		let numDPAttacks = attacksDP1.length;
 		let numRuleAttacks = attackRule1.length;
 
-		// // useless sanity check
-		// assert.equal(numEvents, this.appSensorServer.getEventStore()!.findEvents(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!).length);
-		// assert.equal(numDPAttacks, this.appSensorServer.getAttackStore()!.findAttacks(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!).length);
-		// assert.equal(numRuleAttacks, this.appSensorServer.getAttackStore()!.findAttacks(SimpleAggregateEventAnalysisEngineTest.criteria.get("rule1")!).length);
-
 
 		// 3 events and triggered attack
-		await this.addEvents(SimpleAggregateEventAnalysisEngineTest.bob, detectionPoint1, 3);
+		let earliest = new Date();
+		Logger.getTestsLogger().info(`earliest: ${earliest}`);
+		await this.addEvents(SimpleAggregateEventAnalysisEngineTest.test, detectionPoint1, 3);
 		numEvents += 3; numDPAttacks++; numRuleAttacks++;
 
 		eventsDP1 = await this.appSensorServer.getEventStore()!.findEvents(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!);
@@ -179,8 +176,16 @@ class SimpleAggregateEventAnalysisEngineTest extends BaseTest {
 		assert.equal(numDPAttacks, attacksDP1.length);
 		assert.equal(numRuleAttacks, attackRule1.length);
 
+		//check on client side
+		await this.pullEventsAssert(earliest, 3);
+		await this.pullAttacksAssert(earliest, 2);
+		await this.pullResponsesAssertAnalyse(earliest, 2, ["log", "log"]);
+
+
 		// 1 event and no new attack
-		await this.addEvents(SimpleAggregateEventAnalysisEngineTest.bob, detectionPoint1);
+		earliest = new Date();
+		Logger.getTestsLogger().info(`earliest: ${earliest}`);
+		await this.addEvents(SimpleAggregateEventAnalysisEngineTest.test, detectionPoint1);
 		numEvents += 1;
 
 		eventsDP1 = await this.appSensorServer.getEventStore()!.findEvents(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!);
@@ -190,8 +195,16 @@ class SimpleAggregateEventAnalysisEngineTest extends BaseTest {
 		assert.equal(numDPAttacks, attacksDP1.length);
 		assert.equal(numRuleAttacks, attackRule1.length);
 
+		//check on client side
+		await this.pullEventsAssert(earliest, 1);
+		await this.pullAttacksAssert(earliest, 0);
+		await this.pullResponsesAssertAnalyse(earliest, 0, []);
+
+
 		// 2 events and 2 total attack
-		await this.addEvents(SimpleAggregateEventAnalysisEngineTest.bob, detectionPoint1, 2);
+		earliest = new Date();
+		Logger.getTestsLogger().info(`earliest: ${earliest}`);
+		await this.addEvents(SimpleAggregateEventAnalysisEngineTest.test, detectionPoint1, 2);
 		numEvents += 2; numDPAttacks++; numRuleAttacks++;
 
 		eventsDP1 = await this.appSensorServer.getEventStore()!.findEvents(SimpleAggregateEventAnalysisEngineTest.criteria.get("dp1")!);
@@ -201,7 +214,12 @@ class SimpleAggregateEventAnalysisEngineTest extends BaseTest {
 		assert.equal(numDPAttacks, attacksDP1.length);
 		assert.equal(numRuleAttacks, attackRule1.length);
 
-		console.log('<-- test1_DP1');
+		//check on client side
+		await this.pullEventsAssert(earliest, 2);
+		await this.pullAttacksAssert(earliest, 2);
+		await this.pullResponsesAssertAnalyse(earliest, 2, ["logout", "logout"]);
+		
+		Logger.getTestsLogger().info('<-- test1_DP1');
 	}
 
 	protected async addEvents(user: User, detectionPoint: DetectionPoint, count: number = 1) {
@@ -209,17 +227,14 @@ class SimpleAggregateEventAnalysisEngineTest extends BaseTest {
 			await this.appSensorClient.getEventManager()!.
 				addEvent(new AppSensorEvent(user, detectionPoint, 
 										    SimpleAggregateEventAnalysisEngineTest.detectionSystem1, 
-											SimpleAggregateEventAnalysisEngineTest.time));
+											new Date()));
 
 			await super.sleep(SimpleAggregateEventAnalysisEngineTest.SLEEP_AMOUNT);
-
-			SimpleAggregateEventAnalysisEngineTest.time = new Date();
 		}
 	}
 
 	public static async runTests(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
-		console.log();
-		console.log('----- Run SimpleAggregateEventAnalysisEngineTest -----');
+		Logger.getTestsLogger().info('----- Run SimpleAggregateEventAnalysisEngineTest -----');
 		const inst = new SimpleAggregateEventAnalysisEngineTest(appSensorServer, appSensorClient);
 		inst.initializeTest();
 		await inst.test1_DP1();

@@ -115,16 +115,27 @@ class HttpS2Server {
     }
 
     public async stopServer() {
-        if (this.server) {
-            const address = this.getAddress();
-            this.server.close((err?: Error) => {
-                if (err) {
-                    Logger.getServerLogger().error('HttpS2Server.stopServer: ', err);
-                } else {
-                    Logger.getServerLogger().info('HttpS2Server.stopServer: ', `Server listening on ${address} stopped.`);
-                }
-            });
-        }
+        await new Promise((resolve, reject) => {
+            if (this.server) {
+                const address = this.getAddress();
+                this.server.close((err?: Error) => {
+                    if (err) {
+                        Logger.getServerLogger().error('HttpS2Server.stopServer: ', err);
+                        
+                        reject(err);
+
+                        return;
+
+                    } else {
+                        Logger.getServerLogger().info('HttpS2Server.stopServer: ', `Server listening on ${address} stopped.`);
+                    }
+
+                    resolve(0);
+                });
+            } else {
+                resolve(0);
+            }
+        });
     }
 }
 

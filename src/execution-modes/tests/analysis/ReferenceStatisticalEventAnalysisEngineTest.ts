@@ -5,6 +5,7 @@ import { SearchCriteria } from "../../../core/criteria/criteria.js";
 
 import assert from "assert";
 import { BaseTest } from "./BaseTest.js";
+import { Logger } from "../../../logging/logging.js";
 
 class ReferenceStatisticalEventAnalysisEngineTest extends BaseTest {
 
@@ -22,10 +23,10 @@ class ReferenceStatisticalEventAnalysisEngineTest extends BaseTest {
 	}
 
 	private async testAttackCreation() {
-		console.log('--> testAttackCreation');
+		Logger.getTestsLogger().info('--> testAttackCreation');
 
 		const criteria = new SearchCriteria().
-				setUser(this.generateUserBob()).
+				setUser(this.generateUserTest()).
 				setDetectionPoint(this.generateDetectionPoint1()).
 				setDetectionSystemIds([this.generateDetectionSystemLocalhostMe().getDetectionSystemId()]);
 
@@ -99,7 +100,7 @@ class ReferenceStatisticalEventAnalysisEngineTest extends BaseTest {
 		assert.equal(7, events.length);
 		assert.equal(2, attacks.length);
 
-		console.log('<-- testAttackCreation');
+		Logger.getTestsLogger().info('<-- testAttackCreation');
 	}
 
 	private loadMockedDetectionPoints(): DetectionPoint[] {
@@ -230,7 +231,7 @@ class ReferenceStatisticalEventAnalysisEngineTest extends BaseTest {
 	}
 
     private generateNewEvent(): AppSensorEvent {
-        const event = new AppSensorEvent(this.generateUserBob(), 
+        const event = new AppSensorEvent(this.generateUserTest(), 
 										 this.generateDetectionPoint1(), 
 									     this.generateDetectionSystemLocalhostMe());
 
@@ -248,11 +249,11 @@ class ReferenceStatisticalEventAnalysisEngineTest extends BaseTest {
         return resource;
     }
 
-    private generateUserBob(): User {
-        const bob = new User("bob");
-        bob.setIPAddress(new IPAddress("8.8.8.8"));
+    private generateUserTest(): User {
+        const test = new User("test");
+        test.setIPAddress(new IPAddress("8.8.8.8"));
 
-        return bob;
+        return test;
     }
 
     private generateDetectionPoint1(): DetectionPoint {
@@ -274,8 +275,7 @@ class ReferenceStatisticalEventAnalysisEngineTest extends BaseTest {
 	}
 
 	public static async runTests(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
-		console.log();
-		console.log('----- Run ReferenceStatisticalEventAnalysisEngineTest -----');
+		Logger.getTestsLogger().info('----- Run ReferenceStatisticalEventAnalysisEngineTest -----');
 		const test = new ReferenceStatisticalEventAnalysisEngineTest(appSensorServer, appSensorClient);
 		test.initializeTest();
 		await test.testAttackCreation();

@@ -1,9 +1,9 @@
+import { Logger } from "../../logging/logging.js";
 import { DetectionPointTest } from "./DetectionPointTests.js";
 import { IPAddressTests } from "./IPAddressTests.js";
 
 async function runTests() {
-    console.log();
-    console.log('----- Run core API tests -----');
+    Logger.getTestsLogger().info('----- Run core API tests -----');
     await IPAddressTests.runTests();
     DetectionPointTest.runTests();
 }

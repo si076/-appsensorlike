@@ -5,6 +5,7 @@ import { GeoLocation } from "../../../../core/geolocation/geolocation.js";
 import { CorrelationSet } from "../../../../core/correlation/correlation.js";
 import { Clause, Expression, MonitorPoint, Rule } from "../../../../core/rule/rule.js";
 import { Utils } from "../../../../utils/Utils.js";
+import { Logger } from "../../../../logging/logging.js";
 
 import assert from "assert";
 import fs from 'fs';
@@ -14,7 +15,7 @@ class JSONServerConfigurationTest {
     private static TEST_CONFIG_LOCATION = 'appsensor-server-config.json';
 
     private testConfigurationReadOfAllElements(): void {
-        console.log('--> testConfigurationReadOfAllElements');
+        Logger.getTestsLogger().info('--> testConfigurationReadOfAllElements');
 
         const configExpected = new JSONServerConfiguration();
 
@@ -220,12 +221,11 @@ class JSONServerConfigurationTest {
         assert.strictEqual(configActual.getDetectionPoints()![0].getThreshold()!.getInterval()!.getDuration(), 4);
         assert.strictEqual(configActual.getRules()![0].getExpressions()[1].getClauses()[0].getMonitorPoints()[0].getResponses()[2].getAction(), "disableUser");
 
-        console.log('<-- testConfigurationReadOfAllElements ');
+        Logger.getTestsLogger().info('<-- testConfigurationReadOfAllElements ');
     }
 
     public static runTests() {
-        console.log('');
-        console.log('----- JSONServerConfigurationTest -----');
+        Logger.getTestsLogger().info('----- JSONServerConfigurationTest -----');
         new JSONServerConfigurationTest().testConfigurationReadOfAllElements();
     }
 }

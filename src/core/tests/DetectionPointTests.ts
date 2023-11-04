@@ -1,6 +1,7 @@
 import { DetectionPoint, Interval, INTERVAL_UNITS, Threshold } from "../core.js";
 
 import * as assert from 'assert';
+import { Logger } from "../../logging/logging.js";
 
 class DetectionPointTest {
 
@@ -63,8 +64,7 @@ class DetectionPointTest {
 	}
 
     public static runTests() {
-		console.log();
-        console.log('-> Start of DetectionPointTest');
+        Logger.getTestsLogger().info('-> Start of DetectionPointTest');
 
         // DetectionPointTest.testTypeMatchesEmptyDetectionPoints();
         DetectionPointTest.testTypeMatchesFullMismatch();
@@ -73,7 +73,7 @@ class DetectionPointTest {
         DetectionPointTest.testTypeMatchesThresholdMismatch();
         DetectionPointTest.testTypeMatchesThresholdMatch();
         
-        console.log('<- End of DetectionPointTest');
+        Logger.getTestsLogger().info('<- End of DetectionPointTest');
     }
 }
 

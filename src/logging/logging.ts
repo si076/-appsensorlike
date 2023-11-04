@@ -24,6 +24,7 @@ class Logger {
     private static APPSENSOR_CLIENT_CATEGORY = "APPSENSOR_CLIENT";
     private static APPSENSOR_SERVER_CATEGORY = "APPSENSOR_SERVER";
     private static APPSENSOR_RESPONSES_CATEGORY = "APPSENSOR_RESPONSES";
+    private static APPSENSOR_TESTS = "TESTS";
 
     private static configFile       = 'appsensor-logging-config.json';
     private static configSchemeFile = 'appsensor-logging-config_schema.json';
@@ -41,10 +42,11 @@ class Logger {
     private static clientLogger: log.Logger  = Logger.log4js.getLogger();
     private static serverLogger: log.Logger  = Logger.log4js.getLogger();
     private static responsesLogger: log.Logger  = Logger.log4js.getLogger();
+    private static testsLogger: log.Logger  = Logger.log4js.getLogger();
 
     private static async initLoggers(forceReconfig: boolean = false) {
         if (forceReconfig) {
-            await Logger.shutdown();
+            await Logger.shutdownAsync();
         }
 
         if (forceReconfig || !Logger.log4js) {
@@ -54,6 +56,7 @@ class Logger {
                 Logger.clientLogger = Logger.log4js.getLogger(Logger.APPSENSOR_CLIENT_CATEGORY);
                 Logger.serverLogger = Logger.log4js.getLogger(Logger.APPSENSOR_SERVER_CATEGORY);
                 Logger.responsesLogger = Logger.log4js.getLogger(Logger.APPSENSOR_RESPONSES_CATEGORY);
+                Logger.testsLogger = Logger.log4js.getLogger(Logger.APPSENSOR_TESTS);
             }
         }
     }
@@ -77,6 +80,24 @@ class Logger {
 
     public static getResponsesLogger() {
         return Logger.responsesLogger;
+    }
+
+    public static getTestsLogger() {
+        return Logger.testsLogger;
+    }
+
+    public static getLogger(category: string) {
+        return Logger.log4js.getLogger(category);
+    }
+
+    public static getRecording() {
+        return log.recording();
+    }
+
+    public static getRecordingErrorEvents() {
+        return log.recording().replay().filter(el => {
+            return el.level.isEqualTo(log.levels.ERROR);
+        })
     }
 
     public static stringifyObjInLog(logger: log.Logger, level: log.Level | string, obj: Object) {

@@ -1,16 +1,16 @@
-import { AppSensorClient, AppSensorEvent, AppSensorServer, Attack, Category, DetectionPoint, DetectionSystem, Interval, INTERVAL_UNITS, IPAddress, Response, Threshold, User } from "../../../core/core.js";
-import { ServerConfiguration } from "../../../core/configuration/server/server_configuration.js";
-import { AppSensorLocal } from "../../../execution-modes/appsensor-local/appsensor_local.js";
-import { FastGeoIPLocator } from "../../../geolocators/fast-geoip/fast-geoip.js";
+import { AppSensorClient, AppSensorEvent, AppSensorServer, Attack, Category, DetectionPoint, 
+	     DetectionSystem, Interval, INTERVAL_UNITS, IPAddress, Response, Threshold, User,
+		 ClientApplication } from "@appsensorlike/appsensorlike/core/core.js";
+import { ServerConfiguration } from "@appsensorlike/appsensorlike/core/configuration/server/server_configuration.js";
+import { AppSensorLocal } from "@appsensorlike/appsensorlike/execution-modes/appsensor-local/appsensor_local.js";
+import { Role } from "@appsensorlike/appsensorlike/core/accesscontrol/accesscontrol.js"
+import { InMemoryAttackStore, InMemoryEventStore, InMemoryResponseStore } from "@appsensorlike/appsensorlike/storage-providers/appsensor-storage-in-memory/appsensor-storage-in-memory.js";
 import { AppSensorReportingWebSocketClient } from "../client/appsensor-reporting-websocket-client.js";
 import { AppSensorReportingWebSocketServer } from "../server/appsensor-reporting-websocket-server.js";
-import { Utils as MySQLStorageUtils} from "../../../storage-providers/appsensor-storage-mysql/utils.js";
-import { DOP } from "../../../storage-providers/appsensor-storage-mysql/DOP.js";
-import { MySQLAttackStore, MySQLEventStore, MySQLResponseStore } from "../../../storage-providers/appsensor-storage-mysql/appsensor-storage-mysql.js";
 
 import assert from "assert";
-import { JSONConfigReadValidate, Utils } from "../../../utils/Utils.js";
-import { JSONServerConfigurationReader } from "../../../configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
+import { Utils } from "@appsensorlike/appsensorlike/utils/Utils.js";
+import { JSONServerConfigurationReader } from "@appsensorlike/appsensorlike/configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
 
 class AppSensorReportingWebsocketClientTest {
 
@@ -23,7 +23,7 @@ class AppSensorReportingWebsocketClientTest {
     public async test(earliest: string) {
         const events = await this.wsClient.findEvents(earliest);
 
-        assert.equal(events.length, 14);
+        assert.equal(events.length, 21);
 
 		let attackCount = 0;
 		let responseCount = 0;
@@ -45,13 +45,13 @@ class AppSensorReportingWebsocketClientTest {
 		responseCount += res.responseCount;
 
 		const eventCountByCategoryLabel = await this.wsClient.countEventsByCategoryLabel(earliest, Category.INPUT_VALIDATION, "IE1");
-		assert.equal(eventCountByCategoryLabel, 14);
+		assert.equal(eventCountByCategoryLabel, 6);
 
 		const attackCountByCategoryLabel = await this.wsClient.countAttacksByCategoryLabel(earliest, Category.INPUT_VALIDATION, "IE1");
-		assert.equal(attackCountByCategoryLabel, attackCount);
+		assert.equal(attackCountByCategoryLabel, 2);
 
 		const responseCountByCategoryLabel = await this.wsClient.countResponsesByCategoryLabel(earliest, Category.INPUT_VALIDATION, "IE1");
-		assert.equal(responseCountByCategoryLabel, responseCount);
+		assert.equal(responseCountByCategoryLabel, 2);
 
 		const configStr = await this.wsClient.getServerConfigurationAsJson();
 
@@ -100,18 +100,17 @@ class AppSensorReportingWebsocketTests {
     private appSensorClient: AppSensorClient;
     private appSensorServer: AppSensorServer;
 
-    private geoLocator = new FastGeoIPLocator();
-
     private wsServer: AppSensorReportingWebSocketServer;
 
     constructor(websocketServerConfigLocation: string = '') {
-        this.appSensorLocal = new AppSensorLocal('', 
-                                                 new MySQLAttackStore(),
-                                                 new MySQLEventStore(),
-                                                 new MySQLResponseStore());
+        this.appSensorLocal = new AppSensorLocal('');
 
         this.appSensorClient = this.appSensorLocal.getAppSensorClient();
         this.appSensorServer = this.appSensorLocal.getAppSensorServer();
+
+		(this.appSensorServer.getEventStore() as InMemoryEventStore).clearAll();
+		(this.appSensorServer.getAttackStore() as InMemoryAttackStore).clearAll();
+		(this.appSensorServer.getResponseStore() as InMemoryResponseStore).clearAll();
 
         this.wsServer = new AppSensorReportingWebSocketServer(this.appSensorServer, websocketServerConfigLocation);
     }
@@ -121,125 +120,56 @@ class AppSensorReportingWebsocketTests {
 	}
 
     public async populateData(withCustomPoints: boolean = false) {
-        const ipAddress1 = await IPAddress.fromString("5.45.80.10", this.geoLocator);
+        const ipAddress1 = await IPAddress.fromString("83.228.0.1");
 		const user1 = new User("user1", ipAddress1);
 
-        const ipAddress2 = await IPAddress.fromString("23.29.201.141", this.geoLocator);
+        const ipAddress2 = await IPAddress.fromString("83.228.0.2");
 		const user2 = new User("user2", ipAddress2);
 
-        const ipAddress3 = await IPAddress.fromString("27.54.137.119", this.geoLocator);
+        const ipAddress3 = await IPAddress.fromString("83.228.0.3");
 		const user3 = new User("user3", ipAddress3);
 
-        const ipAddress4 = await IPAddress.fromString("41.50.10.35", this.geoLocator);
+        const ipAddress4 = await IPAddress.fromString("83.228.0.4");
 		const user4 = new User("user4", ipAddress4);
 
-        const ipAddress5 = await IPAddress.fromString("148.208.15.39", this.geoLocator);
+        const ipAddress5 = await IPAddress.fromString("80.80.128.1");
 		const detectionSystem1 = new DetectionSystem("attacked server1", ipAddress5);
 
-        const ipAddress6 = await IPAddress.fromString("5.172.75.122", this.geoLocator);
+        const ipAddress6 = await IPAddress.fromString("80.80.128.2");
 		const detectionSystem2 = new DetectionSystem("attacked server2", ipAddress6);
 		
 		const users: User[] = [user1, user2, user3, user4];
 		const detectionSystems: DetectionSystem[] = [detectionSystem1, detectionSystem2];
 		
-        // const detectionPoint1 = new DetectionPoint(Category.INPUT_VALIDATION, "IE1");
-		
+		const clientApps = this.loadMockedClientApplications();
+		this.appSensorServer.getConfiguration()!.setClientApplications(clientApps);
+
 		const configuredDetPoint = this.loadMockedDetectionPoints();
 		this.appSensorServer.getConfiguration()!.setDetectionPoints(configuredDetPoint);
 
-		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
-		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
+		for (let i = 0; i < 10; i++) {
+			await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
+			await this.appSensorClient.getEventManager()!
+						.addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(4)], detectionSystems[this.getRandomInt(2)]));
+		}
 
-		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
-		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
-
-		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
-		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
-
-		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
-		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
-
-		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
-		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
-
-		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
-		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
-
-		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
-		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
-
-		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
-		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
-
-		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
-		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
-
-		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
-		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
-
-		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
-		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
-
-		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
-		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
-
-		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
-		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
-
-		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
-		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[this.getRandomInt(4)], configuredDetPoint[this.getRandomInt(5)], detectionSystems[this.getRandomInt(2)]));
-
-		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
 
 		//to ensure that will have at least one generated attack and response
-		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[0], configuredDetPoint[0], detectionSystems[0]));
-
-		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
-		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[0], configuredDetPoint[0], detectionSystems[0]));
-
-		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
-		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[0], configuredDetPoint[0], detectionSystems[0]));
+        const detectionPoint1 = new DetectionPoint(Category.INPUT_VALIDATION, "IE1");
+		for (let i = 0; i < 6; i++) {
+			await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
+			await this.appSensorClient.getEventManager()!
+						.addEvent(new AppSensorEvent(users[0], detectionPoint1, detectionSystems[0]));
+		}
 
 
 		//add events of one more category detection point 
 		const detectionPointRE7 = new DetectionPoint(Category.REQUEST, "RE7");
-
-		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
-		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[1], detectionPointRE7, detectionSystems[1]));
-
-		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
-		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[1], detectionPointRE7, detectionSystems[1]));
-
-		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
-		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[1], detectionPointRE7, detectionSystems[1]));
-
-		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
-		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[1], detectionPointRE7, detectionSystems[1]));
-
-		await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
-		await this.appSensorClient.getEventManager()!
-                    .addEvent(new AppSensorEvent(users[1], detectionPointRE7, detectionSystems[1]));
+		for (let i = 0; i < 5; i++) {
+			await Utils.sleep(Math.floor(Math.random() * 2000)  + 500);
+			await this.appSensorClient.getEventManager()!
+						.addEvent(new AppSensorEvent(users[1], detectionPointRE7, detectionSystems[1]));
+		}
 		
 
 		if (withCustomPoints) {
@@ -269,8 +199,19 @@ class AppSensorReportingWebsocketTests {
     
     private getRandomInt(max: number) {
         return Math.floor(Math.random() * max);
-      }
+    }
 	
+	private loadMockedClientApplications(): ClientApplication[] {
+		const app = new ClientApplication('Test', 
+		                                  [Role.ADD_EVENT, 
+										   Role.ADD_ATTACK, 
+										   Role.GET_RESPONSES, 
+										   Role.EXECUTE_REPORT]);
+		
+		app.setIPAddress(new IPAddress("127.0.0.1"));
+
+		return [app];
+	}
 
 	private loadMockedDetectionPoints(): DetectionPoint[] {
 		const configuredDetectionPoints: DetectionPoint[] = [];
@@ -405,11 +346,12 @@ class AppSensorReportingWebsocketTests {
 		const point7 = new DetectionPoint(Category.REQUEST, "RE7", events5minutes5, point7Responses);
 
 
-		configuredDetectionPoints.push(point1);
 		configuredDetectionPoints.push(point2);
 		configuredDetectionPoints.push(point3);
 		configuredDetectionPoints.push(point4);
 		configuredDetectionPoints.push(point5);
+		//
+		configuredDetectionPoints.push(point1);
 		configuredDetectionPoints.push(point6);
 		configuredDetectionPoints.push(point7);
 
@@ -450,55 +392,6 @@ class AppSensorReportingWebsocketTests {
 		return customDetectionPoints;
 	}
 
-	public async initializeMySQLStorage() {
-		await this.clearMySQLStorageTables();
-
-		DOP.clearCache();
-	}
-
-	protected async clearMySQLStorageTables() {
-		let sql = 'delete from attack';
-		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
-
-		sql = 'delete from response';
-		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
-
-		sql = 'delete from appsensorevent';
-		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
-
-		sql = 'delete from rule';
-		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
-
-		sql = 'delete from detection_point';
-		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
-
-		sql = 'delete from detection_system';
-		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
-
-		sql = 'delete from `resource`';
-		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
-
-		sql = 'delete from threshold';
-		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
-
-		sql = 'delete from `interval`';
-		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
-
-		sql = 'delete from `user`';
-		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
-
-		sql = 'delete from metadata';
-		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
-
-		sql = 'delete from key_value_pair';
-		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
-
-		sql = 'delete from ipaddress';
-		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
-
-		sql = 'delete from geo_location';
-		await MySQLStorageUtils.executeSQLOnDB(sql, (results: any) =>{});
-	}
 
 	async closeServer() {
 		await this.wsServer.closeServer();
@@ -509,15 +402,14 @@ class AppSensorReportingWebsocketTests {
 async function runTestWithHttpServer(earliest: string, withCustomPoints: boolean) {
 	console.log('----- With Http Server -----');
 	let configLocation = 'appsensor-reporting-websocket-server-config1.json';
-	let configAbsolutPath = JSONConfigReadValidate.resolvePath(import.meta.url, configLocation);
+	let configAbsolutPath = Utils.resolvePath(import.meta.url, configLocation);
 
     const server = new AppSensorReportingWebsocketTests(configAbsolutPath);
 	await server.startServer();
-    await server.initializeMySQLStorage();
     await server.populateData(withCustomPoints);
 
 	configLocation = 'appsensor-reporting-websocket-client-config1.json';
-	configAbsolutPath = JSONConfigReadValidate.resolvePath(import.meta.url, configLocation);
+	configAbsolutPath = Utils.resolvePath(import.meta.url, configLocation);
 
 	const client = new AppSensorReportingWebsocketClientTest(configAbsolutPath);
     await client.test(earliest);
@@ -530,15 +422,14 @@ async function runTestWithHttpServer(earliest: string, withCustomPoints: boolean
 async function runTestWithHttpsServer(earliest: string, withCustomPoints: boolean) {
 	console.log('----- With Https Server -----');
 	let configLocation = 'appsensor-reporting-websocket-server-config2.json';
-	let configAbsolutPath = JSONConfigReadValidate.resolvePath(import.meta.url, configLocation);
+	let configAbsolutPath = Utils.resolvePath(import.meta.url, configLocation);
 
     const server = new AppSensorReportingWebsocketTests(configAbsolutPath);
 	await server.startServer();
-    await server.initializeMySQLStorage();
     await server.populateData(withCustomPoints);
 
 	configLocation = 'appsensor-reporting-websocket-client-config2.json';
-	configAbsolutPath = JSONConfigReadValidate.resolvePath(import.meta.url, configLocation);
+	configAbsolutPath = Utils.resolvePath(import.meta.url, configLocation);
 
 	const client = new AppSensorReportingWebsocketClientTest(configAbsolutPath);
     await client.test(earliest);
@@ -558,7 +449,6 @@ async function runTests(withCustomPoints: boolean = false) {
 async function runServerSeparately(withCustomPoints: boolean = false) {
     const inst = new AppSensorReportingWebsocketTests();
 	await inst.startServer();
-    await inst.initializeMySQLStorage();
     await inst.populateData(withCustomPoints);
 }
 

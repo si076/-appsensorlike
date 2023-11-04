@@ -1,5 +1,6 @@
 import { AppSensorLocal } from "@appsensorlike/appsensorlike/execution-modes/appsensor-local/appsensor_local.js";
 import { AppSensorClient, AppSensorServer } from "@appsensorlike/appsensorlike/core/core.js";
+import { Logger } from "@appsensorlike/appsensorlike/logging/logging.js";
 
 import { MySQLAttackStore, MySQLEventStore, MySQLResponseStore } from "../appsensor-storage-mysql.js";
 import { AggregateEventAnalysisEngineIntegrationTest } from "./AggregateEventAnalysisEngineIntegrationTest.js";
@@ -12,25 +13,31 @@ import * as readline from 'readline';
 
 async function runTests(appSensorServer: AppSensorServer, 
                         appSensorClient: AppSensorClient, 
+                        choice: string | null = null,
                         readInf: readline.Interface | null = null) {
-    let rl = readInf;
-    if (!rl) {
-        rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout
+
+    if (!choice) {
+        console.log();
+        console.log(" 1: DOPTests tests");
+        console.log(" 2: MySQLStorageTests tests");
+        console.log(" 3: AggregateEventAnalysisEngineIntegrationTest tests");
+
+        let rl = readInf;
+        if (!rl) {
+            rl = readline.createInterface({
+                input: process.stdin,
+                output: process.stdout
+            });
+        }
+
+        choice = await new Promise((resolve, reject) => {
+            rl!.question("To run all tests press 'a', to execute specific test choose a number:", (choice: string) => {
+                resolve(choice);
+            });
         });
     }
-
-    console.log();
-    console.log(" 1: DOPTests tests");
-    console.log(" 2: MySQLStorageTests tests");
-    console.log(" 3: AggregateEventAnalysisEngineIntegrationTest tests");
-    const choice: string = await new Promise((resolve, reject) => {
-        rl!.question("To run all tests press 'a', to execute specific test choose a number:", (choice: string) => {
-            resolve(choice);
-        });
-    });
-    await testChoice(appSensorServer, appSensorClient, choice);
+    
+    await testChoice(appSensorServer, appSensorClient, choice!);
 }
 
 async function testChoice(appSensorServer: AppSensorServer, 
@@ -62,7 +69,8 @@ async function testChoice(appSensorServer: AppSensorServer,
 }
 
 
-async function runTestsLocally(readInf: readline.Interface | null = null) {
+async function runTestsExecModeLocal(testChoice: string | null = null, 
+                                     readInf: readline.Interface | null = null) {
     console.log('----- Run MySQL Storage Tests Locall Execution -----');
     const appSensorLocal = new AppSensorLocal('',
                                                 new MySQLAttackStore(),
@@ -70,10 +78,15 @@ async function runTestsLocally(readInf: readline.Interface | null = null) {
                                                 new MySQLResponseStore());
     await runTests(appSensorLocal.getAppSensorServer(), 
                    appSensorLocal.getAppSensorClient(), 
+                   testChoice,
                    readInf);
+
+    await Logger.shutdownAsync();
+
+    process.exit(0);
 }
 
-// async function runTestsWebSocket(readInf: readline.Interface | null = null) {
+// async function runTestsExecModeWebSocket(readInf: readline.Interface | null = null) {
 //     console.log('----- Run MySQL Storage Tests WebSocket Execution -----');
 //     const appSensorWebSocketServer = 
 //             new AppSensorWebsocketExecServer('', '', undefined,
@@ -93,4 +106,4 @@ async function runTestsLocally(readInf: readline.Interface | null = null) {
 //     await appSensorWebSocketServer.closeWebSocketServer();
 // }
 
-export {runTestsLocally} //,runTestsWebSocket}
+export {runTestsExecModeLocal} //,runTestsWebSocket}

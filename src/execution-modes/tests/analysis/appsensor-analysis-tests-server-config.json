@@ -1,5 +1,5 @@
 {
-    "clientApplicationIdentificationHeaderName": "X-Appsensor-Client-Application-Name2",
+    "clientApplicationIdentificationHeaderName": "X-Appsensor-Client-Application-Name",
 
     "clientApplications": [
         {
@@ -8,12 +8,46 @@
                 "ADD_EVENT",
                 "ADD_ATTACK",
                 "GET_RESPONSES",
+                "GET_EVENTS",
+                "GET_ATTACKS",
                 "EXECUTE_REPORT"
             ],
             "ipAddress": {
                 "address": "localhost",
                 "geoLocation": null
             }
+        },
+        {
+            "name": "myclientapp1",
+            "roles": [
+                "ADD_EVENT",
+                "ADD_ATTACK",
+                "GET_RESPONSES",
+                "GET_EVENTS",
+                "GET_ATTACKS",
+                "EXECUTE_REPORT"
+            ],
+            "ipAddress": {
+                "address": "0.0.0.0",
+                "geoLocation": null
+            }
+        },
+        {
+            "name": "myclientapp2",
+            "roles": [
+                "ADD_EVENT",
+                "ADD_ATTACK",
+                "GET_RESPONSES",
+                "GET_EVENTS",
+                "GET_ATTACKS",
+                "EXECUTE_REPORT"
+            ]
+        },
+        {
+            "name": "myclientapp3",
+            "roles": [
+                "EXECUTE_REPORT"
+            ]
         }
     ],
 

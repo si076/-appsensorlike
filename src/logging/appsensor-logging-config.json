@@ -39,6 +39,20 @@
                 "backups": 3,
                 "compress": false
             },
+            "tests": {
+                "type": "file",
+                "filename": "tests.log",
+                "maxLogSize": 10485760,
+                "backups": 3,
+                "compress": false
+            },
+            "_tests_errors": {
+                "type": "file",
+                "filename": "tests-errors.log",
+                "maxLogSize": 10485760,
+                "backups": 3,
+                "compress": false
+            },
             "out": { 
                 "type": "stdout" 
             },
@@ -51,6 +65,14 @@
                 "type": "logLevelFilter",
                 "appender": "_appsensor-server-errors",
                 "level": "error"
+            },
+            "tests_errors": {
+                "type": "logLevelFilter",
+                "appender": "_tests_errors",
+                "level": "error"
+            },
+            "recording": {
+                "type": "recording"
             }
 
         },
@@ -60,16 +82,20 @@
                 "level": "trace"
             },
             "APPSENSOR_CLIENT": { 
-                "appenders": ["out", "appsensor-client", "appsensor-client-errors"], 
+                "appenders": ["out", "appsensor-client", "appsensor-client-errors", "recording"], 
                 "level": "info"
             },
             "APPSENSOR_SERVER": { 
-                "appenders": ["out", "appsensor-server", "appsensor-server-errors"], 
+                "appenders": ["out", "appsensor-server", "appsensor-server-errors", "recording"], 
                 "level": "info"
             },
             "APPSENSOR_RESPONSES": { 
                 "appenders": ["out", "appsensor-responses"], 
                 "level": "info"
+            },
+            "TESTS": {
+                "appenders": ["out", "tests", "tests_errors"],
+                "level": "trace"
             }
         }
     }
