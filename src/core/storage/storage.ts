@@ -32,6 +32,14 @@ import { AttackListener, EventListener, ResponseListener } from "../listener/lis
 	public abstract findAttacks(criteria: SearchCriteria): Promise<Attack[]>;
 
 
+	/**
+	 * Count how many attacks in the AttackStore match the search criteria.
+	 * 
+	 * ADDITION TO THE ORIGINAL CODE
+	 * 
+	 * @param criteria the {@link SearchCriteria} object to search by
+	 * @return count of {@link Attack}s matching the search criteria.
+	 */
 	public abstract countAttacks(criteria: SearchCriteria): Promise<number>;
 
 	/**
@@ -180,7 +188,15 @@ import { AttackListener, EventListener, ResponseListener } from "../listener/lis
 	public abstract findEvents(criteria: SearchCriteria): Promise<AppSensorEvent[]>;
 
 
-	public abstract countEvents(criteria: SearchCriteria): Promise<number>;
+	/**
+	 * Count how many events in the EventStore match the search criteria.
+	 * 
+	 * ADDITION TO THE ORIGINAL CODE
+	 * 
+	 * @param criteria the {@link SearchCriteria} object to search by
+	 * @return count of {@link AppSensorEvent}s matching the search criteria.
+	 */
+	 public abstract countEvents(criteria: SearchCriteria): Promise<number>;
 
 	/**
 	 * Register an {@link EventListener} to notify when {@link AppSensorEvent}s are added
@@ -327,7 +343,15 @@ import { AttackListener, EventListener, ResponseListener } from "../listener/lis
 	public abstract findResponses(criteria: SearchCriteria): Promise<Response[]>;
 	
 
-	public abstract countResponses(criteria: SearchCriteria): Promise<number>;
+	/**
+	 * Count how many responses in the ResponseStore match the search criteria.
+	 * 
+	 * ADDITION TO THE ORIGINAL CODE
+	 * 
+	 * @param criteria the {@link SearchCriteria} object to search by
+	 * @return count of {@link Response}s matching the search criteria.
+	 */
+	 public abstract countResponses(criteria: SearchCriteria): Promise<number>;
 
 	/**
 	 * Finder for responses in the ResponseStore
