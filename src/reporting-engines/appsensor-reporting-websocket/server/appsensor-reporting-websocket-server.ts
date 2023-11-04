@@ -50,7 +50,7 @@ class AppSensorReportingWebSocketServer extends AppSensorWebSocketServer impleme
 
         const config = this.appSensorServer.getConfiguration();
         if (ws.remoteAddress && config) {
-            const clientApp = config.findClientApplication(new IPAddress(ws.remoteAddress));
+            const clientApp = config.findClientApplication(ws.clientApplication);
             if (clientApp) {
                 allowed = true;
             }
@@ -64,7 +64,7 @@ class AppSensorReportingWebSocketServer extends AppSensorWebSocketServer impleme
 
         const config = this.appSensorServer.getConfiguration();
         if (ws.remoteAddress && config) {
-            const clientApp = config.findClientApplication(new IPAddress(ws.remoteAddress));
+            const clientApp = config.findClientApplication(ws.clientApplication);
             if (clientApp) {
                 authorized = this.appSensorServer.getAccessController()!
                                     .isAuthorized(clientApp, 

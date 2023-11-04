@@ -1,3 +1,8 @@
 {
-    "address": "ws://localhost:4500"
+    "address": "ws://localhost:4500",
+    "options":{
+        "headers": {
+            "X-Appsensor-Client-Application-Name": "myclientapp"
+        }
+    }
 }

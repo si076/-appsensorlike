@@ -5,7 +5,7 @@ import { AppSensorEvent, RequestHandler, AppSensorServer, Attack, Response, IPAd
 import { SearchCriteria } from "@appsensorlike/appsensorlike/core/criteria/criteria.js";
 import { Logger } from "@appsensorlike/appsensorlike/logging/logging.js";
 import { JSONConfigReadValidate, Utils } from "@appsensorlike/appsensorlike/utils/Utils.js";
-import { ActionRequest } from "@appsensorlike/appsensorlike_websocket";
+import { ActionRequest, ACTION_CONFIG } from "@appsensorlike/appsensorlike_websocket";
 import { AppSensorWebSocketServer, WebSocketExt, WebSocketServerConfig } from "@appsensorlike/appsensorlike_websocket/server";
 
 class WebSocketRequestHandlerConfigReader  extends JSONConfigReadValidate {
@@ -36,9 +36,17 @@ class WebSocketRequestHandler extends AppSensorWebSocketServer implements Reques
 
         const config = this.appSensorServer.getConfiguration();
         if (ws.remoteAddress && config) {
-            const clientApp = config.findClientApplication(new IPAddress(ws.remoteAddress));
+            const clientApp = config.findClientApplication(ws.clientApplication);
             if (clientApp) {
-                allowed = true;
+                const clientAppIP = clientApp.getIPAddress();
+                if (clientAppIP) {
+                    if (clientAppIP.equalAddress(ws.remoteAddress)) {
+                        allowed = true;
+                    }
+                } else {
+                    allowed = true;
+                }
+
             }
         }
 
@@ -48,15 +56,21 @@ class WebSocketRequestHandler extends AppSensorWebSocketServer implements Reques
     protected isActionAuthorized(ws: WebSocketExt, request: ActionRequest): boolean {
         let authorized = false;
 
-        const config = this.appSensorServer.getConfiguration();
-        if (ws.remoteAddress && config) {
-            const clientApp = config.findClientApplication(new IPAddress(ws.remoteAddress));
-            if (clientApp) {
-                authorized = this.appSensorServer.getAccessController()!
-                                    .isAuthorized(clientApp, 
-                                                  coreUtils.getActionFromMethod(request.actionName), 
-                                                  new Context());
+        if (request.actionName === ACTION_CONFIG) {
+            authorized = true;
+        } else {
+
+            const config = this.appSensorServer.getConfiguration();
+            if (ws.remoteAddress && config) {
+                const clientApp = config.findClientApplication(ws.clientApplication);
+                if (clientApp) {
+                    authorized = this.appSensorServer.getAccessController()!
+                                        .isAuthorized(clientApp, 
+                                                    coreUtils.getActionFromMethod(request.actionName), 
+                                                    new Context());
+                }
             }
+            
         }
 
         return authorized;
@@ -104,6 +118,46 @@ class WebSocketRequestHandler extends AppSensorWebSocketServer implements Reques
                     this.addAttack(attack as Attack)
                     .then((result) => {
                         AppSensorWebSocketServer.sendResult(ws, request, null, null);                                            
+                    })
+                    .catch((error) => {
+                        AppSensorWebSocketServer.reportError(ws, request, error);                                          
+                    });
+                }
+
+                break;
+            }
+            case "getEvents": {
+                const earliest = AppSensorWebSocketServer.getParameter(request, "earliest");
+
+                if (!earliest) {
+
+                    AppSensorWebSocketServer.reportMissingParameter(ws, request, "earliest");
+
+                } else {
+
+                    this.getEvents(new Date(earliest as string))
+                    .then((result) => {
+                        AppSensorWebSocketServer.sendResult(ws, request, result, 'AppSensorEvent');                                            
+                    })
+                    .catch((error) => {
+                        AppSensorWebSocketServer.reportError(ws, request, error);                                          
+                    });
+                }
+
+                break;
+            }
+            case "getAttacks": {
+                const earliest = AppSensorWebSocketServer.getParameter(request, "earliest");
+
+                if (!earliest) {
+
+                    AppSensorWebSocketServer.reportMissingParameter(ws, request, "earliest");
+
+                } else {
+
+                    this.getAttacks(new Date(earliest as string))
+                    .then((result) => {
+                        AppSensorWebSocketServer.sendResult(ws, request, result, 'Attack');                                            
                     })
                     .catch((error) => {
                         AppSensorWebSocketServer.reportError(ws, request, error);                                          
@@ -188,6 +242,58 @@ class WebSocketRequestHandler extends AppSensorWebSocketServer implements Reques
         }
     }
 
+
+    public async getEvents(earliest: Date): Promise<AppSensorEvent[]> {
+		Logger.getServerLogger().trace('WebSocketRequestHandler.getEvents:');
+		Logger.getServerLogger().trace(`earliest: ${earliest}`);
+
+        try {
+
+            const detSystem = WebSocketRequestHandler.detectionSystemId !== null ? WebSocketRequestHandler.detectionSystemId : "";
+            const criteria: SearchCriteria = new SearchCriteria().
+                    setDetectionSystemIds([detSystem]).
+                    setEarliest(earliest);
+            
+            let events: AppSensorEvent[] = []         
+
+            const eventStore = this.appSensorServer.getEventStore();
+            if (eventStore) {
+                events = await eventStore.findEvents(criteria);
+            }
+            return events;
+
+        } catch (error) {
+            Logger.getServerLogger().error(error);
+
+            return Promise.reject(error);
+        }
+    }
+
+    public async getAttacks(earliest: Date): Promise<Attack[]> {
+		Logger.getServerLogger().trace('WebSocketRequestHandler.getAttacks:');
+		Logger.getServerLogger().trace(`earliest: ${earliest}`);
+
+        try {
+
+            const detSystem = WebSocketRequestHandler.detectionSystemId !== null ? WebSocketRequestHandler.detectionSystemId : "";
+            const criteria: SearchCriteria = new SearchCriteria().
+                    setDetectionSystemIds([detSystem]).
+                    setEarliest(earliest);
+            
+            let attacks: Attack[] = []         
+
+            const attackStore = this.appSensorServer.getAttackStore();
+            if (attackStore) {
+                attacks = await attackStore.findAttacks(criteria);
+            }
+            return attacks;
+
+        } catch (error) {
+            Logger.getServerLogger().error(error);
+
+            return Promise.reject(error);
+        }
+    }
 
 	/**
 	 * {@inheritDoc}

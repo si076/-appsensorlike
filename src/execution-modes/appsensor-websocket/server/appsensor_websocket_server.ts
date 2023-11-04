@@ -9,6 +9,7 @@ import { AttackStore, EventStore, ResponseStore } from "@appsensorlike/appsensor
 import { InMemoryAttackStore, InMemoryEventStore, InMemoryResponseStore } from "@appsensorlike/appsensorlike/storage-providers/appsensor-storage-in-memory/appsensor-storage-in-memory.js";
 import { JSONConfigManager } from "@appsensorlike/appsensorlike/utils/Utils.js";
 import { WebSocketRequestHandler } from "./handler/handler.js";
+import { ResponseAnalysisEngine } from "@appsensorlike/appsensorlike/core/analysis/analysis.js";
 
 class AppSensorWebsocketExecServer {
 
@@ -28,12 +29,13 @@ class AppSensorWebsocketExecServer {
 
     private configManager: JSONConfigManager;
 
-    constructor(appServerConfigFile: string = '',
-                webSocketServerConfigFile: string = '',
+    constructor(appServerConfigFile: string = 'appsensor-server-config.json',
+                webSocketServerConfigFile: string = 'appsensor-websocket-request-handler-config.json',
 				handleProtocols?: (protocols: Set<string>, request: IncomingMessage) => string | false,
                 attackStore?: AttackStore,
                 eventStore?: EventStore,
-                responseStore?: ResponseStore) {
+                responseStore?: ResponseStore,
+                responseAnalysisEngine?: ResponseAnalysisEngine) {
         if (attackStore) {
             this.attackStore = attackStore;
         }
@@ -73,6 +75,14 @@ class AppSensorWebsocketExecServer {
 		for (let i = 0; i < eventAnalysisEngines.length; i++) {
 			this.eventStore.registerListener(eventAnalysisEngines[i]);
 		}
+
+        if (responseAnalysisEngine) {
+            const responseAnalysisEngines = [responseAnalysisEngine];
+            this.appSensorServer.setResponseAnalysisEngines(responseAnalysisEngines);
+            for (let i = 0; i < responseAnalysisEngines.length; i++) {
+                this.responseStore.registerListener(responseAnalysisEngines[i]);
+            }
+        }
 
 		this.aggrAttackEngine.setAppSensorServer(this.appSensorServer);
         this.aggrEventEngine.setAppSensorServer(this.appSensorServer);

@@ -6,8 +6,6 @@ import { ReportingEngineExt } from "@appsensorlike/appsensorlike/reporting-engin
 
 import { AppSensorWebSocketClient, WebSocketClientConfig } from "@appsensorlike/appsensorlike_websocket/client";
 
-import { EventEmitter } from "events";
-
 class ReportingWebSocketClientConfigReader  extends JSONConfigReadValidate {
 
     constructor() {
@@ -20,8 +18,6 @@ class ReportingWebSocketClientConfigReader  extends JSONConfigReadValidate {
 
 class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient implements ReportingEngineExt {
 
-    private static eventEmmiter: EventEmitter = new EventEmitter();
-
     private static ON_ADD_EVENT = 'ON_ADD';
 
     constructor(configLocation: string = 'appsensor-reporting-websocket-client-config.json') {
@@ -33,28 +29,12 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
         if (response.actionName === 'onAdd') {
 
             try {
-                switch (response.resultElementClass) {
-                    case 'AppSensorEvent': {
-                        Utils.setPrototypeInDepth(response.result as Object, Utils.appSensorEventPrototypeSample);
-                        Utils.setTimestampFromJSONParsedObject(response.result as AppSensorEvent, response.result as Object);
-                        break;
-                    }
-                    case 'Attack': {
-                        Utils.setPrototypeInDepth(response.result as Object, Utils.attackPrototypeSample);
-                        Utils.setTimestampFromJSONParsedObject(response.result as Attack, response.result as Object);
-                        break;
-                    }
-                    case 'Response': {
-                        Utils.setPrototypeInDepth(response.result as Object, Utils.responsePrototypeSample);
-                        Utils.setTimestampFromJSONParsedObject(response.result as Response, response.result as Object);
-                        break;
-                    }
-                }
+                Utils.setPrototypeInDepthByClassName(response.result as Object, response.resultElementClass as string);
     
                 this.onAdd(response.result as (AppSensorEvent | Attack | Response));
     
                 //also emit and event as well
-                AppSensorReportingWebSocketClient.eventEmmiter.emit(AppSensorReportingWebSocketClient.ON_ADD_EVENT, 
+                this.eventEmmiter.emit(AppSensorReportingWebSocketClient.ON_ADD_EVENT, 
                                                                     response.result as (AppSensorEvent | Attack | Response));
 
             } catch (error) {
@@ -66,168 +46,98 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
 
         } else {
 
-            AppSensorReportingWebSocketClient.eventEmmiter.emit(response.id, response);
+            this.eventEmmiter.emit(response.id, response);
 
         }
     }
 
     public addOnAddListener(listener: (event: AppSensorEvent | Attack | Response) => void) {
-        AppSensorReportingWebSocketClient.eventEmmiter.addListener(AppSensorReportingWebSocketClient.ON_ADD_EVENT, listener);
+        this.eventEmmiter.addListener(AppSensorReportingWebSocketClient.ON_ADD_EVENT, listener);
     }
 
     public removeOnAddListener(listener: (event: AppSensorEvent | Attack | Response) => void) {
-        AppSensorReportingWebSocketClient.eventEmmiter.removeListener(AppSensorReportingWebSocketClient.ON_ADD_EVENT, listener);
+        this.eventEmmiter.removeListener(AppSensorReportingWebSocketClient.ON_ADD_EVENT, listener);
     }
 
-    private genSendCallback(reject: (reason?: any) => void) {
-
-        return function sendCallback(error?: Error) {
-            if (error) {
-                
-                reject(error);
+    async findEvents(earliest: string): Promise<AppSensorEvent[]> {
+        return await this.addRequest(this.createRequest("findEvents", {earliest: earliest}))
+        .then((result) => {
+            if (result && result instanceof Array) {
+                for (let i = 0; i < result.length; i++) {
+                    Utils.setPrototypeInDepth(result[i], Utils.appSensorEventPrototypeSample);
+                    Utils.setTimestampFromJSONParsedObject(result[i] as AppSensorEvent, result[i]);
+                }
             }
-        }
+
+            return Promise.resolve(result as AppSensorEvent[]);
+        })
+        .catch((error) => {
+            return Promise.reject(error);
+        });
+
     }
 
-
-    findEvents(earliest: string): Promise<AppSensorEvent[]> {
-        return new Promise((resolve, reject) => {
-
-            const request = AppSensorWebSocketClient.createRequest("findEvents", {earliest: earliest});
-
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
-
-                AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
-
-                if (response.error) {
-                    reject(new Error(response.error));
-                } else {
-                    if (response.result && response.result instanceof Array && response.result.length > 0) {
-                        for (let i = 0; i < response.result.length; i++) {
-                            Utils.setPrototypeInDepth(response.result[i], Utils.appSensorEventPrototypeSample);
-                            Utils.setTimestampFromJSONParsedObject(response.result[i] as AppSensorEvent, response.result[i]);
-                        }
-                    }
-
-                    resolve(response.result as AppSensorEvent[]);
+    async findAttacks(earliest: string): Promise<Attack[]> {
+        return await this.addRequest(this.createRequest("findAttacks", {earliest: earliest}))
+        .then((result) => {
+            if (result && result instanceof Array) {
+                for (let i = 0; i < result.length; i++) {
+                    Utils.setPrototypeInDepth(result[i], Utils.attackPrototypeSample);
+                    Utils.setTimestampFromJSONParsedObject(result[i] as Attack, result[i]);
                 }
-            });
+            }
 
-            this.sendRequest(request, this.genSendCallback(reject));
+            return Promise.resolve(result as Attack[]);
+        })
+        .catch((error) => {
+            return Promise.reject(error);
         });
     }
 
-    findAttacks(earliest: string): Promise<Attack[]> {
-        return new Promise((resolve, reject) => {
-
-            const request = AppSensorWebSocketClient.createRequest("findAttacks", {earliest: earliest});
-
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
-
-                AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
-
-                if (response.error) {
-                    reject(new Error(response.error));
-                } else {
-                    if (response.result && response.result instanceof Array && response.result.length > 0) {
-                        for (let i = 0; i < response.result.length; i++) {
-                            Utils.setPrototypeInDepth(response.result[i], Utils.attackPrototypeSample);
-                            Utils.setTimestampFromJSONParsedObject(response.result[i] as Attack, response.result[i]);
-                        }
-                    }
-
-                    resolve(response.result as Attack[]);
+    async findResponses(earliest: string): Promise<Response[]> {
+        return await this.addRequest(this.createRequest("findResponses", {earliest: earliest}))
+        .then((result) => {
+            if (result && result instanceof Array) {
+                for (let i = 0; i < result.length; i++) {
+                    Utils.setPrototypeInDepth(result[i], Utils.responsePrototypeSample);
+                    Utils.setTimestampFromJSONParsedObject(result[i] as Response, result[i]);
                 }
-            });
+            }
 
-            this.sendRequest(request, this.genSendCallback(reject));
+            return Promise.resolve(result as Response[]);
+        })
+        .catch((error) => {
+            return Promise.reject(error);
         });
     }
 
-    findResponses(earliest: string): Promise<Response[]> {
-        return new Promise((resolve, reject) => {
-
-            const request = AppSensorWebSocketClient.createRequest("findResponses", {earliest: earliest});
-
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
-
-                AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
-
-                if (response.error) {
-                    reject(new Error(response.error));
-                } else {
-                    if (response.result && response.result instanceof Array && response.result.length > 0) {
-                        for (let i = 0; i < response.result.length; i++) {
-                            Utils.setPrototypeInDepth(response.result[i], Utils.responsePrototypeSample);
-                            Utils.setTimestampFromJSONParsedObject(response.result[i] as Response, response.result[i]);
-                        }
-                    }
-
-                    resolve(response.result as Response[]);
-                }
-            });
-
-            this.sendRequest(request, this.genSendCallback(reject));
+    async countEvents(earliest: string): Promise<number> {
+        return await this.addRequest(this.createRequest("countEvents", {earliest: earliest}))
+        .then((result) => {
+            return Promise.resolve(result as number);
+        })
+        .catch((error) => {
+            return Promise.reject(error);
         });
     }
 
-    countEvents(earliest: string): Promise<number> {
-        return new Promise((resolve, reject) => {
-
-            const request = AppSensorWebSocketClient.createRequest("countEvents", {earliest: earliest});
-
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
-
-                AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
-
-                if (response.error) {
-                    reject(new Error(response.error));
-                } else {
-                    resolve(response.result as number);
-                }
-            });
-
-            this.sendRequest(request, this.genSendCallback(reject));
+    async countAttacks(earliest: string): Promise<number> {
+        return await this.addRequest(this.createRequest("countAttacks", {earliest: earliest}))
+        .then((result) => {
+            return Promise.resolve(result as number);
+        })
+        .catch((error) => {
+            return Promise.reject(error);
         });
     }
 
-    countAttacks(earliest: string): Promise<number> {
-        return new Promise((resolve, reject) => {
-
-            const request = AppSensorWebSocketClient.createRequest("countAttacks", {earliest: earliest});
-
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
-
-                AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
-
-                if (response.error) {
-                    reject(new Error(response.error));
-                } else {
-                    resolve(response.result as number);
-                }
-            });
-
-            this.sendRequest(request, this.genSendCallback(reject));
-        });
-    }
-
-    countResponses(earliest: string): Promise<number> {
-        return new Promise((resolve, reject) => {
-
-            const request = AppSensorWebSocketClient.createRequest("countResponses", {earliest: earliest});
-
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
-
-                AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
-
-                if (response.error) {
-                    reject(new Error(response.error));
-                } else {
-                    resolve(response.result as number);
-                }
-            });
-
-            this.sendRequest(request, this.genSendCallback(reject));
+    async countResponses(earliest: string): Promise<number> {
+        return await this.addRequest(this.createRequest("countResponses", {earliest: earliest}))
+        .then((result) => {
+            return Promise.resolve(result as number);
+        })
+        .catch((error) => {
+            return Promise.reject(error);
         });
     }
 
@@ -243,152 +153,82 @@ class AppSensorReportingWebSocketClient extends AppSensorWebSocketClient impleme
         throw new Error("Method not implemented.");
     }
 
-    countEventsByCategoryLabel(earliest: string, category: string, label: string): Promise<number> {
-        return new Promise((resolve, reject) => {
-
-            const request = AppSensorWebSocketClient.createRequest("countEventsByCategoryLabel", 
-                                                                            {earliest: earliest,
-                                                                             category: category,
-                                                                             label: label});
-
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
-
-                AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
-
-                if (response.error) {
-                    reject(new Error(response.error));
-                } else {
-                    resolve(response.result as number);
-                }
-            });
-
-            this.sendRequest(request, this.genSendCallback(reject));
+    async countEventsByCategoryLabel(earliest: string, category: string, label: string): Promise<number> {
+        return await this.addRequest(this.createRequest("countEventsByCategoryLabel", 
+                                                        {earliest: earliest,
+                                                         category: category,
+                                                         label: label}))
+        .then((result) => {
+            return Promise.resolve(result as number);
+        })
+        .catch((error) => {
+            return Promise.reject(error);
         });
     }
 
-    countAttacksByCategoryLabel(earliest: string, category: string, label: string): Promise<number> {
-        return new Promise((resolve, reject) => {
-
-            const request = AppSensorWebSocketClient.createRequest("countAttacksByCategoryLabel", 
-                                                                            {earliest: earliest,
-                                                                             category: category,
-                                                                             label: label});
-
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
-
-                AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
-
-                if (response.error) {
-                    reject(new Error(response.error));
-                } else {
-                    resolve(response.result as number);
-                }
-            });
-
-            this.sendRequest(request, this.genSendCallback(reject));
+    async countAttacksByCategoryLabel(earliest: string, category: string, label: string): Promise<number> {
+        return await this.addRequest(this.createRequest("countAttacksByCategoryLabel", 
+                                                        {earliest: earliest,
+                                                         category: category,
+                                                         label: label}))
+        .then((result) => {
+            return Promise.resolve(result as number);
+        })
+        .catch((error) => {
+            return Promise.reject(error);
         });
     }
 
-    countResponsesByCategoryLabel(earliest: string, category: string, label: string): Promise<number> {
-        return new Promise((resolve, reject) => {
-
-            const request = AppSensorWebSocketClient.createRequest("countResponsesByCategoryLabel", 
-                                                                            {earliest: earliest,
-                                                                             category: category,
-                                                                             label: label});
-
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
-
-                AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
-
-                if (response.error) {
-                    reject(new Error(response.error));
-                } else {
-                    resolve(response.result as number);
-                }
-            });
-
-            this.sendRequest(request, this.genSendCallback(reject));
+    async countResponsesByCategoryLabel(earliest: string, category: string, label: string): Promise<number> {
+        return await this.addRequest(this.createRequest("countResponsesByCategoryLabel", 
+                                                        {earliest: earliest,
+                                                         category: category,
+                                                         label: label}))
+        .then((result) => {
+            return Promise.resolve(result as number);
+        })
+        .catch((error) => {
+            return Promise.reject(error);
         });
     }
 
-    countEventsByUser(earliest: string, user: string): Promise<number> {
-        return new Promise((resolve, reject) => {
-
-            const request = AppSensorWebSocketClient.createRequest("countEventsByUser", {earliest: earliest, user: user});
-
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
-
-                AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
-
-                if (response.error) {
-                    reject(new Error(response.error));
-                } else {
-                    resolve(response.result as number);
-                }
-            });
-
-            this.sendRequest(request, this.genSendCallback(reject));
+    async countEventsByUser(earliest: string, user: string): Promise<number> {
+        return await this.addRequest(this.createRequest("countEventsByUser", {earliest: earliest, user: user}))
+        .then((result) => {
+            return Promise.resolve(result as number);
+        })
+        .catch((error) => {
+            return Promise.reject(error);
         });
     }
 
-    countAttacksByUser(earliest: string, user: string): Promise<number> {
-        return new Promise((resolve, reject) => {
-
-            const request = AppSensorWebSocketClient.createRequest("countAttacksByUser", {earliest: earliest, user: user});
-
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
-
-                AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
-
-                if (response.error) {
-                    reject(new Error(response.error));
-                } else {
-                    resolve(response.result as number);
-                }
-            });
-
-            this.sendRequest(request, this.genSendCallback(reject));
+    async countAttacksByUser(earliest: string, user: string): Promise<number> {
+        return await this.addRequest(this.createRequest("countAttacksByUser", {earliest: earliest, user: user}))
+        .then((result) => {
+            return Promise.resolve(result as number);
+        })
+        .catch((error) => {
+            return Promise.reject(error);
         });
     }
 
-    countResponsesByUser(earliest: string, user: string): Promise<number> {
-        return new Promise((resolve, reject) => {
-
-            const request = AppSensorWebSocketClient.createRequest("countResponsesByUser", {earliest: earliest, user: user});
-
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
-
-                AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
-
-                if (response.error) {
-                    reject(new Error(response.error));
-                } else {
-                    resolve(response.result as number);
-                }
-            });
-
-            this.sendRequest(request, this.genSendCallback(reject));
+    async countResponsesByUser(earliest: string, user: string): Promise<number> {
+        return await this.addRequest(this.createRequest("countResponsesByUser", {earliest: earliest, user: user}))
+        .then((result) => {
+            return Promise.resolve(result as number);
+        })
+        .catch((error) => {
+            return Promise.reject(error);
         });
     }
 
-    getServerConfigurationAsJson(): Promise<string> {
-        return new Promise((resolve, reject) => {
-
-            const request = AppSensorWebSocketClient.createRequest("getServerConfigurationAsJson");
-
-            AppSensorReportingWebSocketClient.eventEmmiter.addListener(request.id, (response: ActionResponse) => {
-
-                AppSensorReportingWebSocketClient.eventEmmiter.removeAllListeners(request.id);
-
-                if (response.error) {
-                    reject(new Error(response.error));
-                } else {
-                    resolve(response.result as string);
-                }
-            });
-
-            this.sendRequest(request, this.genSendCallback(reject));
+    async getServerConfigurationAsJson(): Promise<string> {
+        return await this.addRequest(this.createRequest("getServerConfigurationAsJson"))
+        .then((result) => {
+            return Promise.resolve(result as string);
+        })
+        .catch((error) => {
+            return Promise.reject(error);
         });
     }
 
