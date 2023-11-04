@@ -1,6 +1,6 @@
 {
   "name": "@appsensorlike/appsensorlike_exec_mode_rest_server",
-  "version": "0.19.3",
+  "version": "0.20.0",
   "description": "AppSensorLike execution mode REST; server part",
   "main": "appsensor-rest-server.js",
   "type": "module",
@@ -27,7 +27,7 @@
     "node": ">=14.15.0"
   },
   "dependencies": {
-    "@appsensorlike/appsensorlike_rest_server": "^0.18.1",
+    "@appsensorlike/appsensorlike_rest_server": "^0.18.3",
     "express": "^4.18.2"
   },
   "devDependencies": {

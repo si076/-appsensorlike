@@ -155,28 +155,38 @@ class RestServer extends HttpS2Server {
         }
     }
 
-    protected isConnectionAllowed(ip: string, 
+    protected isConnectionAllowed(clientAppName: string,
+                                  ip: string, 
                                   appSensorServerConfig: ServerConfiguration | null): boolean {
         let allowed = false;
 
-        if (ip && appSensorServerConfig) {
-            const clientApp = appSensorServerConfig.findClientApplication(new IPAddress(ip));
+        if (clientAppName && appSensorServerConfig) {
+            const clientApp = appSensorServerConfig.findClientApplication(clientAppName);
             if (clientApp) {
-                allowed = true;
+                const clientAppIP = clientApp.getIPAddress();
+                if (clientAppIP) {
+                    if (clientAppIP.equalAddress(ip)) {
+                        allowed = true;
+                    }
+                } else {
+                    allowed = true;
+                }
+
             }
         }
 
         return allowed;
     }
 
-    protected isActionAuthorized(ip: string, 
+    protected isActionAuthorized(clientAppName: string,
+                                 ip: string, 
                                  appSensorServerConfig: ServerConfiguration | null,
                                  appSensorAccessController: AccessController | null,
                                  action: Action): boolean {
         let authorized = false;
 
-        if (ip && appSensorServerConfig) {
-            const clientApp = appSensorServerConfig.findClientApplication(new IPAddress(ip));
+        if (clientAppName && appSensorServerConfig) {
+            const clientApp = appSensorServerConfig.findClientApplication(clientAppName);
             if (clientApp && appSensorAccessController) {
                 authorized = appSensorAccessController.isAuthorized(clientApp, 
                                                                     action, 

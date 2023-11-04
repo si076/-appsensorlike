@@ -12,6 +12,7 @@ import { AppSensorEvent, Attack, DetectionPoint, DetectionSystem,
          User, IValidateInitialize } from '../core/core.js';
 import { GeoLocation } from '../core/geolocation/geolocation.js';
 import { Clause, Expression, Rule } from '../core/rule/rule.js';
+import { ServerConfiguration } from '../core/configuration/server/server_configuration.js';
 
 class ValidationError extends Error implements ErrorObject {
     keyword: string;
@@ -87,6 +88,8 @@ class JSONConfigManager {
                                        this.currentConfig);
             } catch (error) {
                 if (error instanceof assert.AssertionError) {
+                    ServerConfiguration.clientApplicationCache.clear();
+
                     this.currentConfig = config;
 
                     this.eventEmitter.emit(JSONConfigManager.CONFIGURATION_CHANGED_EVENT, this.currentConfig);
@@ -451,6 +454,27 @@ class Utils {
         if (propDescr) {
             target.setTimestamp(new Date(propDescr.value));
         }
+    }
+
+    public static setPrototypeInDepthByClassName(target: Object, className: string) {
+        switch (className) {
+            case 'AppSensorEvent': {
+                Utils.setPrototypeInDepth(target, Utils.appSensorEventPrototypeSample);
+                Utils.setTimestampFromJSONParsedObject(target as AppSensorEvent, target);
+                break;
+            }
+            case 'Attack': {
+                Utils.setPrototypeInDepth(target, Utils.attackPrototypeSample);
+                Utils.setTimestampFromJSONParsedObject(target as Attack, target);
+                break;
+            }
+            case 'Response': {
+                Utils.setPrototypeInDepth(target, Utils.responsePrototypeSample);
+                Utils.setTimestampFromJSONParsedObject(target as Response, target);
+                break;
+            }
+        }
+
     }
 
     public static copyPropertyValues<T1 extends Object>(srcObj: T1, trgObj: T1) {

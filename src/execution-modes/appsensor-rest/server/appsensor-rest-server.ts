@@ -2,6 +2,7 @@ import { ReferenceAccessController } from "@appsensorlike/appsensorlike/access-c
 import { ReferenceAttackAnalysisEngine, ReferenceEventAnalysisEngine } from "@appsensorlike/appsensorlike/analysis-engines/appsensor-analysis-reference/appsensor-analysis-reference.js";
 import { AggregateAttackAnalysisEngine, AggregateEventAnalysisEngine } from "@appsensorlike/appsensorlike/analysis-engines/appsensor-analysis-rules/appsensor-analysis-rules.js";
 import { JSONServerConfigurationReader } from "@appsensorlike/appsensorlike/configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
+import { ResponseAnalysisEngine } from "@appsensorlike/appsensorlike/core/analysis/analysis.js";
 import { AppSensorServer, RequestHandler } from "@appsensorlike/appsensorlike/core/core.js";
 import { AttackStore, EventStore, ResponseStore } from "@appsensorlike/appsensorlike/core/storage/storage.js";
 import { InMemoryAttackStore, InMemoryEventStore, InMemoryResponseStore } from "@appsensorlike/appsensorlike/storage-providers/appsensor-storage-in-memory/appsensor-storage-in-memory.js";
@@ -29,7 +30,9 @@ class AppSensorRestServer {
                 restServerConfigFile: string = 'appsensor-rest-request-handler-config.json',
                 attackStore?: AttackStore,
                 eventStore?: EventStore,
-                responseStore?: ResponseStore) {
+                responseStore?: ResponseStore,
+                responseAnalysisEngine?: ResponseAnalysisEngine) {
+
         if (attackStore) {
             this.attackStore = attackStore;
         }
@@ -69,6 +72,14 @@ class AppSensorRestServer {
 		for (let i = 0; i < eventAnalysisEngines.length; i++) {
 			this.eventStore.registerListener(eventAnalysisEngines[i]);
 		}
+
+        if (responseAnalysisEngine) {
+            const responseAnalysisEngines = [responseAnalysisEngine];
+            this.appSensorServer.setResponseAnalysisEngines(responseAnalysisEngines);
+            for (let i = 0; i < responseAnalysisEngines.length; i++) {
+                this.responseStore.registerListener(responseAnalysisEngines[i]);
+            }
+        }
 
 		this.aggrAttackEngine.setAppSensorServer(this.appSensorServer);
         this.aggrEventEngine.setAppSensorServer(this.appSensorServer);

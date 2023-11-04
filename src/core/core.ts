@@ -1864,6 +1864,14 @@ class Utils {
 				method = "addEvent";
 				break;
 			}
+			case Action.GET_EVENTS: {
+				method = "getEvents";
+				break;
+			}
+			case Action.GET_ATTACKS: {
+				method = "getAttacks";
+				break;
+			}
 			case Action.GET_RESPONSES: {
 				method = "getResponses";
 				break;
@@ -1882,6 +1890,14 @@ class Utils {
 			}
 			case "addEvent": {
 				action = Action.ADD_EVENT;
+				break;
+			}
+			case "getEvents": {
+				action = Action.GET_EVENTS;
+				break;
+			}
+			case "getAttacks": {
+				action = Action.GET_ATTACKS;
 				break;
 			}
 			case "getResponses": {

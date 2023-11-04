@@ -43,12 +43,12 @@ class RestRequestHandler extends RestServer implements RequestHandler {
 
 
         this.expressApp.post("/events", this.addEventRequest.bind(this));
-        this.expressApp.get("/events:earliest", this.findEventsRequest.bind(this));
+        this.expressApp.get("/events", this.getEventsRequest.bind(this));
 
         this.expressApp.post("/attacks", this.addAttackRequest.bind(this));
-        this.expressApp.get("/attacks:earliest", this.findAttacksRequest.bind(this));
+        this.expressApp.get("/attacks", this.getAttacksRequest.bind(this));
 
-        this.expressApp.get("/responses:earliest", this.getResponsesRequest.bind(this));
+        this.expressApp.get("/responses", this.getResponsesRequest.bind(this));
     }
 
     private checkConsumerRights(req: e.Request, res: e.Response, action: Action): boolean {
@@ -56,20 +56,46 @@ class RestRequestHandler extends RestServer implements RequestHandler {
         const appSensorServerConfig = this.appSensorServer.getConfiguration();
         const appSensorAccessController = this.appSensorServer.getAccessController();
 
-        if (!this.isConnectionAllowed(req.ip, appSensorServerConfig)) {
-            res.status(403).send("Access denied for this client application! Configure server!");
+        const headerName = appSensorServerConfig!.getClientApplicationIdentificationHeaderNameOrDefault().toLowerCase();
+
+        let headerValue: string = '';
+        const propDescriptor = Object.getOwnPropertyDescriptor(req.headers, headerName);
+        if (propDescriptor) {
+            headerValue = propDescriptor.value
+        }
+
+        if (!this.isConnectionAllowed(headerValue, req.ip, appSensorServerConfig)) {
+            res.status(401).send("Access denied for this client application!");
 
             return false;
         }
 
-        if (!this.isActionAuthorized(req.ip, appSensorServerConfig, appSensorAccessController, action)) {
-            res.status(401).send(`Unauthorized action ${action}`);
+        if (!this.isActionAuthorized(headerValue, req.ip, appSensorServerConfig, appSensorAccessController, action)) {
+            res.status(403).send(`Unauthorized action ${action}`);
 
             return false;
         }
 
         return true;
     }
+
+    private checkParameters(req: e.Request, res: e.Response): boolean {
+        if (!req.query.earliest) {
+            res.status(400).send("Missing parameter: earliest");
+
+            return false;
+        } else {
+            const date = Date.parse(req.query.earliest as string);
+            if (isNaN(date)) {
+                res.status(400).send("Parameter 'earliest' is not a date in ISO 8601 format(YYYY-MM-DDTHH:mm:ss.sssZ)");
+
+                return false;
+            }
+        }
+
+        return true;
+    }
+
 
     addEventRequest(req: e.Request, res: e.Response, next: e.NextFunction) {
 
@@ -90,9 +116,10 @@ class RestRequestHandler extends RestServer implements RequestHandler {
         }
     }
     
-    findEventsRequest(req: e.Request, res: e.Response, next: e.NextFunction) {
-        if (this.checkConsumerRights(req, res, Action.FIND_EVENTS)) {
-            this.findEvents(req.query.earliest as string)
+    getEventsRequest(req: e.Request, res: e.Response, next: e.NextFunction) {
+        if (this.checkConsumerRights(req, res, Action.GET_EVENTS) &&
+            this.checkParameters(req, res)) {
+            this.getEvents(new Date(req.query.earliest as string))
             .then((result) => {
                 res.send(result);
             })
@@ -121,9 +148,10 @@ class RestRequestHandler extends RestServer implements RequestHandler {
         }
     }
     
-    findAttacksRequest(req: e.Request, res: e.Response, next: e.NextFunction) {
-        if (this.checkConsumerRights(req, res, Action.FIND_ATTACKS)) {
-            this.findAttacks(req.query.earliest as string)
+    getAttacksRequest(req: e.Request, res: e.Response, next: e.NextFunction) {
+        if (this.checkConsumerRights(req, res, Action.GET_ATTACKS) &&
+            this.checkParameters(req, res)) {
+            this.getAttacks(new Date(req.query.earliest as string))
             .then((result) => {
                 res.send(result);
             })
@@ -134,7 +162,8 @@ class RestRequestHandler extends RestServer implements RequestHandler {
     }
     
     getResponsesRequest(req: e.Request, res: e.Response, next: e.NextFunction) {
-        if (this.checkConsumerRights(req, res, Action.GET_RESPONSES)) {
+        if (this.checkConsumerRights(req, res, Action.GET_RESPONSES) &&
+            this.checkParameters(req, res)) {
             this.getResponses(new Date(req.query.earliest as string))
             .then((result) => {
                 res.send(result);
@@ -176,7 +205,7 @@ class RestRequestHandler extends RestServer implements RequestHandler {
         }
     }
 
-    findEvents(earliest: string): Promise<AppSensorEvent[]> {
+    async getEvents(earliest: Date): Promise<AppSensorEvent[]> {
 		Logger.getServerLogger().trace('RestRequestHandler.findEvents:');
         Logger.getServerLogger().trace(`earliest: ${earliest}`);
 
@@ -227,7 +256,7 @@ class RestRequestHandler extends RestServer implements RequestHandler {
         }
     }
 
-    findAttacks(earliest: string): Promise<Attack[]> {
+    async getAttacks(earliest: Date): Promise<Attack[]> {
 		Logger.getServerLogger().trace('RestRequestHandler.findAttacks:');
         Logger.getServerLogger().trace(`earliest: ${earliest}`);
 

@@ -54,6 +54,8 @@ interface IDetectionPoints {
  */
  abstract class ServerConfiguration implements IServerConfiguration {
 
+	public static DEFAULT_HEADER_NAME = "X-Appsensor-Client-Application-Name";
+
 	configurationFile: string | undefined;
 
 	rules: Rule[] = [];
@@ -62,7 +64,7 @@ interface IDetectionPoints {
 
 	correlationSets: CorrelationSet[] = [];
 
-	clientApplicationIdentificationHeaderName: string = '';
+	clientApplicationIdentificationHeaderName: string = ServerConfiguration.DEFAULT_HEADER_NAME;
 
 	clientApplications: ClientApplication[] = [];
 
@@ -142,6 +144,11 @@ interface IDetectionPoints {
 
 	public getClientApplicationIdentificationHeaderName(): string {
 		return this.clientApplicationIdentificationHeaderName;
+	}
+
+	public getClientApplicationIdentificationHeaderNameOrDefault(): string {
+		return (this.clientApplicationIdentificationHeaderName != null) ? 
+                    this.clientApplicationIdentificationHeaderName : ServerConfiguration.DEFAULT_HEADER_NAME;
 	}
 
 	public setClientApplicationIdentificationHeaderName(

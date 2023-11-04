@@ -17,10 +17,12 @@ class JSONClientConfigurationReader extends JSONConfigReadValidate implements Cl
         JSONClientConfigurationReader.configPrototypesSample.setServerConnection(new ServerConnection());
     }
 
-    constructor() {
-        super(import.meta.url, 
-              JSONClientConfigurationReader.DEFAULT_CONFIG_FILE,
-              JSONClientConfigurationReader.DEFAULT_CONFIG_SCHEMA_FILE);
+    constructor(relativeTo: string = import.meta.url,
+                configFile: string = JSONClientConfigurationReader.DEFAULT_CONFIG_FILE, 
+                configSchemaFile: string | null = JSONClientConfigurationReader.DEFAULT_CONFIG_SCHEMA_FILE) {
+        super(relativeTo, 
+              configFile,
+              configSchemaFile);
     }
 
     public override read(configurationLocation: string = '', 

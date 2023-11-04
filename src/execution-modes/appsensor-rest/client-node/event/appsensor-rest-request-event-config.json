@@ -1,3 +1,7 @@
 {
-    "url": "http://localhost:8080"
+    "serverConnection": {
+        "url": "http://localhost:8080",
+        "type": "REST",
+        "clientApplicationIdentificationHeaderValue": "myclientapp"
+    }
 }

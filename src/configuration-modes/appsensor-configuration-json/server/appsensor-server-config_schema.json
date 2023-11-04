@@ -404,7 +404,9 @@
                 "ADD_ATTACK",
                 "ADD_EVENT",
                 "EXECUTE_REPORT",
-                "GET_RESPONSES"
+                "GET_RESPONSES",
+                "GET_EVENTS",
+                "GET_ATTACKS"
             ],
             "type": "string"
         },

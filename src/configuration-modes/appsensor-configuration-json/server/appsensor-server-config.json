@@ -1,5 +1,5 @@
 {
-    "clientApplicationIdentificationHeaderName": "X-Appsensor-Client-Application-Name2",
+    "clientApplicationIdentificationHeaderName": "X-Appsensor-Client-Application-Name",
 
     "clientApplications": [
         {
