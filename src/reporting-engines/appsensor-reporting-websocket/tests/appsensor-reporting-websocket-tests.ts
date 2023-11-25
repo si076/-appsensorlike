@@ -4,13 +4,15 @@ import { AppSensorClient, AppSensorEvent, AppSensorServer, Attack, Category, Det
 import { ServerConfiguration } from "@appsensorlike/appsensorlike/core/configuration/server/server_configuration.js";
 import { AppSensorLocal } from "@appsensorlike/appsensorlike/execution-modes/appsensor-local/appsensor_local.js";
 import { Role } from "@appsensorlike/appsensorlike/core/accesscontrol/accesscontrol.js"
+import { Logger } from "@appsensorlike/appsensorlike/logging/logging.js";
 import { InMemoryAttackStore, InMemoryEventStore, InMemoryResponseStore } from "@appsensorlike/appsensorlike/storage-providers/appsensor-storage-in-memory/appsensor-storage-in-memory.js";
 import { AppSensorReportingWebSocketClient } from "../client/appsensor-reporting-websocket-client.js";
 import { AppSensorReportingWebSocketServer } from "../server/appsensor-reporting-websocket-server.js";
-
-import assert from "assert";
 import { Utils } from "@appsensorlike/appsensorlike/utils/Utils.js";
 import { JSONServerConfigurationReader } from "@appsensorlike/appsensorlike/configuration-modes/appsensor-configuration-json/server/JSONServerConfig.js";
+import { loggedUnexpectedErrors } from "@appsensorlike/appsensorlike/execution-modes/tests/tests.js";
+
+import assert from "assert";
 
 class AppSensorReportingWebsocketClientTest {
 
@@ -20,10 +22,11 @@ class AppSensorReportingWebsocketClientTest {
         this.wsClient = new AppSensorReportingWebSocketClient(websocketConfigLocation);
 	}
 
-    public async test(earliest: string) {
+    public async test(earliest: string, withCustomPoints: boolean) {
         const events = await this.wsClient.findEvents(earliest);
 
-        assert.equal(events.length, 21);
+		const expectedEventCount = withCustomPoints ? 31 : 21;
+        assert.equal(events.length, expectedEventCount);
 
 		let attackCount = 0;
 		let responseCount = 0;
@@ -57,20 +60,24 @@ class AppSensorReportingWebsocketClientTest {
 
 		const config: ServerConfiguration | null = new JSONServerConfigurationReader().readFromString(configStr);
 
-		console.log(config);
+		Logger.getTestsLogger().info(config);
     }
 
     private async getStatForUser(earliest: string, userName: string): Promise<{eventCount: number, attackCount: number, responseCount: number}> {
         const eventCount = await this.wsClient.countEventsByUser(earliest, userName);
         const attackCount = await this.wsClient.countAttacksByUser(earliest, userName);
         const responseCount = await this.wsClient.countResponsesByUser(earliest, userName);
-        console.log(`Stats for user: ${userName} since: ${earliest}`);
-        console.log(`Event count: ${eventCount}`);
-        console.log(`Attack count: ${attackCount}`);
-        console.log(`Response count: ${responseCount}`);
+        Logger.getTestsLogger().info(`Stats for user: ${userName} since: ${earliest}`);
+        Logger.getTestsLogger().info(`Event count: ${eventCount}`);
+        Logger.getTestsLogger().info(`Attack count: ${attackCount}`);
+        Logger.getTestsLogger().info(`Response count: ${responseCount}`);
 
 		return {eventCount: eventCount, attackCount: attackCount, responseCount: responseCount};
     }
+
+	async connectWebsocket() {
+		await this.wsClient.connect();
+	}
 
 	async closeWebsocket() {
 		await this.wsClient.closeSocket();
@@ -84,9 +91,9 @@ class AppSensorReportingWebsocketClientExt extends AppSensorReportingWebSocketCl
 	}
 
 	onAdd(event: AppSensorEvent | Attack | Response): Promise<void> {
-        console.log(event);
+        Logger.getTestsLogger().info(event);
         if (event.getTimestamp()) {
-            console.log(event.getTimestamp()!.getMilliseconds());
+            Logger.getTestsLogger().info(event.getTimestamp()!.getMilliseconds());
         }
 
 		return Promise.resolve();
@@ -179,7 +186,8 @@ class AppSensorReportingWebsocketTests {
 			//generate random events of custom detection points
 			const clients = [detectionSystems[0].getDetectionSystemId(), 
 							 detectionSystems[1].getDetectionSystemId()];
-			while (true) {
+
+			for (let i = 0; i < 10; i++)  {
 				await Utils.sleep(Math.floor(Math.random() * 1000 * 40)  + 500);
 	
 				const random = this.getRandomInt(2);
@@ -395,12 +403,11 @@ class AppSensorReportingWebsocketTests {
 
 	async closeServer() {
 		await this.wsServer.closeServer();
-		await this.wsServer.stopServer();
 	}
 }
 
 async function runTestWithHttpServer(earliest: string, withCustomPoints: boolean) {
-	console.log('----- With Http Server -----');
+	Logger.getTestsLogger().info('----- With Http Server -----');
 	let configLocation = 'appsensor-reporting-websocket-server-config1.json';
 	let configAbsolutPath = Utils.resolvePath(import.meta.url, configLocation);
 
@@ -412,7 +419,8 @@ async function runTestWithHttpServer(earliest: string, withCustomPoints: boolean
 	configAbsolutPath = Utils.resolvePath(import.meta.url, configLocation);
 
 	const client = new AppSensorReportingWebsocketClientTest(configAbsolutPath);
-    await client.test(earliest);
+	await client.connectWebsocket();
+    await client.test(earliest, withCustomPoints);
 
 	await client.closeWebsocket();
 
@@ -420,7 +428,7 @@ async function runTestWithHttpServer(earliest: string, withCustomPoints: boolean
 }
 
 async function runTestWithHttpsServer(earliest: string, withCustomPoints: boolean) {
-	console.log('----- With Https Server -----');
+	Logger.getTestsLogger().info('----- With Https Server -----');
 	let configLocation = 'appsensor-reporting-websocket-server-config2.json';
 	let configAbsolutPath = Utils.resolvePath(import.meta.url, configLocation);
 
@@ -432,18 +440,36 @@ async function runTestWithHttpsServer(earliest: string, withCustomPoints: boolea
 	configAbsolutPath = Utils.resolvePath(import.meta.url, configLocation);
 
 	const client = new AppSensorReportingWebsocketClientTest(configAbsolutPath);
-    await client.test(earliest);
+	await client.connectWebsocket();
+    await client.test(earliest, withCustomPoints);
 	
 	await client.closeWebsocket();
 
 	await server.closeServer();
 }
 
-async function runTests(withCustomPoints: boolean = false) {
-    console.log('----- Run AppSensorReportingWebsocketTests -----');
+async function runTests() {
+    Logger.getTestsLogger().info('----- Run AppSensorReportingWebsocketTests -----');
 	const earliest = new Date().toISOString();
-	await runTestWithHttpServer(earliest, withCustomPoints);
-	await runTestWithHttpsServer(earliest, withCustomPoints);
+
+    let exitCode = 0;
+
+    try {
+		await runTestWithHttpServer(earliest, true);
+		
+		await runTestWithHttpsServer(earliest, false);
+	} catch (error) {
+		exitCode = 1;
+		Logger.getTestsLogger().error(error);
+	}
+
+    if (loggedUnexpectedErrors([])) {
+        exitCode = 1;
+    }
+
+    await Logger.shutdownAsync();
+    
+    process.exit(exitCode);
 }
 
 async function runServerSeparately(withCustomPoints: boolean = false) {
@@ -453,7 +479,7 @@ async function runServerSeparately(withCustomPoints: boolean = false) {
 }
 
 async function runClientSeparately() {
-	await new AppSensorReportingWebsocketClientTest().test('1970-01-01T00:00:00.000Z');
+	await new AppSensorReportingWebsocketClientTest().test('1970-01-01T00:00:00.000Z', false);
 }
 
 async function runClientSeparatelyReportEvents() {

@@ -1,6 +1,9 @@
 {
     "address": "wss://localhost:3500",
     "options": {
-        "rejectUnauthorized": false
+        "rejectUnauthorized": false,
+        "headers": {
+            "X-Appsensor-Client-Application-Name": "Test"
+        }
     }
 }

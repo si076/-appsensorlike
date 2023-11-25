@@ -17,17 +17,17 @@ async function runTests(readInf: readline.Interface | null = null) {
     let exitCode = 0;
 
     try {
-        // await testWithWrongURL();
+        await testWithWrongURL();
 
-        // await testNotAllowedIP();
+        await testNotAllowedIP();
 
-        // await testWithoutIPSpecifiedInConfig();
+        await testWithoutIPSpecifiedInConfig();
 
         await testUnauthorizedAction();
 
-        // await testErrorHandling();
+        await testErrorHandling();
 
-        // await testScenarios();
+        await testScenarios();
     } catch (error) {
         exitCode = 1;
         Logger.getTestsLogger().error(error);
@@ -35,6 +35,7 @@ async function runTests(readInf: readline.Interface | null = null) {
 
     const expectedErrors = [new Error("connect ECONNREFUSED 127.0.0.1:4005"),
                             new Error("WebSocket in CLOSING state!"),
+                            new Error("Unauthorized action addEvent"),
                             new TypeError("Cannot read property 'getDetectionSystemId' of undefined"),
                             new Error("TypeError: Cannot read property 'getDetectionSystemId' of undefined"),
                             "ReferenceEventAnalysisEngine.analyze: Could not find detection point configured for this type: IE4"];
@@ -229,7 +230,8 @@ async function testUnauthorizedAction() {
                                          new DetectionSystem("localhostme"), 
                                          new Date());
 
-        await appSensorWebSocketClient.getAppSensorClient().getEventManager()!.addEvent(event);
+        await assert.rejects(appSensorWebSocketClient.getAppSensorClient().getEventManager()!.addEvent(event),
+                             new Error("Unauthorized action addEvent"));
     }
 
     await appSensorWebSocketClient.closeWebSocket();

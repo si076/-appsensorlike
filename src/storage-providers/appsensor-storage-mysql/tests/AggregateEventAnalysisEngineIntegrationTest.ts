@@ -6,6 +6,7 @@ import { EventAnalysisEngine } from "@appsensorlike/appsensorlike/core/analysis/
 import { AppSensorClient, AppSensorEvent, AppSensorServer, Category, DetectionPoint, DetectionSystem, Interval, INTERVAL_UNITS, Response, Threshold, User } from "@appsensorlike/appsensorlike/core/core.js";
 import { SearchCriteria } from "@appsensorlike/appsensorlike/core/criteria/criteria.js";
 import { Clause, Expression, MonitorPoint, Rule } from "@appsensorlike/appsensorlike/core/rule/rule.js";
+import { Logger } from "@appsensorlike/appsensorlike/logging/logging.js";
 
 import { DOP } from "../DOP.js";
 import { BaseTests } from "./BaseTests.js";
@@ -336,7 +337,7 @@ class AggregEventAnalysisEngIntegTest extends BaseTests {
 
 	// @Test
 	public async test1_DP1() {
-		console.log('--> test1_DP1');
+		Logger.getTestsLogger().info('--> test1_DP1');
 		//Add rule
 		this.setRule(this.appSensorServer, AggregEventAnalysisEngIntegTest.rules[0]);
 
@@ -370,12 +371,12 @@ class AggregEventAnalysisEngIntegTest extends BaseTests {
 		attacks = await this.appSensorServer!.getAttackStore()!.findAttacks(AggregEventAnalysisEngIntegTest.criteria.get("rule1")!);
 		assert.equal(2, attacks.length);
 
-		console.log('<-- test1_DP1');
+		Logger.getTestsLogger().info('<-- test1_DP1');
 	}
 
 	// @Test
 	public async test2_DP1andDP2() {
-		console.log('--> test2_DP1andDP2');
+		Logger.getTestsLogger().info('--> test2_DP1andDP2');
 		//Add rule
 		this.setRule(this.appSensorServer, AggregEventAnalysisEngIntegTest.rules[1]);
 
@@ -429,12 +430,12 @@ class AggregEventAnalysisEngIntegTest extends BaseTests {
 		await this.assertEventsAndAttacks(36, 3, AggregEventAnalysisEngIntegTest.criteria.get("dp2")!);
 		await this.assertEventsAndAttacks(0, 3, AggregEventAnalysisEngIntegTest.criteria.get("rule2")!);
 
-		console.log('<-- test2_DP1andDP2');
+		Logger.getTestsLogger().info('<-- test2_DP1andDP2');
 	}
 
 	// @Test
 	public async test3_DP1orDP2() {
-		console.log('--> test3_DP1orDP2');
+		Logger.getTestsLogger().info('--> test3_DP1orDP2');
 		//Add rule
 		this.setRule(this.appSensorServer, AggregEventAnalysisEngIntegTest.rules[2]);;
 
@@ -474,12 +475,12 @@ class AggregEventAnalysisEngIntegTest extends BaseTests {
 		await this.assertEventsAndAttacks(7, 2, AggregEventAnalysisEngIntegTest.criteria.get("dp1")!);
 		await this.assertEventsAndAttacks(0, 4, AggregEventAnalysisEngIntegTest.criteria.get("rule3")!);
 
-		console.log('<-- test3_DP1orDP2');
+		Logger.getTestsLogger().info('<-- test3_DP1orDP2');
 	}
 
 	// @Test
 	public async test4_DP1orDP2andDP3() {
-		console.log('--> test4_DP1orDP2andDP3');
+		Logger.getTestsLogger().info('--> test4_DP1orDP2andDP3');
 		//Add rule
 		this.setRule(this.appSensorServer, AggregEventAnalysisEngIntegTest.rules[3]);
 
@@ -530,12 +531,12 @@ class AggregEventAnalysisEngIntegTest extends BaseTests {
 		await this.assertEventsAndAttacks(39, 3, AggregEventAnalysisEngIntegTest.criteria.get("dp3")!);
 		await this.assertEventsAndAttacks(0, 6, AggregEventAnalysisEngIntegTest.criteria.get("rule4")!);
 
-		console.log('<-- test4_DP1orDP2andDP3');
+		Logger.getTestsLogger().info('<-- test4_DP1orDP2andDP3');
 	}
 
 	// @Test
 	public async test5_DP1thenDP2() {
-		console.log('--> test5_DP1thenDP2');
+		Logger.getTestsLogger().info('--> test5_DP1thenDP2');
 		//Add rule
 		this.setRule(this.appSensorServer, AggregEventAnalysisEngIntegTest.rules[4]);
 
@@ -571,12 +572,12 @@ class AggregEventAnalysisEngIntegTest extends BaseTests {
 		await this.assertEventsAndAttacks(36, 3, AggregEventAnalysisEngIntegTest.criteria.get("dp2")!);
 		await this.assertEventsAndAttacks(0, 2, AggregEventAnalysisEngIntegTest.criteria.get("rule5")!);
 
-		console.log('<-- test5_DP1thenDP2');
+		Logger.getTestsLogger().info('<-- test5_DP1thenDP2');
 	}
 
 	// @Test
 	public async test6_DP1thenDP2thenDP1orDP2() {
-		console.log('--> test6_DP1thenDP2thenDP1orDP2');
+		Logger.getTestsLogger().info('--> test6_DP1thenDP2thenDP1orDP2');
 		//Add rule
 		this.setRule(this.appSensorServer, AggregEventAnalysisEngIntegTest.rules[5]);
 
@@ -647,13 +648,13 @@ class AggregEventAnalysisEngIntegTest extends BaseTests {
 		await this.assertEventsAndAttacks(60, 5, AggregEventAnalysisEngIntegTest.criteria.get("dp2")!);
 		await this.assertEventsAndAttacks(0, 2, AggregEventAnalysisEngIntegTest.criteria.get("rule6")!);
 
-		console.log('<-- test6_DP1thenDP2thenDP1orDP2');
+		Logger.getTestsLogger().info('<-- test6_DP1thenDP2thenDP1orDP2');
 	}
 
 	// test the scheduling bug
 	// @Test
 	public async test7_DP1andDP4orDP1andDP3thenDP1() {
-		console.log('--> test7_DP1andDP4orDP1andDP3thenDP1');
+		Logger.getTestsLogger().info('--> test7_DP1andDP4orDP1andDP3thenDP1');
 
 		let time = new Date(100 * 60 * 60 * 1000);
 		const ruleCriteria = new SearchCriteria().
@@ -706,13 +707,13 @@ class AggregEventAnalysisEngIntegTest extends BaseTests {
 		attacks = await this.appSensorServer!.getAttackStore()!.findAttacks(ruleCriteria);
 		assert.equal(2, attacks.length);
 
-		console.log('<-- test7_DP1andDP4orDP1andDP3thenDP1');
+		Logger.getTestsLogger().info('<-- test7_DP1andDP4orDP1andDP3thenDP1');
 	}
 
 	// test the earliest attack bug
 		// @Test
     public async test8_DP1() {
-		console.log('--> test8_DP1');
+		Logger.getTestsLogger().info('--> test8_DP1');
 
         let time = new Date(100 * 60 * 60 * 1000);
         const ruleCriteria = new SearchCriteria().
@@ -748,12 +749,12 @@ class AggregEventAnalysisEngIntegTest extends BaseTests {
 		attacks = await this.appSensorServer!.getAttackStore()!.findAttacks(ruleCriteria);
         assert.equal(2, attacks.length);
 
-		console.log('<-- test8_DP1');
+		Logger.getTestsLogger().info('<-- test8_DP1');
     }
 
 	public static async runTests(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
-		console.log();
-		console.log(`----- Run AggregateEventAnalysisEngineIntegrationTest -----`);
+		Logger.getTestsLogger().info('');
+		Logger.getTestsLogger().info(`----- Run AggregateEventAnalysisEngineIntegrationTest -----`);
 		const instance = new AggregEventAnalysisEngIntegTest(appSensorServer, appSensorClient);
 
 		await instance.initializeTest();

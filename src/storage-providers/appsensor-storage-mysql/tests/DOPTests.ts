@@ -1,4 +1,5 @@
 import { AppSensorClient, AppSensorEvent, AppSensorServer, DetectionPoint, KeyValuePair } from "@appsensorlike/appsensorlike/core/core.js";
+import { Logger } from "@appsensorlike/appsensorlike/logging/logging.js";
 import { DOP, TYPE_FILTER_FUNCTION } from "../DOP.js";
 import { BaseTests } from "./BaseTests.js";
 
@@ -11,7 +12,7 @@ class DOPTests extends BaseTests {
 	}
 
     private async persistObjects() {
-        console.log('--> persistObjects');
+        Logger.getTestsLogger().info('--> persistObjects');
 
 
         const event1 = new AppSensorEvent(BaseTests.user, BaseTests.point1, BaseTests.detectionSystem, new Date());
@@ -54,13 +55,13 @@ class DOPTests extends BaseTests {
 		const foundEvents = await DOP.findObjects("AppSensorEvent", propFilterFuncMap);
 		assert.equal(foundEvents.length, 2);
 
-		console.log(foundEvents[1]);
+		Logger.getTestsLogger().info(foundEvents[1]);
 
-        console.log('<-- persistObjects');
+        Logger.getTestsLogger().info('<-- persistObjects');
     } 
 
     public static async runTests(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
-        console.log('----- Run DOPTests -----');
+        Logger.getTestsLogger().info('----- Run DOPTests -----');
 		const inst = new DOPTests(appSensorServer, appSensorClient);
 		await inst.initializeTest();
 		await inst.persistObjects();

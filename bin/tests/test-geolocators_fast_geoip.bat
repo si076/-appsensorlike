@@ -22,6 +22,13 @@ echo "Running tests..."
 cd %outFastGeoipDir%
 call npx run-func %srcTestsDir%/tests.js runTests
 
+echo ---
+echo Copying log files
+set logsDir=%sd%\logs\geolocators_fast_geoip 
+rd %logsDir% /s /q
+mkdir %logsDir%
+copy *.log %logsDir%
+
 cd %md%
 
 echo ---

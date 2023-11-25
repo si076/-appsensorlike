@@ -1,6 +1,7 @@
 import { AppSensorLocal } from "@appsensorlike/appsensorlike/execution-modes/appsensor-local/appsensor_local.js";
 import { AppSensorClient, AppSensorServer } from "@appsensorlike/appsensorlike/core/core.js";
 import { Logger } from "@appsensorlike/appsensorlike/logging/logging.js";
+import { loggedUnexpectedErrors } from "@appsensorlike/appsensorlike/execution-modes/tests/tests.js";
 
 import { MySQLAttackStore, MySQLEventStore, MySQLResponseStore } from "../appsensor-storage-mysql.js";
 import { AggregateEventAnalysisEngineIntegrationTest } from "./AggregateEventAnalysisEngineIntegrationTest.js";
@@ -71,23 +72,40 @@ async function testChoice(appSensorServer: AppSensorServer,
 
 async function runTestsExecModeLocal(testChoice: string | null = null, 
                                      readInf: readline.Interface | null = null) {
-    console.log('----- Run MySQL Storage Tests Locall Execution -----');
-    const appSensorLocal = new AppSensorLocal('',
-                                                new MySQLAttackStore(),
-                                                new MySQLEventStore(),
-                                                new MySQLResponseStore());
-    await runTests(appSensorLocal.getAppSensorServer(), 
-                   appSensorLocal.getAppSensorClient(), 
-                   testChoice,
-                   readInf);
+    Logger.getTestsLogger().info('----- Run MySQL Storage Tests Locall Execution -----');
+
+    let exitCode = 0;
+
+    try {
+
+        const appSensorLocal = new AppSensorLocal('',
+                                                  new MySQLAttackStore(),
+                                                  new MySQLEventStore(),
+                                                  new MySQLResponseStore());
+                                                  
+        await runTests(appSensorLocal.getAppSensorServer(), 
+                    appSensorLocal.getAppSensorClient(), 
+                    testChoice,
+                    readInf);
+
+	} catch (error) {
+		exitCode = 1;
+		Logger.getTestsLogger().error(error);
+	}
+
+    const expectedErrors = ["ReferenceEventAnalysisEngine.analyze: Could not find detection point configured for this type: IE4"];
+    
+    if (loggedUnexpectedErrors(expectedErrors)) {
+        exitCode = 1;
+    }
 
     await Logger.shutdownAsync();
 
-    process.exit(0);
+    process.exit(exitCode);
 }
 
 // async function runTestsExecModeWebSocket(readInf: readline.Interface | null = null) {
-//     console.log('----- Run MySQL Storage Tests WebSocket Execution -----');
+//     Logger.getTestsLogger().info('----- Run MySQL Storage Tests WebSocket Execution -----');
 //     const appSensorWebSocketServer = 
 //             new AppSensorWebsocketExecServer('', '', undefined,
 //                                              new MySQLAttackStore(),

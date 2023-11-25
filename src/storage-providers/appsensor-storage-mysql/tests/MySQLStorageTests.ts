@@ -1,6 +1,7 @@
 import { BaseTests } from "./BaseTests.js";
 import { AppSensorClient, AppSensorEvent, AppSensorServer, KeyValuePair } from "@appsensorlike/appsensorlike/core/core.js";
 import { SearchCriteria } from "@appsensorlike/appsensorlike/core/criteria/criteria.js";
+import { Logger } from "@appsensorlike/appsensorlike/logging/logging.js";
 
 import assert from "assert";
 
@@ -12,7 +13,7 @@ class MySQLStorageTests extends BaseTests {
     }
 
     private async storeObjects() {
-        console.log('--> storeObjects');
+        Logger.getTestsLogger().info('--> storeObjects');
 
         const earliest = new Date();
 
@@ -65,11 +66,11 @@ class MySQLStorageTests extends BaseTests {
         const foundAttacks = await this.appSensorServer.getAttackStore()!.findAttacks(criteria);
 		assert.equal(foundAttacks.length, 1);
 
-        console.log('<-- storeObjects');
+        Logger.getTestsLogger().info('<-- storeObjects');
     } 
 
     public static async runTests(appSensorServer: AppSensorServer, appSensorClient: AppSensorClient) {
-        console.log(`----- Run MySQLStorageTests -----`);
+        Logger.getTestsLogger().info(`----- Run MySQLStorageTests -----`);
 		const inst = new MySQLStorageTests(appSensorServer, appSensorClient);
         await inst.initializeTest();
 		await inst.storeObjects();

@@ -575,3 +575,14 @@ src/execution-modes/appsensor-websocket/dist/execution-modes/appsensor-websocket
 src/execution-modes/appsensor-websocket/dist/execution-modes/appsensor-websocket/server/handler/appsensor-websocket-server-config_schema.json
 src/execution-modes/appsensor-websocket/dist/execution-modes/appsensor-websocket/server/handler/handler.js
 src/execution-modes/appsensor-websocket/dist/execution-modes/appsensor-websocket/tests/tests.js
+bin/tests/logs/geolocators_fast_geoip/appsensor-client-errors.log
+bin/tests/logs/geolocators_fast_geoip/appsensor-client.log
+bin/tests/logs/geolocators_fast_geoip/appsensor-responses.log
+bin/tests/logs/geolocators_fast_geoip/appsensor-server-errors.log
+bin/tests/logs/geolocators_fast_geoip/appsensor-server.log
+bin/tests/logs/geolocators_fast_geoip/tests-errors.log
+bin/tests/logs/geolocators_fast_geoip/tests.log
+bin/tests/logs/reporting_websocket/tests-errors.log
+bin/tests/logs/reporting_websocket/tests.log
+bin/tests/logs/storage_mysql/tests-errors.log
+bin/tests/logs/storage_mysql/tests.log

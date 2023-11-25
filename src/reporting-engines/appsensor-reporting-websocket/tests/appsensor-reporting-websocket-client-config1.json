@@ -1,3 +1,9 @@
 {
-    "address": "ws://localhost:3000"
+    "address": "ws://localhost:3000",
+    "options":{
+        "headers": {
+            "X-Appsensor-Client-Application-Name": "Test"
+        }
+    }
+
 }
