@@ -32,6 +32,7 @@ echo ---
 echo "Running tests..."
 cd %outRestDir%
 call npx run-func %testsDir%/tests.js runTests
+set errLevel=%errorlevel%
 
 echo ---
 echo Copying log files
@@ -47,3 +48,7 @@ echo Clearing tests dir
 rd %outDistDir% /s /q
 
 cd %sd%
+
+if %errLevel%==1 (
+    exit /b 1
+)

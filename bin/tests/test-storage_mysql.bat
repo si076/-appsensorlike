@@ -29,6 +29,7 @@ echo ---
 echo "Running tests..."
 cd %outStorageMySQLDir%
 call npx run-func %srcTestsDir%/tests.js runTestsExecModeLocal a
+set errLevel=%errorlevel%
 
 echo ---
 echo Copying log files
@@ -44,3 +45,7 @@ echo Clearing tests dir
 rd %outDistDir% /s /q
 
 cd %sd%
+
+if %errLevel%==1 (
+    exit /b 1
+)
