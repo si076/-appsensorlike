@@ -4,8 +4,9 @@ import assert from 'assert';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 
-import { default as Ajv, AnySchemaObject, ErrorObject } from "ajv"
-import { default as formatsPlugin} from "ajv-formats"
+import Ajv from "ajv";
+import { AnySchemaObject, ErrorObject } from "ajv";
+import formatsPlugin from "ajv-formats"
 
 import { AppSensorEvent, Attack, DetectionPoint, DetectionSystem, 
          Interval, IPAddress, KeyValuePair, Resource, Response, Threshold, 
@@ -255,8 +256,8 @@ class JSONConfigReadValidate {
 
         const schema = JSON.parse(fs.readFileSync(validatorLocation, 'utf8'));
 
-        const ajv = new Ajv({strict:true, allowUnionTypes: true, allErrors:true});
-        formatsPlugin(ajv);
+        const ajv = new Ajv.default({strict:true, allowUnionTypes: true, allErrors:true});
+        formatsPlugin.default(ajv);
 
         const validate = ajv.compile(schema);
         validate(config);

@@ -85,9 +85,22 @@ class HttpS2Server {
 
             const listenOptions = config.listenOptions ? config.listenOptions: {};
             const self = this;
-            this.server.listen(listenOptions, () => {
-                Logger.getServerLogger().info('HttpS2Server.startServer: ', `Listening on: ${self.getAddress()}`);
+
+            const listenPromise = new Promise((resolve, reject) => {
+                if (this.server) {
+                    this.server.listen(listenOptions, () => {
+                        Logger.getServerLogger().info('HttpS2Server.startServer: ', `Listening on: ${self.getAddress()}`);
+                        resolve(null);
+                    });
+                }
             });
+            const timeOutInMillis = 10000;
+            const timeoutPromise = new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        reject(new Error(`Server didn't start in ${timeOutInMillis} milliseconds!`));
+                    }, timeOutInMillis);
+                });
+            await Promise.race([listenPromise, timeoutPromise]);
         }
 
     }

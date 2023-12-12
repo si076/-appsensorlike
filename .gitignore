@@ -586,3 +586,4 @@ bin/tests/logs/reporting_websocket/tests-errors.log
 bin/tests/logs/reporting_websocket/tests.log
 bin/tests/logs/storage_mysql/tests-errors.log
 bin/tests/logs/storage_mysql/tests.log
+bin/tests/error.txt

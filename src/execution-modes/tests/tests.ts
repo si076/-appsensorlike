@@ -107,7 +107,7 @@ function loggedUnexpectedErrors(expectedErrors: (Error | string)[]): boolean {
     for (let i = 0; i < events.length; i++) {
         let writtenEventStr = util.format(...events[i].data);
         if (events[i].error) {
-            writtenEventStr = events[i].error!.name + ': ' + events[i].error!.message;
+            writtenEventStr = events[i].error!.constructor.name + ': ' + events[i].error!.message;
         }
         // console.log(events[i].categoryName, writtenEventStr);
 
@@ -116,7 +116,7 @@ function loggedUnexpectedErrors(expectedErrors: (Error | string)[]): boolean {
         for (let j = 0; j < expectedErrors.length; j++) {
             let expErrorStr = util.format(...[expectedErrors[j]]);
             if (expectedErrors[j] instanceof Error) {
-                expErrorStr = (expectedErrors[j] as Error).name + ': ' + (expectedErrors[j] as Error).message;
+                expErrorStr = (expectedErrors[j] as Error).constructor.name + ': ' + (expectedErrors[j] as Error).message;
             }
             if (expErrorStr == writtenEventStr) {
                 found = true;
