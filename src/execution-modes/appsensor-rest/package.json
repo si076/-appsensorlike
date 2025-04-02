@@ -12,8 +12,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@appsensorlike/appsensorlike": "^0.20.5",
-    "@appsensorlike/appsensorlike_rest_server": "^0.18.3",
+    "@appsensorlike/appsensorlike": "^0.20.6",
+    "@appsensorlike/appsensorlike_rest_server": "^0.20.6",
     "cross-fetch": "^3.1.6",
     "node-fetch": "2.6.12"
   },

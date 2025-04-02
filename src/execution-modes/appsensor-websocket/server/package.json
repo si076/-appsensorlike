@@ -1,6 +1,6 @@
 {
   "name": "@appsensorlike/appsensorlike_exec_mode_websocket_server",
-  "version": "0.18.0",
+  "version": "0.20.6",
   "description": "AppSensorLike execution mode over websocket; server part",
   "main": "appsensor_websocket_server.js",
   "type": "module",
@@ -27,8 +27,8 @@
     "node": ">=14.15.0"
   },
   "dependencies": {
-    "@appsensorlike/appsensorlike": "^0.20.3",
-    "@appsensorlike/appsensorlike_websocket": "^0.20.2"
+    "@appsensorlike/appsensorlike": "^0.20.6",
+    "@appsensorlike/appsensorlike_websocket": "^0.20.6"
   },
   "exports": {
     ".": "./dist/execution-modes/appsensor-websocket/server/appsensor_websocket_server.js"

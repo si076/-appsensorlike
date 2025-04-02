@@ -1,6 +1,6 @@
 {
   "name": "@appsensorlike/appsensorlike",
-  "version": "0.20.5",
+  "version": "0.20.6",
   "description": "A port of OWASP AppSensor reference implementation",
   "main": "",
   "type": "module",

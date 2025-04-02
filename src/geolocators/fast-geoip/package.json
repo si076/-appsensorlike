@@ -1,6 +1,6 @@
 {
   "name": "@appsensorlike/appsensorlike_geolocators_fast_geoip",
-  "version": "0.18.1",
+  "version": "0.20.6",
   "description": "AppSensorLike ip locator implementation utilizing fast-geoip library",
   "type": "module",
   "directories": {
@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "fast-geoip": "^1.1.88",
-    "@appsensorlike/appsensorlike": "0.20.4"
+    "@appsensorlike/appsensorlike": "0.20.6"
   },
   "exports": {
     ".": "./dist/geolocators/fast-geoip/fast-geoip.js"

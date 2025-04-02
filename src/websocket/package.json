@@ -1,6 +1,6 @@
 {
   "name": "@appsensorlike/appsensorlike_websocket",
-  "version": "0.20.3",
+  "version": "0.20.6",
   "description": "Base class/types utilized by websocket client/server",
   "type": "module",
   "scripts": {
@@ -28,7 +28,7 @@
     "node": ">=14.15.0"
   },
   "dependencies": {
-    "@appsensorlike/appsensorlike": "^0.20.2",
+    "@appsensorlike/appsensorlike": "^0.20.6",
     "uuid": "^9.0.0",
     "ws": "^8.13.0"
   },
