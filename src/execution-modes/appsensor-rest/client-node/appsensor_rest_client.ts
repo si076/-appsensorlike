@@ -11,9 +11,9 @@ class AppSensorRestClient {
     private responseHandler: ResponseHandler = new LocalResponseHandler(this.userManager);
 
     constructor(url: string = '', 
+                configLocation: string = 'appsensor-rest-request-event-config.json',
                 clientApplicationIdentificationHeaderName: string = ServerConnection.DEFAULT_HEADER_NAME,
                 clientApplicationIdentificationHeaderValue: string = '',
-                configLocation: string = 'appsensor-rest-request-event-config.json',
                 responseHandler?: ResponseHandler) {
 
         if (responseHandler) {

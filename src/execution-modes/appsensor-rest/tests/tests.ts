@@ -49,7 +49,7 @@ async function runTests(readInf: readline.Interface | null = null) {
     const expectedErrors = [new FetchError("request to http://localhost:8008/events failed, reason: connect ECONNREFUSED 127.0.0.1:8008", 'system'),
                             new Error("Server responded with status: 401"),
                             new Error("Server responded with status: 403"),
-                            new TypeError("Cannot read property 'getDetectionSystemId' of undefined"),
+                            new TypeError("Cannot read properties of undefined (reading 'getDetectionSystemId')"),
                             new Error("Server responded with status: 500"),
                             "ReferenceEventAnalysisEngine.analyze: Could not find detection point configured for this type: IE4"];
     if (loggedUnexpectedErrors(expectedErrors)) {
@@ -69,9 +69,9 @@ async function testScenarios(readInf: readline.Interface | null = null) {
     const responseHandler = new TestResponseHandler(new NoopUserManager());
 
     const appSensorRestClient = new AppSensorRestClient('', 
-                                                        '',
-                                                        '',
                                                         'appsensor-rest-request-event-config.json', 
+                                                        '',
+                                                        '',
                                                         responseHandler);
 
     await appSensorRestServer.initStartServer();
@@ -94,8 +94,8 @@ async function testWithWrongURL() {
 
     const appSensorRestClient = new AppSensorRestClient('http://localhost:8008', 
                                                         '',
-                                                        'myclientapp',
                                                         '', 
+                                                        'myclientapp',
                                                         responseHandler);
 
     await appSensorRestServer.initStartServer();
@@ -124,8 +124,8 @@ async function testNotAllowedIP() {
 
     const appSensorRestClient = new AppSensorRestClient('http://localhost:8080', 
                                                         '',
-                                                        'myclientapp1',
                                                         '', 
+                                                        'myclientapp1',
                                                         responseHandler);
 
     await appSensorRestServer.initStartServer();
@@ -154,8 +154,8 @@ async function testWithoutIPSpecifiedInConfig() {
 
     const appSensorRestClient = new AppSensorRestClient('http://localhost:8080', 
                                                         '',
-                                                        'myclientapp2',
                                                         '', 
+                                                        'myclientapp2',
                                                         responseHandler);
 
     await appSensorRestServer.initStartServer();
@@ -180,8 +180,8 @@ async function testUnauthorizedAction() {
 
     const appSensorRestClient = new AppSensorRestClient('http://localhost:8080', 
                                                         '',
-                                                        'myclientapp3',
                                                         '', 
+                                                        'myclientapp3',
                                                         responseHandler);
 
     await appSensorRestServer.initStartServer();
@@ -210,8 +210,8 @@ async function testErrorHandling() {
 
     const appSensorRestClient = new AppSensorRestClient('http://localhost:8080', 
                                                         '',
-                                                        'myclientapp',
                                                         '', 
+                                                        'myclientapp',
                                                         responseHandler);
 
     await appSensorRestServer.initStartServer();

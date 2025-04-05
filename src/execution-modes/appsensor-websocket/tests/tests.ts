@@ -36,8 +36,8 @@ async function runTests(readInf: readline.Interface | null = null) {
     const expectedErrors = [new Error("connect ECONNREFUSED 127.0.0.1:4005"),
                             new Error("WebSocket in CLOSING state!"),
                             new Error("Unauthorized action addEvent"),
-                            new TypeError("Cannot read property 'getDetectionSystemId' of undefined"),
-                            new Error("TypeError: Cannot read property 'getDetectionSystemId' of undefined"),
+                            new TypeError("Cannot read properties of undefined (reading 'getDetectionSystemId')"),
+                            new Error("TypeError: Cannot read properties of undefined (reading 'getDetectionSystemId')"),
                             "ReferenceEventAnalysisEngine.analyze: Could not find detection point configured for this type: IE4"];
     if (loggedUnexpectedErrors(expectedErrors)) {
         exitCode = 1;
@@ -277,7 +277,7 @@ async function testErrorHandling() {
         const event: AppSensorEvent = JSON.parse("{}");
 
         await assert.rejects(appSensorWebSocketClient.getAppSensorClient().getEventManager()!.addEvent(event),
-                             new Error("TypeError: Cannot read property 'getDetectionSystemId' of undefined"));
+                             new Error("TypeError: Cannot read properties of undefined (reading 'getDetectionSystemId')"));
     }
 
     await appSensorWebSocketClient.closeWebSocket();
