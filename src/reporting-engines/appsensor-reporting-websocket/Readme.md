@@ -79,9 +79,9 @@ The upper example is just for a demonstration. You can run reporting engine serv
 
 Authentication and authorization of clients
 ---
-**Authentication** of the reporting engine client by the reporting engine server is based on the client IP. It has to match the IP sepecified in appsensor-server-config.json under clientApplications.ipAddress.address. You can specify the address in IPv4 or IPv6 format. For 127.0.0.1 in particular you can write "localhost" instead.
+**Authentication** of the reporting engine client by the reporting engine server is based on custom header field and its value, sent with the websocket request. The field name is specified with clientApplicationIdentificationHeaderName of appsensor-server-config.json configuration file. The value of the field has to match one of ClientApplication.name enumerated under clientApplications of appsensor-server-config.json config file. If in the matched ClientApplication is present ipAddresses, this narrows down further the clients. These are allowed IPs only. The IPs can be specified in IPv4 or IPv6 format. For 127.0.0.1 in particular you can write "localhost" instead.
 
-**Authorization** - after the reporting engine client has successfully been authenticated, its authorizations are checked accoring to sepecified in appsensor-server-config.json under clientApplications.roles where the IP has been matched in authentication process. Role EXECUTE_REPORT is required.
+**Authorization** - after the reporting engine client has successfully been authenticated, its authorizations are checked against the roles found in the matched ClientApplication during the authentication phase. Role EXECUTE_REPORT is required.
 
 
 Configuration
