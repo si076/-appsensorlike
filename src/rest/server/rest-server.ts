@@ -163,15 +163,9 @@ class RestServer extends HttpS2Server {
         if (clientAppName && appSensorServerConfig) {
             const clientApp = appSensorServerConfig.findClientApplication(clientAppName);
             if (clientApp) {
-                const clientAppIP = clientApp.getIPAddress();
-                if (clientAppIP) {
-                    if (clientAppIP.equalAddress(ip)) {
-                        allowed = true;
-                    }
-                } else {
-                    allowed = true;
-                }
-
+                //Please note that there are no restrictions when ip addresses 
+                //are not specified in the configuration under the matched client application
+                allowed = clientApp.isIPAddressAllowed(ip);
             }
         }
 

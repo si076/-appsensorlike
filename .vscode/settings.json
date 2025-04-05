@@ -4,8 +4,7 @@
             "fileMatch": [
                 "/src/configuration-modes/appsensor-configuration-json/server/appsensor-server-config.json",
                 "/src/configuration-modes/appsensor-configuration-json/server/tests/appsensor-server-config.json",
-                "/src/execution-modes/tests/analysis/appsensor-analysis-tests-server-config.json",
-                "/src/reporting-engines/appsensor-reporting-websocket/tests/appsensor-server-config.json"
+                "/src/execution-modes/tests/analysis/appsensor-analysis-tests-server-config.json"
             ],
             "url": "/src/configuration-modes/appsensor-configuration-json/server/appsensor-server-config_schema.json"
         },

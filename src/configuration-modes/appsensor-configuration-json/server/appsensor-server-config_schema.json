@@ -1,43 +1,82 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "additionalProperties": true,
+    "additionalProperties": false,
     "definitions": {
-        "Clause": {
+        "IDetectionPoints": {
             "additionalProperties": false,
+            "description": "Client/custom detection points and regular detection points",
             "properties": {
-                "id": {
-                    "default": "",
-                    "type": "string"
+                "clients": {
+                    "items": {
+                        "$ref": "#/definitions/IClient"
+                    },
+                    "type": "array"
                 },
-                "monitorPoints": {
-                    "default": [],
-                    "description": "The monitor points being checked as variables in an Expression",
+                "detectionPoints": {
                     "items": {
                         "$ref": "#/definitions/DetectionPoint"
                     },
-                    "type": "array",
-                    "minItems": 1
+                    "type": "array"
                 }
             },
             "required": [
-                "monitorPoints"
+                "detectionPoints"
+            ],
+            "type": "object"
+        },
+        "INTERVAL_UNITS": {
+            "description": "Interval units",
+            "enum": [
+                "milliseconds",
+                "seconds",
+                "minutes",
+                "hours",
+                "days"
+            ],
+            "type": "string"
+        },
+        "Role": {
+            "description": "Role is the standard attribution of an access to be used by the {@link AccessController} \nto determine {@link ClientApplication} access to the different pieces of functionality.",
+            "enum": [
+                "ADD_EVENT",
+                "ADD_ATTACK",
+                "GET_RESPONSES",
+                "EXECUTE_REPORT",
+                "GET_EVENTS",
+                "GET_ATTACKS"
+            ],
+            "type": "string"
+        },
+        "IClient": {
+            "additionalProperties": false,
+            "description": "Client/custom detection points (override some aspects for a client or brand new detection points).",
+            "properties": {
+                "clientName": {
+                    "type": "string"
+                },
+                "detectionPoints": {
+                    "items": {
+                        "$ref": "#/definitions/DetectionPoint"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "clientName",
+                "detectionPoints"
             ],
             "type": "object"
         },
         "ClientApplication": {
             "additionalProperties": false,
+            "description": "The ClientApplication object represents a consumer of the AppSensor \nservices in any of the client-server style setups.",
             "properties": {
-                "ipAddress": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/definitions/IPAddress"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "default": null,
-                    "description": "The {@link IPAddress} of the client application, optionally set in the server configuration"
+                "ipAddresses": {
+                    "description": "The {@link IPAddress} of the client application, optionally set in the server configuration",
+                    "items": {
+                        "$ref": "#/definitions/IPAddress"
+                    },
+                    "type": "array"
                 },
                 "name": {
                     "default": "",
@@ -46,7 +85,7 @@
                 },
                 "roles": {
                     "default": [],
-                    "description": "The collection of {@link Role}s associated with this client application",
+                    "description": "The collection of Roles associated with this client application",
                     "items": {
                         "$ref": "#/definitions/Role"
                     },
@@ -59,26 +98,9 @@
             ],
             "type": "object"
         },
-        "CorrelationSet": {
-            "additionalProperties": false,
-            "properties": {
-                "clientApplications": {
-                    "default": [],
-                    "description": "{@link ClientApplication}s that are represented in this correlation set",
-                    "items": {
-                        "type": "string"
-                    },
-                    "type": "array",
-                    "minItems": 1
-                }
-            },
-            "required": [
-                "clientApplications"
-            ],
-            "type": "object"
-        },
         "DetectionPoint": {
             "additionalProperties": false,
+            "description": "The detection point represents the unique sensor concept in the code.\n\nA list of project detection points are maintained at https://www.owasp.org/index.php/AppSensor_DetectionPoints",
             "properties": {
                 "category": {
                     "default": "",
@@ -86,16 +108,12 @@
                     "type": "string"
                 },
                 "guid": {
-                    "default": "",
-                    "type": "string",
-                    "pattern": "([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}"
+                    "type": "string"
                 },
                 "id": {
-                    "default": "",
                     "type": "string"
                 },
                 "label": {
-                    "default": "",
                     "description": "Identifier for the detection point. (ex. \"IE1\", \"RE2\")",
                     "type": "string"
                 },
@@ -105,8 +123,7 @@
                     "items": {
                         "$ref": "#/definitions/Response"
                     },
-                    "type": "array",
-                    "minItems": 1
+                    "type": "array"
                 },
                 "threshold": {
                     "anyOf": [
@@ -118,12 +135,11 @@
                         }
                     ],
                     "default": null,
-                    "description": "{@link Threshold} for determining whether given detection point (associated {@link Event})\nshould be considered an {@link Attack}."
+                    "description": "{@link Threshold} for determining whether given detection point (associated {@link AppSensorEvent})\nshould be considered an {@link Attack}."
                 }
             },
             "required": [
                 "category",
-                "id",
                 "responses",
                 "threshold"
             ],
@@ -131,13 +147,13 @@
         },
         "DetectionSystem": {
             "additionalProperties": false,
+            "description": "Identifier label for the system that detected the event. \nThis will be either the client application, or possibly an external \ndetection system, such as syslog, a WAF, network IDS, etc.",
             "properties": {
                 "detectionSystemId": {
                     "default": "",
                     "type": "string"
                 },
                 "id": {
-                    "default": "",
                     "type": "string"
                 },
                 "ipAddress": {
@@ -158,105 +174,9 @@
             ],
             "type": "object"
         },
-        "Expression": {
-            "additionalProperties": false,
-            "properties": {
-                "clauses": {
-                    "default": [],
-                    "description": "The Clauses that build up the Expression. *",
-                    "items": {
-                        "$ref": "#/definitions/Clause"
-                    },
-                    "type": "array",
-                    "minItems": 1
-                },
-                "id": {
-                    "default": "",
-                    "type": "string"
-                },
-                "window": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/definitions/Interval"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "default": null,
-                    "description": "The window of time a Clause must be triggered within"
-                }
-            },
-            "required": [
-                "clauses",
-                "window"
-            ],
-            "type": "object"
-        },
-        "GeoLocation": {
-            "additionalProperties": false,
-            "properties": {
-                "id": {
-                    "default": "",
-                    "type": "string"
-                },
-                "latitude": {
-                    "default": 0,
-                    "type": "number"
-                },
-                "longitude": {
-                    "default": 0,
-                    "type": "number"
-                }
-            },
-            "required": [
-                "latitude",
-                "longitude"
-            ],
-            "type": "object"
-        },
-        "IClient": {
-            "additionalProperties": false,
-            "properties": {
-                "clientName": {
-                    "type": "string"
-                },
-                "detectionPoints": {
-                    "items": {
-                        "$ref": "#/definitions/DetectionPoint"
-                    },
-                    "type": "array"
-                }
-            },
-            "required": [
-                "clientName",
-                "detectionPoints"
-            ],
-            "type": "object"
-        },
-        "IDetectionPoints": {
-            "additionalProperties": false,
-            "properties": {
-                "clients": {
-                    "items": {
-                        "$ref": "#/definitions/IClient"
-                    },
-                    "type": "array"
-                },
-                "detectionPoints": {
-                    "items": {
-                        "$ref": "#/definitions/DetectionPoint"
-                    },
-                    "type": "array"
-                }
-            },
-            "required": [
-                "detectionPoints"
-            ],
-            "type": "object"
-        },
         "IPAddress": {
             "additionalProperties": false,
+            "description": "The IP Address for the user, optionally provided by the client application.",
             "properties": {
                 "address": {
                     "default": "",
@@ -274,7 +194,6 @@
                     "default": null
                 },
                 "id": {
-                    "default": "",
                     "type": "string"
                 }
             },
@@ -286,20 +205,19 @@
         },
         "Interval": {
             "additionalProperties": false,
+            "description": "The Interval represents a span of time.\n\n<ul>\n\t\t<li>duration (example: 15)</li>\n\t\t<li>unit: (example: minutes)</li>\n</ul>",
             "properties": {
                 "duration": {
                     "default": 0,
                     "description": "Duration portion of interval, ie. '3' if you wanted \nto represent an interval of '3 minutes'",
-                    "type": "number",
-                    "exclusiveMinimum": 0
+                    "type": "number"
                 },
                 "id": {
-                    "default": "",
                     "type": "string"
                 },
                 "unit": {
-                    "description": "Unit portion of interval, ie. 'minutes' if you wanted \nto represent an interval of '3 minutes'.\nConstants are provided in the Interval class for the \nunits supported by the reference implementation, ie.\nSECONDS, MINUTES, HOURS, DAYS.",
-                    "type": "string"
+                    "$ref": "#/definitions/INTERVAL_UNITS",
+                    "description": "Unit portion of interval, ie. 'minutes' if you wanted \nto represent an interval of '3 minutes'.\nConstants are provided in the Interval class for the \nunits supported by the reference implementation, ie.\nSECONDS, MINUTES, HOURS, DAYS."
                 }
             },
             "required": [
@@ -310,9 +228,9 @@
         },
         "KeyValuePair": {
             "additionalProperties": false,
+            "description": "Represent a (key, value) pair.\n It could store application specific information.",
             "properties": {
                 "id": {
-                    "default": "",
                     "type": "string"
                 },
                 "key": {
@@ -330,6 +248,7 @@
         },
         "Response": {
             "additionalProperties": false,
+            "description": "After an {@link Attack} has been determined to have occurred, a Response\nis executed. The Response configuration is done on the server-side, not \nthe client application.",
             "properties": {
                 "action": {
                     "default": "",
@@ -337,8 +256,19 @@
                     "type": "string"
                 },
                 "active": {
-                    "default": false,
                     "type": "boolean"
+                },
+                "detectionPoint": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/DetectionPoint"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "ADDITION TO THE ORIGINAL CODE TO TRACE WHAT CAUSED THIS RESPONSE\nESSENTIAL FOR REPORTING\n{@link DetectionPoint} that was triggered"
                 },
                 "detectionSystem": {
                     "anyOf": [
@@ -349,11 +279,9 @@
                             "type": "null"
                         }
                     ],
-                    "default": null,
                     "description": "Client application name that response applies to."
                 },
                 "id": {
-                    "default": "",
                     "type": "string"
                 },
                 "interval": {
@@ -365,16 +293,26 @@
                             "type": "null"
                         }
                     ],
-                    "default": null,
-                    "description": "Interval response should last for, if applicable. Ie. block access for 30 minutes"
+                    "description": "{@link Interval} response should last for, if applicable. Ie. block access for 30 minutes"
                 },
                 "metadata": {
-                    "default": [],
                     "description": "Represent extra metadata, anything client wants to send",
                     "items": {
                         "$ref": "#/definitions/KeyValuePair"
                     },
                     "type": "array"
+                },
+                "rule": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/Rule"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "ADDITION TO THE ORIGINAL CODE TO TRACE WHAT CAUSED THIS RESPONSE\nESSENTIAL FOR REPORTING\n{@link Rule} that was triggered"
                 },
                 "timestamp": {
                     "description": "When the event occurred",
@@ -390,8 +328,7 @@
                             "type": "null"
                         }
                     ],
-                    "default": null,
-                    "description": "User the response is for"
+                    "description": "{@link User} the response is for"
                 }
             },
             "required": [
@@ -399,86 +336,16 @@
             ],
             "type": "object"
         },
-        "Role": {
-            "enum": [
-                "ADD_ATTACK",
-                "ADD_EVENT",
-                "EXECUTE_REPORT",
-                "GET_RESPONSES",
-                "GET_EVENTS",
-                "GET_ATTACKS"
-            ],
-            "type": "string"
-        },
-        "Rule": {
-            "additionalProperties": false,
-            "properties": {
-                "expressions": {
-                    "default": [],
-                    "description": "The {@link Expression}s that build up a Rule\nThe order of the list corresponds to the temporal order of the expressions.",
-                    "items": {
-                        "$ref": "#/definitions/Expression"
-                    },
-                    "type": "array",
-                    "minItems": 1
-                },
-                "guid": {
-                    "default": "",
-                    "description": "Unique identifier",
-                    "type": "string",
-                    "pattern": "([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}"
-                },
-                "id": {
-                    "default": "",
-                    "type": "string"
-                },
-                "name": {
-                    "default": "",
-                    "description": "An optional human-friendly name for the Rule",
-                    "type": "string"
-                },
-                "responses": {
-                    "default": [],
-                    "description": "Set of {@link Response}s associated with given Rule.",
-                    "items": {
-                        "$ref": "#/definitions/Response"
-                    },
-                    "type": "array",
-                    "minItems": 1
-                },
-                "window": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/definitions/Interval"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "default": null,
-                    "description": "The window is the time all {@link Expression}s must be triggered within.\nA Rule's window must be greater than or equal to the total of it's Expressions' windows."
-                }
-            },
-            "required": [
-                "expressions",
-                "guid",
-                "name",
-                "responses",
-                "window"
-            ],
-            "type": "object"
-        },
         "Threshold": {
             "additionalProperties": false,
+            "description": "The Threshold represents a number of occurrences over a span of time.\n\n<ul>\n\t\t<li>count: (example: 12)</li>\n\t\t<li>interval: (example: 15 minutes)</li>\n</ul>",
             "properties": {
                 "count": {
                     "default": 0,
                     "description": "The count at which this threshold is triggered.",
-                    "type": "number",
-                    "exclusiveMinimum": 0
+                    "type": "number"
                 },
                 "id": {
-                    "default": "",
                     "type": "string"
                 },
                 "interval": {
@@ -502,9 +369,9 @@
         },
         "User": {
             "additionalProperties": false,
+            "description": "The standard User object. This represents the end user in the system, \nNOT the client application. \n\nThe base implementation assumes the username is provided by the client application. \n\nIt is up to the client application to manage the username. \nThe username could be anything, an actual username, an IP address, \nor any other identifier desired. The core notion is that any desired \ncorrelation on the user is done by comparing the username.",
             "properties": {
                 "id": {
-                    "default": "",
                     "type": "string"
                 },
                 "ipAddress": {
@@ -519,7 +386,6 @@
                     "default": null
                 },
                 "username": {
-                    "default": "",
                     "type": "string"
                 }
             },
@@ -528,8 +394,159 @@
                 "username"
             ],
             "type": "object"
+        },
+        "CorrelationSet": {
+            "additionalProperties": false,
+            "description": "The CorrelationSet represents a set of {@link ClientApplication}s that \nshould be considered to share the same {@link User} base. \n\nFor example if server1 and server2 are part of a correlation set, \nthen client1/userA is considered the same {@link User} as client2/userA. \n\nThis can be useful for simple tracking of {@link User} activity across multiple\n{@link ClientApplication}s.",
+            "properties": {
+                "clientApplications": {
+                    "default": [],
+                    "description": "{@link ClientApplication}s that are represented in this correlation set",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "clientApplications"
+            ],
+            "type": "object"
+        },
+        "GeoLocation": {
+            "additionalProperties": false,
+            "description": "General object representing geo-location.",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "default": 0,
+                    "type": "number"
+                },
+                "longitude": {
+                    "default": 0,
+                    "type": "number"
+                }
+            },
+            "required": [
+                "latitude",
+                "longitude"
+            ],
+            "type": "object"
+        },
+        "Clause": {
+            "additionalProperties": false,
+            "description": "A Clause represents the terms in an {@link Expression} separated by an \"OR\" operator.\nEach {@link MonitorPoint} in the monitorPoints field are the variables joined\nby \"AND\" operators.\n\nFor example:\n\t\tIn the expression: \"MP1 AND MP2 OR MP3 AND MP4\"\n\n\t\t\"MP1 AND MP2\" would be a single clause and \"MP3 AND MP4\" would be another.",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "monitorPoints": {
+                    "default": [],
+                    "description": "The monitor points being checked as variables in an Expression",
+                    "items": {
+                        "$ref": "#/definitions/DetectionPoint"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "monitorPoints"
+            ],
+            "type": "object"
+        },
+        "Expression": {
+            "additionalProperties": false,
+            "description": "An Expression is a logical boolean expression where the variables are {@link MonitorPoint}s.\nEach Expression in a {@link Rule} is separated by the \"THEN\" operator.\n\nAn Expression contains a set of {@link Clause}s. Only one {@link Clause} needs to evaluate to true\nfor an Expression to evaluate to true.\n\nFor example:\n\t\tIn the Rule: \"MP1 AND MP2 THEN MP3 OR mP4\"\n\n\t\t\"MP1 AND MP2\" would be the first Expression with a single Clause\n\t\tand \"MP3 OR MP4\" would a second Expression with two Clauses.",
+            "properties": {
+                "clauses": {
+                    "default": [],
+                    "description": "The Clauses that build up the Expression. *",
+                    "items": {
+                        "$ref": "#/definitions/Clause"
+                    },
+                    "type": "array"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "window": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/Interval"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The window of time a Clause must be triggered within"
+                }
+            },
+            "required": [
+                "clauses",
+                "window"
+            ],
+            "type": "object"
+        },
+        "Rule": {
+            "additionalProperties": false,
+            "description": "A Rule defines a logical aggregation of {@link MonitorPoint}s to determine if an\n{@link Attack} is occurring. A Rule uses the boolean operators \"AND\" and \"OR\" as well\nas the temporal operator \"THEN\" in joining {@link MonitorPoint}s into a Rule.\n\nFor example:\n\t\tA rule could be as simple as: \"MP1 AND MP2\"\n\t\tWhere the Rule will generate an attack if both MonitorPoint 1 and 2\n\t\tare violated within the Rule's window.\n\n\t\tMore complex: \"MP1 AND MP2 THEN MP3 OR MP4\"\n\n\t\tEven more complex: \"MP1 AND MP2 THEN MP3 OR MP4 THEN MP5 AND MP6 OR MP7\"",
+            "properties": {
+                "expressions": {
+                    "default": [],
+                    "description": "The {@link Expression}s that build up a Rule\nThe order of the list corresponds to the temporal order of the expressions.",
+                    "items": {
+                        "$ref": "#/definitions/Expression"
+                    },
+                    "type": "array"
+                },
+                "guid": {
+                    "default": "",
+                    "description": "Unique identifier",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "default": "",
+                    "description": "An optional human-friendly name for the Rule",
+                    "type": "string"
+                },
+                "responses": {
+                    "default": [],
+                    "description": "Set of {@link Response}s associated with given Rule.",
+                    "items": {
+                        "$ref": "#/definitions/Response"
+                    },
+                    "type": "array"
+                },
+                "window": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/Interval"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The window is the time all {@link Expression}s must be triggered within.\nA Rule's window must be greater than or equal to the total of it's Expressions' windows."
+                }
+            },
+            "required": [
+                "expressions",
+                "guid",
+                "name",
+                "responses",
+                "window"
+            ],
+            "type": "object"
         }
     },
+    "description": "Represents the configuration for server-side components.",
     "properties": {
         "clientApplicationIdentificationHeaderName": {
             "type": "string"
@@ -538,8 +555,7 @@
             "items": {
                 "$ref": "#/definitions/ClientApplication"
             },
-            "type": "array",
-            "minItems": 1
+            "type": "array"
         },
         "configurationFile": {
             "type": "string"
@@ -548,8 +564,7 @@
             "items": {
                 "$ref": "#/definitions/CorrelationSet"
             },
-            "type": "array",
-            "minItems": 1
+            "type": "array"
         },
         "detectionPoints": {
             "$ref": "#/definitions/IDetectionPoints"
@@ -564,8 +579,7 @@
             "items": {
                 "$ref": "#/definitions/Rule"
             },
-            "type": "array",
-            "minItems": 1
+            "type": "array"
         },
         "serverHostName": {
             "type": "string"

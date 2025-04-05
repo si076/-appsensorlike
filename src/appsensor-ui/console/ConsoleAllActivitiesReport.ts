@@ -97,7 +97,7 @@ class ConsoleAllActivitiesReport extends ConsoleReport {
                 const userName = coreUtils.getUserName(item.getUser());
     
                 const detPoint = item.getDetectionPoint();
-                let rule: Rule | null = null;
+                let rule: Rule | null | undefined = null;
     
                 let type = "Event";
                 let from = userName;

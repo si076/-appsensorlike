@@ -32,7 +32,7 @@ class JSONServerConfigurationReader extends JSONConfigReadValidate implements Se
         JSONServerConfigurationReader.configPrototypesSample.correlationSets = [correlSet];
 
         const clientAppl = new ClientApplication();
-        clientAppl.setIPAddress(Utils.ipAddressSample);
+        clientAppl.setIPAddresses([Utils.ipAddressSample]);
 
         JSONServerConfigurationReader.configPrototypesSample.clientApplications = [clientAppl];
     }

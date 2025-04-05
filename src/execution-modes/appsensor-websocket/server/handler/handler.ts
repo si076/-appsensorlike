@@ -38,15 +38,9 @@ class WebSocketRequestHandler extends AppSensorWebSocketServer implements Reques
         if (ws.remoteAddress && config) {
             const clientApp = config.findClientApplication(ws.clientApplication);
             if (clientApp) {
-                const clientAppIP = clientApp.getIPAddress();
-                if (clientAppIP) {
-                    if (clientAppIP.equalAddress(ws.remoteAddress)) {
-                        allowed = true;
-                    }
-                } else {
-                    allowed = true;
-                }
-
+                //Please note that there are no restrictions when ip addresses 
+                //are not specified in the configuration under the matched client application
+                allowed = clientApp.isIPAddressAllowed(ws.remoteAddress);
             }
         }
 

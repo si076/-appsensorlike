@@ -52,7 +52,9 @@ class AppSensorReportingWebSocketServer extends AppSensorWebSocketServer impleme
         if (ws.remoteAddress && config) {
             const clientApp = config.findClientApplication(ws.clientApplication);
             if (clientApp) {
-                allowed = true;
+                //Please note that there are no restrictions when ip addresses 
+                //are not specified in the configuration under the matched client application
+                allowed = clientApp.isIPAddressAllowed(ws.remoteAddress);
             }
         }
 

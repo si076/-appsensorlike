@@ -23,13 +23,13 @@
                 "GET_RESPONSES",
                 "EXECUTE_REPORT"
             ],
-            "ipAddress": {
+            "ipAddresses": [{
                 "address": "1.1.1.1",
                 "geoLocation": {
                     "latitude": -26.3811,
                     "longitude": 27.8376
                 }
-            }
+            }]
         }
     ],
 

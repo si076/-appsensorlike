@@ -31,8 +31,8 @@ class JSONServerConfigurationTest {
                                    Role.EXECUTE_REPORT]),
             new ClientApplication("myclientapp2", 
                                    [Role.GET_RESPONSES,
-                                    Role.EXECUTE_REPORT]).setIPAddress(
-                                    new IPAddress("1.1.1.1", new GeoLocation(-26.3811, 27.8376)))
+                                    Role.EXECUTE_REPORT]).setIPAddresses(
+                                    [new IPAddress("1.1.1.1", new GeoLocation(-26.3811, 27.8376))])
         ];
         configExpected.correlationSets = [
             new CorrelationSet(["server1",

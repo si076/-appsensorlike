@@ -216,7 +216,7 @@ class AppSensorReportingWebsocketTests {
 										   Role.GET_RESPONSES, 
 										   Role.EXECUTE_REPORT]);
 		
-		app.setIPAddress(new IPAddress("127.0.0.1"));
+		app.setIPAddresses([new IPAddress("127.0.0.1")]);
 
 		return [app];
 	}

@@ -347,12 +347,12 @@ class AppsensorEntity implements IEquals, IValidateInitialize {
 	/** ADDITION TO THE ORIGINAL CODE TO TRACE WHAT CAUSED THIS RESPONSE
 	 *  ESSENTIAL FOR REPORTING
 	 *  {@link DetectionPoint} that was triggered */
-	private detectionPoint: DetectionPoint | null = null;
+	private detectionPoint?: DetectionPoint | null | undefined = null;
 
 	/** ADDITION TO THE ORIGINAL CODE TO TRACE WHAT CAUSED THIS RESPONSE
 	 *  ESSENTIAL FOR REPORTING
 	 *  {@link Rule} that was triggered */
-	private rule: Rule | null = null;
+	private rule?: Rule | null | undefined = null;
 
 	
 	public constructor(user: User | null | undefined = undefined, 
@@ -463,7 +463,7 @@ class AppsensorEntity implements IEquals, IValidateInitialize {
 		return this.active;
 	}
 	
-	public getDetectionPoint(): DetectionPoint | null {
+	public getDetectionPoint(): DetectionPoint | null | undefined {
 		return this.detectionPoint;
 	}
 
@@ -472,7 +472,7 @@ class AppsensorEntity implements IEquals, IValidateInitialize {
 		return this;
 	}
 
-	public getRule(): Rule | null {
+	public getRule(): Rule | null | undefined {
 		return this.rule;
 	}
 
@@ -1452,7 +1452,7 @@ class Category {
 	private roles: Role[] = [];
 
 	/** The {@link IPAddress} of the client application, optionally set in the server configuration */
-	private ipAddress?: IPAddress | undefined;
+	private ipAddresses?: IPAddress[] | undefined;
 	
 	constructor(name: string = '', roles: Role[] = []) {
 		this.name = name;
@@ -1472,13 +1472,39 @@ class Category {
 		return this.roles;
 	}
 
-	public getIPAddress(): IPAddress | undefined {
-		return this.ipAddress;
+	public getIPAddresses(): IPAddress[] | undefined {
+		return this.ipAddresses;
 	}
 
-	public setIPAddress(ipAddress: IPAddress): ClientApplication {
-		this.ipAddress = ipAddress;
+	public setIPAddresses(ipAddresses: IPAddress[]): ClientApplication {
+		this.ipAddresses = ipAddresses;
 		return this;
+	}
+
+	public addIPAddress(ipAddress: IPAddress): ClientApplication {
+		if (this.ipAddresses == undefined) {
+			this.ipAddresses = [];
+		}
+		this.ipAddresses.push(ipAddress);
+		return this;
+	}
+
+	public isIPAddressAllowed(ip: string): boolean {
+		let result = false;
+		if (this.ipAddresses && this.ipAddresses.length > 0) {
+
+			for (const configClientIP of this.ipAddresses) {
+				if (configClientIP.equalAddress(ip)) {
+					result = true;
+					break;
+				}
+			}
+
+		} else {
+			//no restrictions when ip addresses are not specified
+			result = true;
+		}
+		return result;
 	}
 	
 	public equals(obj: Object | null): boolean {
@@ -1492,7 +1518,7 @@ class Category {
 		const other: ClientApplication = obj as ClientApplication;
 
 		let equals = this.name === other.getName() && 
-		             Utils.equalsEntitys(this.ipAddress, other.getIPAddress());
+		             Utils.equalsArrayEntitys(this.ipAddresses, other.getIPAddresses());
 		
 		if (equals) {
 			const _roles: Role[] = this.roles;
@@ -2076,10 +2102,10 @@ class Utils {
 		//ESSENTIAL FOR REPORTING
 		//check detection point match if detection point specified
 		let detectionPointMatch: boolean = true;
-		if (detectionPoint !== null) {
+		if (detectionPoint) {
 			const attDetoint = response.getDetectionPoint();
 
-			detectionPointMatch = (attDetoint !== null) ?
+			detectionPointMatch = (attDetoint) ?
 					detectionPoint.typeAndThresholdMatches(attDetoint) : false;
 		}
 
@@ -2087,9 +2113,9 @@ class Utils {
 		//ESSENTIAL FOR REPORTING
 		//check rule match if rule specified
 		let ruleMatch: boolean = true;
-		if (rule !== null) {
+		if (rule) {
 			const attRule = response.getRule();
-			ruleMatch = (attRule !== null) ? rule.guidMatches(attRule) : false;
+			ruleMatch = (attRule) ? rule.guidMatches(attRule) : false;
 		}
 
 		if (userMatch && detectionSystemMatch && earliestMatch && detectionPointMatch && ruleMatch) {

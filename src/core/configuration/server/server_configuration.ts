@@ -286,30 +286,19 @@ interface IDetectionPoints {
 		return matches;
 	}
 
-	public findClientApplication(clientApplicationNameOrIP: string | IPAddress): ClientApplication | undefined {
+	public findClientApplication(clientApplicationName: string): ClientApplication | undefined {
 		let clientApplication: ClientApplication | undefined = undefined;
 
-		const clientApplicationId = (clientApplicationNameOrIP instanceof IPAddress) ? clientApplicationNameOrIP.getAddress(): clientApplicationNameOrIP;
-
-		clientApplication = ServerConfiguration.clientApplicationCache.get(clientApplicationId);
+		clientApplication = ServerConfiguration.clientApplicationCache.get(clientApplicationName);
 
 		if (!clientApplication && this.clientApplications) {
 			for (const configuredClientApplication of this.clientApplications) {
 
-				const configClientAppIPAddress = configuredClientApplication.getIPAddress();
-
-				let found = false;
-				if (typeof clientApplicationNameOrIP === 'string') {
-					found = configuredClientApplication.getName() === clientApplicationNameOrIP;
-				} else if (configClientAppIPAddress) {
-					found = configClientAppIPAddress.equals(clientApplicationNameOrIP);
-				}
-
-				if (found) {
+				if (configuredClientApplication.getName() === clientApplicationName) {
 					clientApplication = configuredClientApplication;
 
 					//cache
-					ServerConfiguration.clientApplicationCache.set(clientApplicationId, clientApplication);
+					ServerConfiguration.clientApplicationCache.set(clientApplicationName, clientApplication);
 
 					break;
 				}
