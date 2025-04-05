@@ -639,3 +639,4 @@ dist/@appsensorlike/appsensorlike_ui_web/dist/appsensor-ui/web/templates/templat
 dist/@appsensorlike/appsensorlike_ui_web/dist/appsensor-ui/web/templates/templates/common/normal-container.html
 dist/@appsensorlike/appsensorlike_ui_web/dist/appsensor-ui/web/templates/templates/common/wide-container.html
 dist/@appsensorlike/appsensorlike/dist/configuration-modes/appsensor-configuration-json/server/appsensor-server-config_schema_old.json
+dist/@appsensorlike/appsensorlike/CHANGELOG.md
