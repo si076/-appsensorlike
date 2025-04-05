@@ -3,6 +3,8 @@
         "user": "test",
         "password": "test2020",
         "database": "appsensor",
+        "socketPath": "/var/lib/mysql/mysql.sock",
+        "charset": "utf8mb4",
         "dateStrings": ["DATE","DATETIME"],
         "waitForConnections": false,
         "queueLimit": 0

@@ -12,7 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@appsensorlike/appsensorlike": "^0.20.6",
-    "@appsensorlike/appsensorlike_websocket": "^0.20.6"
+    "@appsensorlike/appsensorlike": "^0.30.0",
+    "@appsensorlike/appsensorlike_websocket": "^0.30.0"
   }
 }

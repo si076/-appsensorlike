@@ -12,10 +12,10 @@
                 "GET_ATTACKS",
                 "EXECUTE_REPORT"
             ],
-            "ipAddress": {
+            "ipAddresses": [{
                 "address": "localhost",
                 "geoLocation": null
-            }
+            }]
         },
         {
             "name": "myclientapp1",
@@ -27,10 +27,10 @@
                 "GET_ATTACKS",
                 "EXECUTE_REPORT"
             ],
-            "ipAddress": {
+            "ipAddresses": [{
                 "address": "0.0.0.0",
                 "geoLocation": null
-            }
+            }]
         },
         {
             "name": "myclientapp2",

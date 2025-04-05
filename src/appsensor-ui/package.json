@@ -1,6 +1,6 @@
 {
   "name": "@appsensorlike/appsensorlike_ui",
-  "version": "0.20.6",
+  "version": "0.30.0",
   "description": "AppSensorLike UI classes/types shared among web and console UIs",
   "type": "module",
   "directories": {
@@ -28,11 +28,11 @@
     "node": ">=14.15.0"
   },
   "dependencies": {
-    "@appsensorlike/appsensorlike": "^0.20.6",
+    "@appsensorlike/appsensorlike": "^0.30.0",
     "@js-joda/core": "^5.5.3",
     "@js-joda/extra": "^0.11.3",
     "lru-cache": "^10.0.0",
-    "mysql2": "^3.4.3"
+    "mysql2": "^3.10.2"
   },
   "devDependencies": {
     "@types/passport": "^1.0.12"
