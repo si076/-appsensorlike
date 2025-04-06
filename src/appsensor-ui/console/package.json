@@ -1,6 +1,6 @@
 {
   "name": "@appsensorlike/appsensorlike_ui_console",
-  "version": "0.30.0",
+  "version": "0.30.1",
   "description": "AppSensorLikeUI console UI",
   "bin": {
     "AppSensorLikeConsole": "./dist/appsensor-ui/console/appsensor-ui-console.js"
@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@appsensorlike/appsensorlike": "^0.30.0",
-    "@appsensorlike/appsensorlike_reporting_engines_websocket": "^0.30.0",
+    "@appsensorlike/appsensorlike_reporting_engines_websocket": "^0.30.1",
     "@appsensorlike/appsensorlike_ui": "^0.30.0",
     "@inquirer/prompts": "^1.2.3",
     "chalk": "^5.2.0",
