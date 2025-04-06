@@ -1,4 +1,9 @@
 {
     "address": "ws://localhost:3000",
-    "reconnectOnConnectionLost": true
+    "reconnectOnConnectionLost": true,
+    "options":{
+        "headers": {
+            "X-Appsensor-Client-Application-Name": "myclientapp"
+        }
+    }
 }

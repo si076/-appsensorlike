@@ -49,6 +49,8 @@ const wsClient = new AppSensorReportingWebSocketClient();
 wsClient.addOnAddListener((obj) => {//: AppSensorEvent | Attack | Response) => {
     console.log(obj);
 });
+//connect to the reporting server via web socket
+await wsClient.connect();
 
 const userName = user1.getUsername();
 const eventCount = await wsClient.countEventsByUser(earliest, userName);
@@ -83,6 +85,41 @@ Authentication and authorization of clients
 
 **Authorization** - after the reporting engine client has successfully been authenticated, its authorizations are checked against the roles found in the matched ClientApplication during the authentication phase. Role EXECUTE_REPORT is required.
 
+For example in appsensor-server-config.json:
+`````json
+    ...
+    "clientApplicationIdentificationHeaderName": "X-Appsensor-Client-Application-Name",
+    ...
+    "clientApplications": [
+        {
+            "name": "myclientapp",
+            "roles": [
+                "ADD_EVENT",
+                "ADD_ATTACK",
+                "GET_RESPONSES",
+                "GET_EVENTS",
+                "GET_ATTACKS",
+                "EXECUTE_REPORT"
+            ],
+            "ipAddresses": [{
+                "address": "localhost",
+                "geoLocation": null
+            }]
+        }]
+    ...
+`````
+For example in your reporting config file appsensor-reporting-websocket-client.json
+`````json
+{
+    "address": "ws://localhost:3000",
+    "reconnectOnConnectionLost": true,
+    "options":{
+        "headers": {
+            "X-Appsensor-Client-Application-Name": "myclientapp"
+        }
+    }
+}
+`````
 
 Configuration
 ---
