@@ -61,6 +61,11 @@ TypeScript support
 ---
 You need TypeScript version >= 4.7 in order the paths exported by the module to be resolved.
 
+Changelog
+---
+Refer to the [changelog](https://github.com/si076/-appsensorlike/blob/8402c92ba0f4f9929e1634c17e0139c3c18c135a/CHANGELOG.md). 
+
+
 
 Other modules
 ---
