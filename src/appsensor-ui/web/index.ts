@@ -532,6 +532,9 @@ class AppsensorUIRestServer extends RestServer {
 
         }
 
+        //connect to the reporting server via web socket
+        this.wsReportingClient.connect();
+
         //add the express app's request listener
         super.attachToServer();
     }

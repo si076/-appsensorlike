@@ -106,6 +106,9 @@ await wsServer.startServer();
 
 Dashboard app creates a websocket reporting engine client, which by default tries to connect to ws://localhost:3000. By default it will try to reconnect on connection lost. You can change configuration as pointed in [@appsensorlike/appsensorlike_reporting_engines_websocket](https://www.npmjs.com/package/@appsensorlike/appsensorlike_reporting_engines_websocket) under Configuration section.
 
+
+**Running the Dashboard app on the configured server**
+
 1) Run locally to installation of the module:
 
     npx @appsensorlike/appsensorlike_ui_web
@@ -115,7 +118,12 @@ Dashboard app creates a websocket reporting engine client, which by default trie
     AppSensorLikeWeb
 
 
-Authentication and authorization of clients
+**Open the Dashboard in a web browser**
+
+Default URL is http://localhost:8080/
+
+
+Authentication and authorization of Dashboard's clients
 ---
 **Authentication** of the users is based on user name and password, which have to be set in advance by the administrator in ui_users table.
 
