@@ -26,11 +26,13 @@ fi
 cp $baseDir/appsensor-ui-rest-server-config.json $outWebDir
 cp $baseDir/appsensor-rest-server-config_schema.json $outWebDir
 
-mkdir $outTemplatesDir
-cp -r $srcTemplatesDir $outTemplatesDir
+#mkdir $outTemplatesDir
+#cp -r $srcTemplatesDir $outTemplatesDir
+cp -r $srcTemplatesDir $outWebDir
 
-mkdir $outStaticDir
-cp -r $srcStaticDir $outStaticDir
+#mkdir $outStaticDir
+#cp -r $srcStaticDir $outStaticDir
+cp -r $srcStaticDir $outWebDir
 
 
 cp $baseDir/package.json $outRootDir
