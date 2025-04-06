@@ -28,6 +28,29 @@ Authentication and authorization of the clients
 
 **Authorization** - after the client has successfully been authenticated, its authorizations are checked against the roles found in the matched ClientApplication during the authentication phase.
 
+For example in appsensor-server-config.json:
+`````json
+    ...
+    "clientApplicationIdentificationHeaderName": "X-Appsensor-Client-Application-Name",
+    ...
+    "clientApplications": [
+        {
+            "name": "myclientapp",
+            "roles": [
+                "ADD_EVENT",
+                "ADD_ATTACK",
+                "GET_RESPONSES",
+                "GET_EVENTS",
+                "GET_ATTACKS",
+                "EXECUTE_REPORT"
+            ],
+            "ipAddresses": [{
+                "address": "localhost",
+                "geoLocation": null
+            }]
+        }]
+    ...
+`````
 
 Configuration
 ---

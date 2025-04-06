@@ -71,6 +71,17 @@ Configuration
 You can configure the *url* to send request to and websocket options via  AppSensorWebsocketExecClient constructor or configure it in appsensor-websocket-event-manager-config.json file in the working directory. You can copy the default configuration from this module's dist/execution-modes/appsensor-websocket/client-node/event. Corresponding schema file appsensor-websocket-client-config_schema.json is in the same directory.  
 The default url is ws://localhost:4500 . The implementation takes advantage of WS websocket module so you could check for websocket options here  https://github.com/websockets/ws/blob/HEAD/doc/ws.md#new-websocketaddress-protocols-options .
 
+For example in your appsensor-websocket-event-manager-config.json:
+`````json
+{
+    "address": "ws://localhost:4500",
+    "options":{
+        "headers": {
+            "X-Appsensor-Client-Application-Name": "myclientapp"
+        }
+    }
+}
+`````
 
 TypeScript support
 ---

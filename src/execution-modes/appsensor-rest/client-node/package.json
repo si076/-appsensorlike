@@ -1,6 +1,6 @@
 {
   "name": "@appsensorlike/appsensorlike_exec_mode_rest_client_node",
-  "version": "0.30.0",
+  "version": "0.30.1",
   "description": "AppSensorLike execution mode REST; client part for node",
   "type": "module",
   "scripts": {

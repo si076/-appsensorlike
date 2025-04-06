@@ -1,6 +1,6 @@
 {
   "name": "@appsensorlike/appsensorlike_exec_mode_websocket_client_node",
-  "version": "0.30.0",
+  "version": "0.30.1",
   "description": "AppSensorLike execution mode over websocket; client part",
   "main": "appsensor_websocket_client.js",
   "type": "module",
