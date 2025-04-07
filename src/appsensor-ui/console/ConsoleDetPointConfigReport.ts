@@ -36,6 +36,7 @@ class ConsoleDetPointConfigReport extends ConsoleReport {
                     settings: AppSensorUIConsoleSettings): Promise<void> {
         if (!this.loaded || this.hasToReload) {
             this.hasToReload = false;
+            this.initData();
             
             const serverConfigurationString = await this.report.getServerConfiguration();
 

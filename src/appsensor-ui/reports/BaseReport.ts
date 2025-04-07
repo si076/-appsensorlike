@@ -93,49 +93,20 @@ class BaseReport {
         const responses = await this.recentResponses('', earliest, limit, filterFunc);
 
         const merged: (AppSensorEvent | Attack | Response)[] = [];
-
-        let response = responses.shift();
-        let attack = attacks.shift();
-        let event = events.shift();
-        while(response || attack || event) {
-            let rt = -1;
-            if (response) {
-                const timestamp = response.getTimestamp();
-                rt = timestamp ? timestamp.getTime() : -1;
+        
+        merged.push(...events);
+        merged.push(...attacks);
+        merged.push(...responses);
+        merged.sort((a, b) => {
+            let result = this.compareByDateDescending(a, b);
+            if (result == 0  && 
+               ((a instanceof Attack && b instanceof AppSensorEvent) || 
+                (a instanceof Response && b instanceof AppSensorEvent) ||
+                (a instanceof Response && b instanceof Attack))) {
+                    result = -1;
             }
-
-            let at = -1;
-            if (attack) {
-                const timestamp = attack.getTimestamp();
-                at = timestamp ? timestamp.getTime() : -1;
-            }
-
-            let et = -1;
-            if (event) {
-                const timestamp = event.getTimestamp();
-                et = timestamp ? timestamp.getTime() : -1;
-            }
-
-            if (rt > at && rt > et) {
-                merged.push(response!);
-                response = responses.shift();
-            } else if (at > rt && at > et) {
-                merged.push(attack!);
-                attack = attacks.shift();
-            } else if (et > rt && et > at) {
-                merged.push(event!);
-                event = events.shift();
-            } else if (rt > -1 && rt === at && at === et) {
-                merged.push(response!);
-                response = responses.shift();
-
-                merged.push(attack!);
-                attack = attacks.shift();
-
-                merged.push(event!);
-                event = events.shift();
-            }
-        }
+            return result;
+        });
 
         return merged;
     }

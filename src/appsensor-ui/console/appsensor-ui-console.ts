@@ -218,7 +218,7 @@ class ReportingConsole {
     private reportingEngine: ReportingEngineExt;
 
     private settings: AppSensorUIConsoleSettings = new AppSensorUIConsoleSettings();
-    private repotingSettingsLoader = new AppSensorUIConsoleSettingsLoader();
+    private repotingSettingsLoader = new AppSensorUIConsoleSettingsLoader(AppSensorUIConsoleSettingsLoader.DEFAULT_FILE);
 
     private commandLineOptions: CommandLineOptions;
 
@@ -367,10 +367,9 @@ class ReportingConsole {
 
             this.actionPromise = this.prepareActionsMenu(this.settings, this.currentReport);
 
-            const reloadPromise = this.reloadAfter(this.settings.autoReloadTimeMs!);
-
             const promises: Promise<string>[] = [this.actionPromise];
             if (this.settings.autoReload) {
+                const reloadPromise = this.reloadAfter(this.settings.autoReloadTimeMs!);
                 promises.splice(0, 0, reloadPromise);
             }
 
@@ -764,7 +763,9 @@ class ReportingConsole {
 }
 
 async function run() {
-    await new ReportingConsole(new AppSensorReportingWebSocketClient()).run();
+    const reportingEngine = new AppSensorReportingWebSocketClient();
+    await reportingEngine.connect();
+    await new ReportingConsole(reportingEngine).run();
 }
 
 await run();
