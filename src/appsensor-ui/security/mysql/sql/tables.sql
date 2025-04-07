@@ -51,6 +51,13 @@ CREATE TABLE `ui_user_client_applications` (
   CONSTRAINT `fk_user_client_applications_user` FOREIGN KEY (`username`) REFERENCES `ui_users` (`username`)
 );
 
+CREATE TABLE `sessions` (
+  `session_id` varchar(128) NOT NULL,
+  `expires` int unsigned NOT NULL,
+  `data` mediumtext,
+  PRIMARY KEY (`session_id`)
+);
+
 -- ********************  BASE AUTHORITIES ********************** 
 INSERT INTO `ui_authorities` (authority) VALUES ('USER_ADMINISTRATION');
 -- view / edit appsensor server config via UI
