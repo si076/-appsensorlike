@@ -37,3 +37,11 @@ cp -r $outRootDir $execModeWebsocketServer/$nodeModulesAppsensorlike
 reportingEnginesWebsocket=../../src/reporting-engines/appsensor-reporting-websocket
 rm -r $reportingEnginesWebsocket/$nodeModulesAppsensorlike
 cp -r $outRootDir $reportingEnginesWebsocket/$nodeModulesAppsensorlike
+
+uiWeb=../../src/appsensor-ui/web
+rm -r $uiWeb/$nodeModulesAppsensorlike
+cp -r $outRootDir $uiWeb/$nodeModulesAppsensorlike
+
+uiConsole=../../src/appsensor-ui/console
+rm -r $uiConsole/$nodeModulesAppsensorlike
+cp -r $outRootDir $uiConsole/$nodeModulesAppsensorlike
