@@ -117,10 +117,13 @@ Dashboard app creates a websocket reporting engine client, which by default trie
 
     AppSensorLikeWeb
 
+If you see any errors related to database, please refer to [known issues section](#known-issues)!
+
 
 **Open the Dashboard in a web browser**
 
 Default URL is http://localhost:8080/
+If you see any errors related to database, please refer to [known issues section](#known-issues)!
 
 
 Authentication and authorization of Dashboard's clients
@@ -138,3 +141,9 @@ The authorizations are set by the administrator in ui_authorities table and link
 Configuration
 ---
 You can configure protocol http/s, port, etc via *appsensor-ui-rest-server-config.json* file in your working directory. You can copy the default configuration from the module's dist/appsensor-ui/web. Corresponding schem file *appsensor-rest-server-config_schema.json* is in the same directory.
+
+
+Known Issues
+---
+*  Database problems like (Encoding not recognized: 'undefined'...):
+This module dpends on express-mysql-session, which on its own depends on mysql2 for storing user's session. There is an open issue https://github.com/sidorares/node-mysql2/issues/1398 related to the problem. For the time being, you could manually patch your mysql2 module by adding 'utf8mb3: 45,' in mysql2/lib/constants/encoding_charset.js. Please update your mysql2 as soon as the problem is officially fixed!
