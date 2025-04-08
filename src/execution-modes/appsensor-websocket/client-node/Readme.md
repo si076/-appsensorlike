@@ -25,7 +25,9 @@ const appSensorWebsocketExecServer =
 await appSensorWebsocketExecServer.startWebSocketServer();
 
 const appSensorWebsocketExecClient = 
-        new AppSensorWebsocketExecClient('appsensor-websocket-event-manager-config.json');
+        new AppSensorWebsocketExecClient(null,
+                                         'appsensor-websocket-event-manager-config.json');
+const connected = await appSensorWebsocketExecClient.connectWebSocket();
 //you are now able to get instance of AppSensorClient respectivly EventManager and to send events to the server
 const eventManager = appSensorWebsocketExecClient.getAppSensorClient().getEventManager();
 
@@ -39,6 +41,9 @@ if (eventManager) {
     await eventManager.addEvent(new AppSensorEvent(user1, detectionPoint, detectionSystem)); 
     await eventManager.addEvent(new AppSensorEvent(user1, detectionPoint, detectionSystem)); //new instance every time to set timestamp
 }
+
+await appSensorWebsocketExecClient.closeWebSocket();
+await appSensorWebsocketExecServer.closeWebSocketServer();
 `````
 
 Here it is an example when your client runs along with your app on a separate node instance.
@@ -50,7 +55,9 @@ import { AppSensorWebsocketExecClient } from '@appsensorlike/appsensorlike_exec_
 import { AppSensorEvent, Category, DetectionPoint, DetectionSystem, User } from "@appsensorlike/appsensorlike/core/core.js";
 
 const appSensorWebsocketExecClient = 
-        new AppSensorWebsocketExecClient('appsensor-websocket-event-manager-config.json');
+        new AppSensorWebsocketExecClient(null,
+                                         'appsensor-websocket-event-manager-config.json');
+const connected = await appSensorWebsocketExecClient.connectWebSocket();
 //you are now able to get instance of AppSensorClient respectivly EventManager and to send events to the server
 const eventManager = appSensorWebsocketExecClient.getAppSensorClient().getEventManager();
 
@@ -64,6 +71,8 @@ if (eventManager) {
     await eventManager.addEvent(new AppSensorEvent(user1, detectionPoint, detectionSystem)); 
     await eventManager.addEvent(new AppSensorEvent(user1, detectionPoint, detectionSystem)); //new instance every time to set timestamp
 }
+
+await appSensorWebsocketExecClient.closeWebSocket();
 `````
 
 Configuration
