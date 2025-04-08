@@ -1,6 +1,6 @@
 {
   "name": "@appsensorlike/appsensorlike_ui_web",
-  "version": "0.30.3",
+  "version": "0.30.4",
   "description": "AppSensorLikeUI web implementation",
   "bin": {
     "AppSensorLikeWeb": "./dist/appsensor-ui/web/index.js"

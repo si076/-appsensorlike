@@ -122,7 +122,8 @@ If you see any errors related to database, please refer to [known issues section
 
 **Open the Dashboard in a web browser**
 
-Default URL is http://localhost:8080/
+Default URL is http://localhost:8080/ .
+
 If you see any errors related to database, please refer to [known issues section](#known-issues)!
 
 
