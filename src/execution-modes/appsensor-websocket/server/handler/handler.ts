@@ -29,6 +29,13 @@ class WebSocketRequestHandler extends AppSensorWebSocketServer implements Reques
 				handleProtocols?: (protocols: Set<string>, request: IncomingMessage) => string | false) {
 		super(new WebSocketRequestHandlerConfigReader().read(configLocation), handleProtocols);
         this.appSensorServer = appSensorServer;
+        
+        //overwrite config.clientApplicationIdentificationHeaderName with configured in appsensor-server-config.json
+        const appSensorServerConfig = this.appSensorServer.getConfiguration();
+        if (appSensorServerConfig) {
+            this.config.clientApplicationIdentificationHeaderName = 
+                appSensorServerConfig.clientApplicationIdentificationHeaderName;
+        }
     }
 
     protected isConnectionAllowed(ws: WebSocketExt): boolean {
